@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Predicciones - PredictiLab</title>
+
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/predictions.css">
+</head>
+
+<body>
+
+    <header class="navbar-secondary">
+        <div class="navbar-left">
+            <img class="logo-icon" src="assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab">
+            <span class="logo1-text">PredictiLab</span>
+        </div>
+
+        <nav class="navbar-center">
+        <a href="#">Inicio</a>
+        <a href="predictions.html" class="active">Torneos</a>
+        <a href="#">Mis Grupos</a>
+        <a href="ranking.html">Ranking</a>
+        </nav>
+
+        <div id="navbarContainer" class="navbar-right"></div>
+    </header>
+
+    <main class="predictions-container">
+
+        <section class="header-section">
+            <h1>Tus predicciones</h1>
+            <p>Envía tus pronósticos antes de que termine la cuenta atrás y suma puntos</p>
+        </section>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-card-left1">
+                    <svg class="stat-card-icon1">
+                        <use href="assets/icons/icons.svg#icon-predict"></use>
+                    </svg>
+                </div>
+                <div class="stat-card-right">
+                    <span>Predicciones enviadas</span>
+                    <strong>24 / 32</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-left2">
+                    <svg class="stat-card-icon2">
+                        <use href="assets/icons/icons.svg#icon-check"></use>
+                    </svg>
+                </div>
+                <div class="stat-card-right">
+                    <span>Resultados exactos</span>
+                    <strong>5</strong>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-card-left3">
+                    <svg class="stat-card-icon3">
+                        <use href="assets/icons/icons.svg#icon-star"></use>
+                    </svg>
+                </div>
+                <div class="stat-card-right">
+                    <span>Tu posición</span>
+                    <strong>12</strong>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="insight-banner">
+
+            <div class="insight-header">
+                <svg class="icon">
+                    <use href="assets/icons/icons.svg#icon-sparkle"></use>
+                </svg>
+
+                <p>
+                    <span class="insight-text">Estás a</span>
+                    <strong>
+                        <span id="remaining">3</span> predicciones
+                    </strong>
+                    <span class="insight-text">para completar la jornada ⚽</span>
+                </p>
+            </div>
+
+            <div class="insight-right">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <span class="progress-text" id="progressText">0 de 0 completadas</span>
+            </div>
+
+        </section>
+
+        <section class="matches">
+            <div class="card-order">
+
+                <div class="match-card">
+
+                    <!-- 1 -->
+                    <div class="match-header">
+                        <div class="match-header-left">
+                            <span class="tag">Grupo A</span>
+                            <span class="time">Hoy, 15:00</span>
+                        </div>
+
+                        <div class="match-header-right">
+                            <svg class="stat-card-icon4">
+                                <use href="assets/icons/icons.svg#icon-time"></use>
+                            </svg>
+                            <span>00d 00:45:12</span>
+                        </div>
+                    </div>
+
+                    <div class="match-body">
+
+                        <div class="team">
+                            <span>Francia</span>
+                            <img src="assets/images/flag-fraV2.svg" alt="flag">
+                        </div>
+
+                        <div class="score">
+                            <div class="score-control">
+                                <button type="button" class="score-btn minus">−</button>
+                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
+                                <button type="button" class="score-btn plus">+</button>
+                            </div>
+
+                            <span>vs</span>
+                            
+                            <div class="score-control">
+                                <button type="button" class="score-btn minus">−</button>
+                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
+                                <button type="button" class="score-btn plus">+</button>
+                            </div>
+                        </div>
+
+                        <div class="team">
+                            <span>Dinamarca</span>
+                            <img src="assets/images/flag-denmarkV2.svg" alt="flag">
+                        </div>
+
+                        
+                    </div>
+
+                    <div class="match-status">
+                        <span class="text">Estado: </span> 
+                        <span class="status-text">Sin registrar</span>
+                    </div>
+                </div>
+
+                
+                <!-- 2 -->
+                <div class="match-card">
+
+                    <div class="match-header">
+                        <div class="match-header-left">
+                            <span class="tag">Grupo A</span>
+                            <span class="time">Hoy, 15:00</span>
+                        </div>
+
+                        <div class="match-header-right">
+                            <svg class="stat-card-icon4">
+                                <use href="assets/icons/icons.svg#icon-time"></use>
+                            </svg>
+                            <span>00d 00:45:12</span>
+                        </div>
+                    </div>
+
+                    <div class="match-body">
+
+                        <div class="team">
+                            <span>Francia</span>
+                            <img src="assets/images/flag-fraV2.svg" alt="flag">
+                        </div>
+
+                        <div class="score">
+                            <div class="score-control">
+                                <button type="button" class="score-btn minus">−</button>
+                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
+                                <button type="button" class="score-btn plus">+</button>
+                            </div>
+
+                            <span>vs</span>
+                            
+                            <div class="score-control">
+                                <button type="button" class="score-btn minus">−</button>
+                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
+                                <button type="button" class="score-btn plus">+</button>
+                            </div>
+                        </div>
+
+                        <div class="team">
+                            <span>Dinamarca</span>
+                            <img src="assets/images/flag-denmarkV2.svg" alt="flag">
+                        </div>
+
+                        
+                    </div>
+
+                    <div class="match-status">
+                        <span class="text">Estado: </span> 
+                        <span class="status-text">Sin registrar</span>
+                    </div>
+                </div>
+
+
+                <!-- 3 -->
+                <div class="match-card">
+
+                    <div class="match-header">
+                        <div class="match-header-left">
+                            <span class="tag">Grupo A</span>
+                            <span class="time">Hoy, 15:00</span>
+                        </div>
+
+                        <div class="match-header-right">
+                            <svg class="stat-card-icon4">
+                                <use href="assets/icons/icons.svg#icon-time"></use>
+                            </svg>
+                            <span>00d 00:45:12</span>
+                        </div>
+                    </div>
+
+                    <div class="match-body">
+
+                        <div class="team">
+                            <span>Francia</span>
+                            <img src="assets/images/flag-fraV2.svg" alt="flag">
+                        </div>
+
+                        <div class="score">
+                            <div class="score-control">
+                                <button type="button" class="score-btn minus">−</button>
+                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
+                                <button type="button" class="score-btn plus">+</button>
+                            </div>
+
+                            <span>vs</span>
+                            
+                            <div class="score-control">
+                                <button type="button" class="score-btn minus">−</button>
+                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
+                                <button type="button" class="score-btn plus">+</button>
+                            </div>
+                        </div>
+
+                        <div class="team">
+                            <span>Dinamarca</span>
+                            <img src="assets/images/flag-denmarkV2.svg" alt="flag">
+                        </div>
+
+                        
+                    </div>
+
+                    <div class="match-status">
+                        <span class="text">Estado: </span> 
+                        <span class="status-text">Sin registrar</span>
+                    </div>
+                </div>
+
+            </div>
+
+        
+
+        </section>
+
+    </main>
+
+    <section class="how-it-works">
+            <div class="container-how-it-works">
+
+                <div class="desplegables">
+
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <span class="accordion-left">
+                                <div class="arrow">
+                                    <svg class="icon-dark">
+                                        <use href="assets/icons/icons.svg#icon-info"></use>
+                                    </svg>
+                                </div>
+                                <span>Ver cómo se otorgan los puntos</span>
+                            </span>
+                            
+                            <svg class="icon-wrapper">
+                                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
+                            </svg>
+                        </button>
+
+                        <div class="accordion-content">
+                            <ul class="points-list">
+                                <li>
+                                    <strong>Marcador exacto:</strong>
+                                    3 puntos (ej.: Tu pronosticas 2-1 y termina 2-1)
+                                </li>
+
+                                <li>
+                                    <strong>Resultado correcto:</strong>
+                                    1 punto (ej.: Tu pronosticas 1-0 y termina 3-2)
+                                </li>
+
+                                <li>
+                                    <strong>Fecha límite:</strong>
+                                    Las predicciones se cierran 15 minutos antes del inicio del partido.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer-system">
+                <div class="footer-container">
+
+                    <div class="footer-left">
+                    <span class="logo-text">PredictiLab.com</span>
+                    </div>
+
+                    <div class="footer-center">
+                    <a href="#">Políticas de privacidad</a>
+                    <a href="#">Términos del servicio</a>
+                    <a href="#">Contáctanos</a>
+                    </div>
+
+                    <div class="footer-right">
+                    <span>© 2026 PredictiLab - Greht Fernández</span>
+                    </div>
+
+                </div>
+            </footer>
+
+
+    <script type="module" src="/js/app/init.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+</html>

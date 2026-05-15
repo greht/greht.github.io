@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro - PredictiLab</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/login.css">
+  <link href="https://cdn.jsdelivr.net/npm/tom-select/dist/css/tom-select.css" rel="stylesheet">
+</head>
+<body class="register-page">
+
+    <header class="navbar">
+        <div class="logo">
+            <img class="logo-icon" src="assets/images//Fondo-blanco.svg" alt="Logo PredictiLab">
+            <span class="logo-text">PredictiLab</span>
+        </div>
+    </header>
+
+    <main class="login-container">
+
+        <div class="login-left">
+            <img src="assets/images/login.png" alt="login">
+        </div>
+
+        <div class="login-card">
+            <div class="logo1">
+                <img class="logo1-icon" src="assets/images//Fondo-oscuro.svg" alt="Logo PredictiLab">
+                <span class="logo1-text">PredictiLab</span>
+            </div>
+        
+            <div class="register-card">
+            <div class="logo1">
+                <img class="logo1-icon" src="assets/images//Fondo-oscuro.svg" alt="Logo PredictiLab">
+                <span class="logo1-text">PredictiLab</span>
+            </div>
+        
+            <div class="head-card">
+                <h2 class="title-up">Únete al juego</h2>
+                <span class="title-down">Crea tu <strong class="color-highlight">cuenta</strong> y empieza a predecir partidos ⚽</span>
+            </div>
+
+            <form>
+            
+                <label for="username">Nombre de usuario</label>
+                <input 
+                    type="username" 
+                    id="username"
+                    name="username"
+                    placeholder="El nombre que verán en tu liga"
+                    required
+                >
+
+                <label for="email">Email</label>
+                <input 
+                    type="email" 
+                    id="email"
+                    name="email"
+                    placeholder="ejemplo@correo.com"
+                    required
+                >
+
+                <label for="country">País</label>
+                    <select id="country" name="country" required>
+                    <option value="" disabled selected hidden>País donde juegas</option>
+                    <option value="AR">🇦🇷 Argentina</option>
+                    <option value="CO">🇨🇴 Colombia</option>
+                    <option value="MX">🇲🇽 México</option>
+                    <option value="ES">🇪🇸 España</option>
+                    <option value="US">🇺🇸 Estados Unidos</option>
+                </select>
+
+                <label for="">Contraseña</label>
+                <input 
+                    type="password" 
+                    id="password"
+                    name="password"
+                    placeholder="Mínimo 8 caracteres"
+                    required
+                >
+
+                <label for="">Repetir contraseña</label>
+                <input 
+                    type="repeat-password" 
+                    id="repeat-password"
+                    name="repeat-password"
+                    placeholder="Confirma tu contraseña"
+                    required
+                >
+                
+                <div class="info">
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                            Confirmo que soy mayor de 18 años
+                        </label>
+
+                        <label class="checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                            Acepto los <strong>términos y condiciones</strong> y la política de privacidad.
+                        </label>
+                    </div>
+
+            
+                </div>
+
+
+                <button type="submit" class="btn-primary">Empezar a jugar
+                    <svg class="icon-entrar">
+                        <use href="assets/icons/icons.svg#icon-entrar"></use>
+                    </svg>
+                </button>
+
+                <div class="divider">
+                    <span>O registrate con</span>
+                </div>
+
+                <button class="btn-google">
+                    <svg class="google-icon">
+                        <use href="assets/icons/icons.svg#icon-google"></use>
+                    </svg>
+                    Crear cuenta con Google
+                </button>
+
+
+                <div class="link-create-account">
+                    <a>
+                        ¿Ya tienes una cuenta? 
+                    </a>
+                    <a href="login.html" class="accent-link">
+                        <strong class="create-account">Iniciar sesión</strong>
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
+    </main>
+
+    <footer class="secondary-footer">
+        <div class="secondary-footer-container">
+
+            <div class="secondary-footer-left">
+            <span class="logo-text">PredictiLab.com</span>
+            </div>
+
+            <div class="secondary-footer-center">
+            <a href="#">Políticas de privacidad</a>
+            <a href="#">Términos del servicio</a>
+            <a href="#">Contáctanos</a>
+            </div>
+
+            <div class="secondary-footer-right">
+            <span>© 2026 PredictiLab - Greht Fernández</span>
+            </div>
+
+        </div>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+</html>

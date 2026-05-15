@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - PredictiLab</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="login-page">
+
+    <header class="navbar">
+        <div class="logo">
+            <img class="logo-icon" src="assets/images//Fondo-blanco.svg" alt="Logo PredictiLab">
+            <span class="logo-text">PredictiLab</span>
+        </div>
+    </header>
+
+    <main class="login-container">
+
+        <div class="login-left">
+            <img src="assets/images/login.png" alt="login">
+        </div>
+
+        <div class="login-card">
+            <div class="logo1">
+                <img class="logo1-icon" src="assets/images//Fondo-oscuro.svg" alt="Logo PredictiLab">
+                <span class="logo1-text">PredictiLab</span>
+            </div>
+        
+            <div class="head-card">
+                <h2 class="title-up">Volvamos al juego</h2>
+                <span class="title-down">Tus <strong class="color-highlight">predicciones</strong> y tu <strong class="color-highlight">equipo</strong> te están esperando ⚽</span>
+            </div>
+
+            <form>
+            
+                <label for="email">Email</label>
+                <input 
+                    type="email" 
+                    id="email"
+                    name="email"
+                    placeholder="ejemplo@correo.com"
+                    required
+                >
+
+                <label for="password">Contraseña</label>
+                <input 
+                    type="password" 
+                    id="password"
+                    name="password"
+                    placeholder="••••••••"
+                    required
+                >
+                
+                <div class="info">
+                    <div class="info-left">
+                        <label class="checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                            Recordarme
+                        </label>
+                    </div>
+
+                    <div class="info-right">
+                        <a href="forgot-password.html" class="accent-link">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+                </div>
+
+
+                <button type="submit" class="btn-primary">Entrar a PredictiLab
+                    <svg class="icon-entrar">
+                        <use href="assets/icons/icons.svg#icon-entrar"></use>
+                    </svg>
+                </button>
+
+                <div class="divider">
+                    <span>O ingresa con</span>
+                </div>
+
+                <button class="btn-google">
+                    <svg class="google-icon">
+                        <use href="assets/icons/icons.svg#icon-google"></use>
+                    </svg>
+                    Iniciar sesión con Google
+                </button>
+
+
+                <div class="link-create-account">
+                    <a>
+                        ¿No tienes una cuenta? 
+                    </a>
+                    <a href="register.html" class="accent-link">
+                        <strong class="create-account">Crea una nueva cuenta</strong>
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+
+    </main>
+
+    <footer class="secondary-footer">
+        <div class="secondary-footer-container">
+
+            <div class="secondary-footer-left">
+            <span class="logo-text">PredictiLab.com</span>
+            </div>
+
+            <div class="secondary-footer-center">
+            <a href="#">Políticas de privacidad</a>
+            <a href="#">Términos del servicio</a>
+            <a href="#">Contáctanos</a>
+            </div>
+
+            <div class="secondary-footer-right">
+            <span>© 2026 PredictiLab - Greht Fernández</span>
+            </div>
+
+        </div>
+    </footer>
+</body>
+</html>

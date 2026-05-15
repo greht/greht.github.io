@@ -1,1 +1,320 @@
-hola
+<!DOCTYPE html5>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="CSS/styles.css">
+    
+    <title>PredictiLab</title>
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <img class="logo-icon" src="assets/images//Fondo-blanco.svg" alt="Logo PredictiLab">
+            <span class="logo-text">PredictiLab</span>
+        </div>
+
+        <div class="nav-actions">
+            <a href="register.html" class="nav-link">Registro</a>
+            <button class="btn btn-primary" onclick="window.location.href='login.html'">Iniciar sesión</button>
+        </div>
+
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <div class="hero-content">
+        
+                <div class="hero-text">
+                    <h1>Domina los partidos.</h1>
+                    <h1 class="subtitle">Lidera el ranking.</h1>
+                    <p>
+                        La forma más simple de competir con tus amigos prediciendo partidos de tus competencias favoritas. <br> <br>
+                        Predice resultados, reta a tus amigos y asciende en la clasificación mundial. ¿Listo para demostrar tu experiencia?
+                    </p>
+
+                            
+                    <div class="hero-cta">
+                        <button class="hero-btn">Crear mi grupo gratis</button>
+
+                        <ul class="hero-benefits">
+                            <li>✔ Gratis</li>
+                            <li>✔ Crea grupos privados</li>
+                            <li>✔ Ranking automático</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="hero-card">
+
+                    <div class="match-card">
+
+                        <div class="card-title">
+                            <span class="title-left">Próximos partidos</span>
+                            <span class="title-right">Predicciones</span>
+                        </div>
+
+                        <div class="card-body">
+
+                            <div class="team">
+                                <img src="assets/images/flag-mexV2.svg" alt="Mexico">
+                                <span>MEX</span>
+                            </div>
+
+                            <div class="vs">VS</div>
+
+                            <div class="team">
+                                <img src="assets/images/flag-sudV2.svg" alt="Sudafrica">
+                                <span>SUD</span>
+                            </div>
+                        
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-bar left">
+                                <div class="progress-fill"></div>
+                            </div>
+
+                            <div class="progress-bar right">
+                                <div class="progress-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="social">
+            <div class="container-social">
+
+                <h2 class="social-title">Social. Competitivo. Simple</h1>
+
+                <div class="social-cards">
+                    
+                    <div class="card">
+                        <div class="icon-card">
+                            <svg class="icon">
+                                <use href="assets/icons/icons.svg#icon-arrow-up"></use>
+                            </svg>
+                        </div>
+                        <h3>Predice resultados</h3>
+                        <p>Ingresa rápidamente tus puntuaciones para todas los partidos con nuestra interfaz optimizada.</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="icon-card">
+                            <svg class="icon">
+                                <use href="assets/icons/icons.svg#icon-users"></use>
+                            </svg>
+                        </div>
+                        <h3>Desafía a tus amigos</h3>
+                        <p>Crea grupos personalizados y descubre quién es el verdadero experto en fútbol de tu círculo.</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="icon-card">
+                            <svg class="icon">
+                                <use href="assets/icons/icons.svg#icon-arrow-up"></use>
+                            </svg>
+                        </div>
+                        <h3>Gana en el ranking</h3>
+                        <p>Gana puntos por precisión y asciende en la clasificación. Compite a nivel mundial o en ligas privadas.</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="como-funciona">
+            <div class="container-como-funciona"></div>
+
+                <h2>¿Cómo funciona?</h2>
+
+                <p class="text-subtitle">
+                    <strong>PredictiLab</strong> es una plataforma donde puedes registrar tus pronósticos deportivos y competir con tus amigos, familia o compañeros de trabajo para demostrar quién sabe más de fútbol.
+                </p>
+
+                <div class="desplegables">
+
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <span class="accordion-left">
+                                <div class="arrow">
+                                    <svg class="icon-white">
+                                        <use href="assets/icons/icons.svg#icon-add-user"></use>
+                                    </svg>
+                                </div>
+                                Crea tu cuenta y arma tus grupos
+                            </span>
+                            
+                            <svg class="icon-wrapper">
+                                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
+                            </svg>
+                        </button>
+
+                        <div class="accordion-content">
+                        <p>
+                            Regístrate en minutos y crea una competencia privada. <br>
+                            Invita a tus amigos, familiares o colegas y arma tu propia liga de pronósticos.
+                        </p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <span class="accordion-left">
+                                <div class="arrow">
+                                    <svg class="icon-white">
+                                        <use href="assets/icons/icons.svg#icon-jugadas"></use>
+                                    </svg>
+                                </div>
+                                Haz tus predicciones antes del partido
+                            </span>
+                            
+                            <svg class="icon-wrapper">
+                                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
+                            </svg>
+                        </button>
+
+                        <div class="accordion-content">
+                        <p>
+                            Antes de cada partido, ingresa tus pronósticos: quién gana, empata o pierde. <br>
+                            Cada predicción cuenta para demostrar tu conocimiento deportivo.
+                        </p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <span class="accordion-left">
+                                <div class="arrow">
+                                    <svg class="icon-white">
+                                        <use href="assets/icons/icons.svg#icon-medal"></use>
+                                    </svg>
+                                </div>
+                                Acumula puntos
+                            </span>
+                            
+                            <svg class="icon-wrapper">
+                                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
+                            </svg>
+                        </button>
+
+                        <div class="accordion-content">
+                        <p>
+                            Gana puntos según la precisión de tus predicciones. <br>
+                            Cuanto más acertado seas, más subirás en el ranking.
+                        </p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <span class="accordion-left">
+                                <div class="arrow">
+                                    <svg class="icon-white">
+                                        <use href="assets/icons/icons.svg#icon-ranking"></use>
+                                    </svg>
+                                </div>
+                                Sigue resultados y ranking
+                            </span>
+                            
+                            <svg class="icon-wrapper">
+                                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
+                            </svg>
+                        </button>
+
+                        <div class="accordion-content">
+                        <p>
+                            Después de cada partido, el sistema actualiza automáticamente los resultados y la tabla de posiciones para ver quién lidera la competencia.
+                        </p>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <button class="accordion-header">
+                            <span class="accordion-left">
+                                <div class="arrow">
+                                    <svg class="icon-white">
+                                        <use href="assets/icons/icons.svg#icon-card"></use>
+                                    </svg>
+                                </div>
+                                Totalmente gratis
+                            </span>
+                            
+                            <svg class="icon-wrapper">
+                                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
+                            </svg>
+                        </button>
+
+                        <div class="accordion-content">
+                        <p>
+                            Disfruta de todas las funcionalidades de PredictiLab sin costo. <br>
+                            Crea competiciones, invita a tus amigos y demuestra quién es el mejor pronosticador.
+                        </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="creator-section">
+            <h2 class="creator-title">Creado con curiosidad por</h2>
+
+            <div class="profile-wrapper">
+                <img src="assets/images/GrehtFernandez.png" alt="Greht" class="profile-img">
+            </div>
+
+            <h3 class="creator-name">Grehtlingmar Fernández</h3>
+            <p class="creator-role">Product Owner • UX UI Design • Creadora de PredictiLab</p>
+
+            <p class="creator-quote">
+                Creé esta plataforma para hacer de las predicciones una experiencia más social y divertida.
+            </p>
+
+            <div class="social-icons">
+                <svg class="icon-rrss">
+                    <use href="assets/icons/icons.svg#icon-linkedin"></use>
+                </svg>
+
+                <svg class="icon-rrss">
+                    <use href="assets/icons/icons.svg#icon-web"></use>
+                </svg>
+
+                <svg class="icon-rrss">
+                    <use href="assets/icons/icons.svg#icon-ig"></use>
+                </svg>
+
+            </div>
+        </section>
+    
+    </div>
+    
+        <footer class="footer">
+            <div class="footer-container">
+
+                <div class="footer-left">
+                <span class="logo-text">PredictiLab.com</span>
+                </div>
+
+                <div class="footer-center">
+                <a href="#">Políticas de privacidad</a>
+                <a href="#">Términos del servicio</a>
+                <a href="#">Contáctanos</a>
+                </div>
+
+                <div class="footer-right">
+                <span>© 2026 PredictiLab - Greht Fernández</span>
+                </div>
+
+            </div>
+        </footer>
+    
+    <script src="js/main.js"></script>
+</body>
+</html>
