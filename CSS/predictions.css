@@ -245,6 +245,7 @@ body {
   padding: 0;
   height: auto;
   width: 100%;
+  transition: all 0.3s ease;
 }
 
 .match-header {
@@ -320,6 +321,7 @@ body {
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  transition: all 0.2s ease;
 }
 
 .score {
@@ -372,10 +374,6 @@ body {
   font-weight: 800;
 }
 
-.team {
-  transition: all 0.2s ease;
-}
-
 .team.winner img {
   transform: scale(1.1);
 }
@@ -396,6 +394,7 @@ body {
 
 .status-text {
   font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .status-saving {
@@ -408,14 +407,6 @@ body {
 
 .status-updated {
   color: var(--color-accent);
-}
-
-.status-text {
-  transition: all 0.3s ease;
-}
-
-.match-card {
-  transition: all 0.3s ease;
 }
 
 .match-card.saving {
@@ -513,4 +504,50 @@ body {
   color: var(--color-bg);
   padding: 20px 40px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.empty-state {
+  opacity: 0.6;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.4;
+  }
+}
+
+.placeholder-flag {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.flag-rounded {
+  width: 64px;
+  height: 44px;
+
+  border-radius: 12px;
+  overflow: hidden;
+
+  background: #fff;
+}
+
+.flag {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.score-control.disabled {
+  pointer-events: none;
+  opacity: 0.5;
 }

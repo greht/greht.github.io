@@ -1,4 +1,4 @@
-import { getProcessedUsers, getUsersByCountry } from "../../data/users.js";
+import { getProcessedUsers, getUsersByCountry } from "/js/data/users.js";
 
 let currentPage = 1;
 let rowsPerPage = 10;
@@ -12,11 +12,26 @@ export function getState(filterCountry = "global") {
     if (filterCountry !== "global") {
         currentFilter = filterCountry;
     }
-    const allUsers = filterCountry === "global" 
+    
+    let allUsers = filterCountry === "global" 
         ? getProcessedUsers() 
         : getUsersByCountry(filterCountry);
 
-    const users = allUsers.filter(u => u.rank > 3);
+    // Recalcular rank para país (empezar desde 1)
+    if (filterCountry !== "global") {
+        allUsers = allUsers.map((user, index) => ({
+            ...user,
+            rank: index + 1
+        }));
+        
+        // Para país, excluir podium (rank 1-3) de la tabla
+        allUsers = allUsers.filter(u => u.rank > 3);
+    } else {
+        // Para global, excluir podium (rank 1-3)
+        allUsers = allUsers.filter(u => u.rank > 3);
+    }
+
+    const users = allUsers;
 
     const totalPages = Math.max(1, Math.ceil(users.length / rowsPerPage));
 

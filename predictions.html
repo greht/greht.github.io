@@ -17,9 +17,8 @@
         </div>
 
         <nav class="navbar-center">
-        <a href="#">Inicio</a>
+        <a href="dashboard.html">Inicio</a>
         <a href="predictions.html" class="active">Torneos</a>
-        <a href="#">Mis Grupos</a>
         <a href="ranking.html">Ranking</a>
         </nav>
 
@@ -99,171 +98,74 @@
         </section>
 
         <section class="matches">
-            <div class="card-order">
+            <div class="card-order" id="matches-container">
 
-                <div class="match-card">
+                <div class="match-card empty-state">
 
-                    <!-- 1 -->
                     <div class="match-header">
                         <div class="match-header-left">
-                            <span class="tag">Grupo A</span>
-                            <span class="time">Hoy, 15:00</span>
+                            <span class="tag">Fase de grupos</span>
+                            <span class="time">Próximamente</span>
                         </div>
 
                         <div class="match-header-right">
                             <svg class="stat-card-icon4">
                                 <use href="assets/icons/icons.svg#icon-time"></use>
                             </svg>
-                            <span>00d 00:45:12</span>
+
+                            <span>--:--:--</span>
                         </div>
                     </div>
 
                     <div class="match-body">
 
                         <div class="team">
-                            <span>Francia</span>
-                            <img src="assets/images/flag-fraV2.svg" alt="flag">
+                            <span>Equipo local</span>
+                            <div class="placeholder-flag"></div>
                         </div>
 
                         <div class="score">
-                            <div class="score-control">
+
+                            <div class="score-control disabled">
                                 <button type="button" class="score-btn minus">−</button>
-                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
+
+                                <input
+                                    class="score-input"
+                                    type="text"
+                                    placeholder="-"
+                                    disabled
+                                >
+
                                 <button type="button" class="score-btn plus">+</button>
                             </div>
 
                             <span>vs</span>
-                            
-                            <div class="score-control">
+
+                            <div class="score-control disabled">
                                 <button type="button" class="score-btn minus">−</button>
-                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
-                                <button type="button" class="score-btn plus">+</button>
-                            </div>
-                        </div>
 
-                        <div class="team">
-                            <span>Dinamarca</span>
-                            <img src="assets/images/flag-denmarkV2.svg" alt="flag">
-                        </div>
+                                <input
+                                    class="score-input"
+                                    type="text"
+                                    placeholder="-"
+                                    disabled
+                                >
 
-                        
-                    </div>
-
-                    <div class="match-status">
-                        <span class="text">Estado: </span> 
-                        <span class="status-text">Sin registrar</span>
-                    </div>
-                </div>
-
-                
-                <!-- 2 -->
-                <div class="match-card">
-
-                    <div class="match-header">
-                        <div class="match-header-left">
-                            <span class="tag">Grupo A</span>
-                            <span class="time">Hoy, 15:00</span>
-                        </div>
-
-                        <div class="match-header-right">
-                            <svg class="stat-card-icon4">
-                                <use href="assets/icons/icons.svg#icon-time"></use>
-                            </svg>
-                            <span>00d 00:45:12</span>
-                        </div>
-                    </div>
-
-                    <div class="match-body">
-
-                        <div class="team">
-                            <span>Francia</span>
-                            <img src="assets/images/flag-fraV2.svg" alt="flag">
-                        </div>
-
-                        <div class="score">
-                            <div class="score-control">
-                                <button type="button" class="score-btn minus">−</button>
-                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
                                 <button type="button" class="score-btn plus">+</button>
                             </div>
 
-                            <span>vs</span>
-                            
-                            <div class="score-control">
-                                <button type="button" class="score-btn minus">−</button>
-                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
-                                <button type="button" class="score-btn plus">+</button>
-                            </div>
                         </div>
 
                         <div class="team">
-                            <span>Dinamarca</span>
-                            <img src="assets/images/flag-denmarkV2.svg" alt="flag">
+                            <span>Equipo visitante</span>
+                            <div class="placeholder-flag"></div>
                         </div>
 
-                        
                     </div>
 
-                    <div class="match-status">
-                        <span class="text">Estado: </span> 
-                        <span class="status-text">Sin registrar</span>
-                    </div>
-                </div>
+</div>
 
-
-                <!-- 3 -->
-                <div class="match-card">
-
-                    <div class="match-header">
-                        <div class="match-header-left">
-                            <span class="tag">Grupo A</span>
-                            <span class="time">Hoy, 15:00</span>
-                        </div>
-
-                        <div class="match-header-right">
-                            <svg class="stat-card-icon4">
-                                <use href="assets/icons/icons.svg#icon-time"></use>
-                            </svg>
-                            <span>00d 00:45:12</span>
-                        </div>
-                    </div>
-
-                    <div class="match-body">
-
-                        <div class="team">
-                            <span>Francia</span>
-                            <img src="assets/images/flag-fraV2.svg" alt="flag">
-                        </div>
-
-                        <div class="score">
-                            <div class="score-control">
-                                <button type="button" class="score-btn minus">−</button>
-                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
-                                <button type="button" class="score-btn plus">+</button>
-                            </div>
-
-                            <span>vs</span>
-                            
-                            <div class="score-control">
-                                <button type="button" class="score-btn minus">−</button>
-                                <input class="score-input" type="text" min="0" inputmode="numeric" placeholder="0">
-                                <button type="button" class="score-btn plus">+</button>
-                            </div>
-                        </div>
-
-                        <div class="team">
-                            <span>Dinamarca</span>
-                            <img src="assets/images/flag-denmarkV2.svg" alt="flag">
-                        </div>
-
-                        
-                    </div>
-
-                    <div class="match-status">
-                        <span class="text">Estado: </span> 
-                        <span class="status-text">Sin registrar</span>
-                    </div>
-                </div>
+    
 
             </div>
 
@@ -340,6 +242,7 @@
 
 
     <script type="module" src="/js/app/init.js"></script>
+    <script type="module" src="/js/pages/predictions.js"></script>
     <script src="js/main.js"></script>
 
 </body>

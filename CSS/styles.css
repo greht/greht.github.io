@@ -19,6 +19,13 @@
 body {
     font-family: var(--font-primary);
     margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
 }
 
 html, body {
@@ -231,6 +238,43 @@ button {
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
+  cursor: pointer;
+}
+
+.user-dropdown {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.user-dropdown .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--color-bg);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  min-width: 150px;
+  display: none;
+  z-index: 100;
+}
+
+.user-dropdown.active .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 10px 16px;
+  color: var(--color-text);
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: var(--color-primary-100);
+  color: var(--color-primary);
 }
 
 .btn {
@@ -806,6 +850,7 @@ p {
   color: var(--color-primary);
   padding: 20px 20px;
   border-top: 1px solid rgba(255,255,255,0.1);
+  width: 100%;
 }
 
 .secondary-footer-container {

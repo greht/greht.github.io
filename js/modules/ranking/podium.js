@@ -1,4 +1,4 @@
-import { getProcessedUsers, getUsersByCountry } from "../../data/users.js";
+import { getProcessedUsers, getUsersByCountry } from "/js/data/users.js";
 
 export function renderPodium(filterCountry = "global") {
 
@@ -40,6 +40,13 @@ export function renderPodium(filterCountry = "global") {
             el.querySelector(".stat-successes").textContent = user.correct;
             el.querySelector(".rank-card-avatar").src =
                 `assets/images/${user.avatar}`;
+            
+            // Update flag
+            const flagEl = el.querySelector(".flag");
+            if (flagEl && user.country) {
+                flagEl.src = `https://flagcdn.com/w40/${user.country.toLowerCase()}.png`;
+                flagEl.alt = user.countryName || user.country;
+            }
         } else {
             el.style.display = "none";
         }

@@ -1,4 +1,4 @@
-import { getCurrentUser } from "../../data/users.js";
+import { getCurrentUser } from "/js/data/users.js";
 
 export function renderTable(state) {
   const tbody = document.getElementById("ranking-body");

@@ -1,10 +1,10 @@
-import { getCurrentUser, currentUserId } from "../../data/users.js";
+import { getCurrentUser, getCurrentUserFromSupabase, currentUserId } from "/js/data/users.js";
 
 function randomMessage(messages) {
     return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export function renderUserStickyCard(state) {
+export async function renderUserStickyCard(state) {
 
     const container = document.getElementById("userStickyCard");
     if (!container) return;
@@ -21,14 +21,32 @@ export function renderUserStickyCard(state) {
     const progressText = document.getElementById("progressText");
 
     const avatarEl = document.getElementById("stickyAvatar");
+    const flagEl = document.getElementById("stickyFlag");
 
+    // Obtener usuario de Supabase primero
+    let user = await getCurrentUserFromSupabase();
+    console.log("Sticky - User from Supabase:", user);
+    
+    // Fallback a datos locales
     const users = state?.usersPage || [];
-    const user = users.find(u => u.id === currentUserId) || getCurrentUser();
+    if (!user) {
+        user = users.find(u => u.id === currentUserId) || getCurrentUser();
+    }
+    console.log("Sticky - User final:", user);
+
+    // Si aún no hay usuario, no mostrar sticky
+    if (!user) {
+        console.log("Sticky - No user, returning");
+        return;
+    }
 
     const prev = JSON.parse(sessionStorage.getItem("sticky_prev")) || null;
 
-    // 🛑 safety
-    if (!user || !users.length) return;
+    // 🛑 safety - solo verificar que existe usuario
+    if (!user) {
+        console.log("Sticky - No user, returning");
+        return;
+    }
 
     // ==============================
     // VISIBILIDAD
@@ -43,24 +61,26 @@ export function renderUserStickyCard(state) {
     container.classList.toggle("in-table-view", isVisible);
     container.classList.toggle("floating", !isVisible);
 
-    // 🖼 avatar
+    // 🖼 avatar - si es URL completa usarla, si no buscar en assets
     if (avatarEl && user.avatar) {
-        avatarEl.src = `assets/images/${user.avatar}`;
+        const avatarSrc = user.avatar.startsWith('http') 
+            ? user.avatar 
+            : `assets/images/${user.avatar}`;
+        avatarEl.src = avatarSrc;
     }
 
     // 🖼 bandera
-    const flagEl = document.getElementById("stickyFlag");
     if (flagEl && user.country) {
         flagEl.src = `https://flagcdn.com/w40/${user.country.toLowerCase()}.png`;
         flagEl.title = user.countryName || user.country;
     }
 
-    const rank = user.rank;
-    const points = user.points;
+    const rank = user?.rank || 0;
+    const points = user?.points || 0;
 
     const top1 = users[0];
     const top3 = users[2];
-    const nextUser = users.find(u => u.rank === rank - 1);
+    const nextUser = rank > 0 ? users.find(u => u.rank === rank - 1) : null;
 
     // 📊 PROGRESO
     const top10 = users.slice(0, 10);
