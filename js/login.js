@@ -17,8 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return
         }
 
-        console.log("🟢 Usuario logueado:", data.user)
-
         // redirigir
         window.location.href = "/dashboard.html"
     })

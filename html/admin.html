@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - PredictiLab</title>
+    <link rel="stylesheet" href="/CSS/styles.css">
+    <link rel="stylesheet" href="/CSS/predictions.css">
+    <link rel="stylesheet" href="/CSS/footer.css">
+    <link rel="stylesheet" href="/CSS/admin.css">
+</head>
+<body>
+    <header class="navbar-secondary">
+        <div class="navbar-left">
+            <img class="logo-icon" src="/assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab">
+            <span class="logo1-text">PredictiLab</span>
+        </div>
+
+        <nav class="navbar-center">
+            <a href="/dashboard.html">Inicio</a>
+            <a href="/predictions.html">Torneos</a>
+            <a href="/ranking.html">Ranking</a>
+        </nav>
+
+        <div id="navbarContainer" class="navbar-right"></div>
+    </header>
+
+    <main class="predictions-container">
+        <section class="header-section">
+            <h1>Panel de Administración</h1>
+            <p>Gestiona los partidos y resultados</p>
+        </section>
+
+        <div class="admin-actions">
+            <button id="processPointsBtn" class="btn-secondary">
+                Procesar Puntos
+            </button>
+        </div>
+
+        <div id="processResult" class="process-result hidden"></div>
+
+        <section class="matches">
+            <div class="card-order" id="matches-container"></div>
+        </section>
+    </main>
+
+    <section class="how-it-works">
+        <div class="container-how-it-works">
+            <div class="desplegables">
+                <div class="accordion-item">
+                    <button class="accordion-header">
+                        <span class="accordion-left">
+                            <span>Ingresar Resultados</span>
+                        </span>
+                        <span class="accordion-arrow">▼</span>
+                    </button>
+
+                    <div class="accordion-content">
+                        <ul class="points-list">
+                            <li><strong>Para editar:</strong> Haz click en los números de cada partido y escribe el resultado</li>
+                            <li><strong>Guardar:</strong> Click en el botón "Guardar" debajo del partido</li>
+                            <li><strong>Finalizar:</strong> Selecciona "Finalizado" en el estado para bloquear el resultado</li>
+                            <li><strong>Procesar puntos:</strong> Una vez guardados todos los resultados, clickea "Procesar Puntos"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="footer" class="footer-system"></footer>
+
+    <script type="module">
+        import { supabase } from "/config/supabase.js";
+        import { processFinishedMatches } from "/js/services/scoring.js";
+        import { loadNavbar, loadFooter } from "/js/components/navbar.js";
+
+        let currentUser = null;
+        let allMatches = [];
+
+        async function checkAdminAccess() {
+            const { data: { user }, error } = await supabase.auth.getUser();
+
+            if (error || !user) {
+                window.location.href = "/login.html";
+                return false;
+            }
+
+            currentUser = user;
+
+            const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("user_id", user.id)
+                .single();
+
+            if (profileError || !profile || profile.role !== "admin") {
+                document.querySelector(".header-section").innerHTML = `
+                    <h1>Acceso Denegado</h1>
+                    <p>No tienes permisos para acceder a esta sección.</p>
+                    <a href="/dashboard.html" class="btn-primary" style="display:inline-block;margin-top:1rem;">Volver al Inicio</a>
+                `;
+                document.querySelector(".matches").remove();
+                document.querySelector(".admin-actions").remove();
+                return false;
+            }
+
+            return true;
+        }
+
+        async function loadMatches() {
+            const { data: matches, error } = await supabase
+                .from("matches")
+                .select("*")
+                .order("match_date", { ascending: true });
+
+            if (error) {
+                document.getElementById("matches-container").innerHTML =
+                    `<p class="error">Error cargando partidos: ${error.message}</p>`;
+                return;
+            }
+
+            const teamIds = [...new Set(matches.flatMap(m => [m.home_team_id, m.away_team_id]).filter(Boolean))];
+            const groupIds = [...new Set(matches.map(m => m.group_id).filter(Boolean))];
+
+            let teamsMap = {};
+            let groupsMap = {};
+            let phasesMap = {};
+
+            if (teamIds.length > 0) {
+                const { data: teams } = await supabase
+                    .from("teams")
+                    .select("id, name, flag_url")
+                    .in("id", teamIds);
+                if (teams) {
+                    teamsMap = teams.reduce((acc, t) => { acc[t.id] = t; return acc; }, {});
+                }
+            }
+
+            if (groupIds.length > 0) {
+                const { data: groups } = await supabase
+                    .from("groups")
+                    .select("id, name")
+                    .in("id", groupIds);
+                if (groups) {
+                    groupsMap = groups.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
+                }
+            }
+
+            const { data: phases } = await supabase
+                .from("phases")
+                .select("id, name, display_order")
+                .order("display_order", { ascending: true });
+
+            if (phases) {
+                phasesMap = phases.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
+            }
+
+            allMatches = matches.map(m => ({
+                ...m,
+                home_team: teamsMap[m.home_team_id] || null,
+                away_team: teamsMap[m.away_team_id] || null,
+                group: groupsMap[m.group_id] || null,
+                phase: phasesMap[m.phase_id] || null
+            }));
+
+            renderMatches(allMatches);
+        }
+
+        function groupMatchesByDay(matches) {
+            return matches.reduce((groups, match) => {
+                const date = new Date(match.match_date);
+                const key = date.toLocaleDateString("es-ES", {
+                    weekday: "long",
+                    day: "2-digit",
+                    month: "long"
+                });
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(match);
+                return groups;
+            }, {});
+        }
+
+        function capitalize(text) {
+            return text.charAt(0).toUpperCase() + text.slice(1);
+        }
+
+        function formatMatchDate(dateStr) {
+            const date = new Date(dateStr);
+            const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+            return argentinaDate.toLocaleString("es-ES", {
+                weekday: "long",
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit"
+            }).replace(".", "");
+        }
+
+        function getScoreValue(value) {
+            return value !== null && value !== undefined ? value : "";
+        }
+
+        function isMatchLocked(match) {
+            if (match.status === "finished") return true;
+
+            if (match.match_date) {
+                const matchTime = new Date(match.match_date).getTime();
+                const now = new Date().getTime();
+                const diffMinutes = (matchTime - now) / (1000 * 60);
+                if (diffMinutes <= 15) return true;
+            }
+
+            return false;
+        }
+
+        function renderMatchCard(match) {
+            const homeTeam = match.home_team?.name || "Equipo Local";
+            const awayTeam = match.away_team?.name || "Equipo Visitante";
+            const homeFlag = match.home_team?.flag_url || "/assets/images/flag-mexV2.svg";
+            const awayFlag = match.away_team?.flag_url || "/assets/images/flag-mexV2.svg";
+            const group = match.group?.name || "Grupo";
+            const matchDate = formatMatchDate(match.match_date);
+
+            const statusMap = {
+                scheduled: "Pr&oacute;ximamente",
+                pending: "Pr&oacute;ximamente",
+                live: "EN VIVO",
+                finished: "Finalizado"
+            };
+            const statusText = statusMap[match.status] || "Sin registrar";
+            const isLocked = isMatchLocked(match);
+
+            return `
+                <div class="match-card admin-match-card" data-match-id="${match.id}">
+                    <div class="match-header">
+                        <div class="match-header-left">
+                            <span class="tag">${group}</span>
+                            <span class="time">${matchDate}</span>
+                        </div>
+                        <div class="match-header-right">
+                            <span>${statusText}</span>
+                        </div>
+                    </div>
+
+                    <div class="match-body">
+                        <div class="team">
+                            <span>${homeTeam}</span>
+                            <div class="flag-rounded">
+                                <img class="flag" src="${homeFlag}" alt="flag">
+                            </div>
+                        </div>
+
+                        <div class="score admin-score">
+                            <div class="score-control">
+                                <input type="number"
+                                       class="score-input admin-input"
+                                       id="home-${match.id}"
+                                       value="${getScoreValue(match.home_score)}"
+                                       placeholder="0"
+                                       min="0"
+                                       max="15"
+                                       ${isLocked ? 'disabled' : ''}>
+                            </div>
+                            <span>vs</span>
+                            <div class="score-control">
+                                <input type="number"
+                                       class="score-input admin-input"
+                                       id="away-${match.id}"
+                                       value="${getScoreValue(match.away_score)}"
+                                       placeholder="0"
+                                       min="0"
+                                       max="15"
+                                       ${isLocked ? 'disabled' : ''}>
+                            </div>
+                        </div>
+
+                        <div class="team">
+                            <span>${awayTeam}</span>
+                            <div class="flag-rounded">
+                                <img class="flag" src="${awayFlag}" alt="flag">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="match-status admin-status">
+                        <select class="status-select" id="status-${match.id}" ${isLocked ? 'disabled' : ''}>
+                            <option value="scheduled" ${match.status === 'scheduled' || match.status === 'pending' ? 'selected' : ''}>Pr&oacute;ximamente</option>
+                            <option value="live" ${match.status === 'live' ? 'selected' : ''}>En Vivo</option>
+                            <option value="finished" ${match.status === 'finished' ? 'selected' : ''}>Finalizado</option>
+                        </select>
+                        <button class="btn-save-match" data-match-id="${match.id}" ${isLocked ? 'disabled' : ''}>
+                            Guardar
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function initAccordions() {
+            document.querySelectorAll(".matches-group").forEach((group, index) => {
+                const btn = group.querySelector(".matches-group-header");
+                const content = group.querySelector(".matches-group-content");
+
+                if (!btn || !content) return;
+
+                if (index === 0) {
+                    group.classList.add("open");
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+
+                btn.addEventListener("click", () => {
+                    const isOpen = group.classList.contains("open");
+
+                    if (isOpen) {
+                        group.classList.remove("open");
+                        content.style.maxHeight = "0";
+                        content.style.padding = "0 12px";
+                    } else {
+                        group.classList.add("open");
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        content.style.padding = "16px";
+                    }
+                });
+            });
+        }
+
+        function renderMatches(matches) {
+            const container = document.getElementById("matches-container");
+            if (!container) return;
+
+            const grouped = groupMatchesByDay(matches);
+
+            container.innerHTML = Object.entries(grouped).map(([dayLabel, dayMatches], index) => {
+                const phaseName = dayMatches[0]?.phase?.name || "";
+                const journeyLabel = phaseName ? `Fecha ${index + 1} - ${phaseName}` : `Fecha ${index + 1}`;
+
+                return `
+                    <div class="matches-group" data-group-index="${index}">
+                        <button type="button" class="matches-group-header">
+                            <div class="accordion-info">
+                                <span class="journey">${journeyLabel}</span>
+                                <span class="date-label">${capitalize(dayLabel)}</span>
+                            </div>
+                            <div class="accordion-right">
+                                <div class="accordion-progress">
+                                    <span class="count">${dayMatches.length} partidos</span>
+                                </div>
+                                <svg class="accordion-arrow" viewBox="0 0 24 24">
+                                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </button>
+                        <div class="matches-group-content" style="max-height: 0; overflow: hidden;">
+                            ${dayMatches.map(match => renderMatchCard(match)).join("")}
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            setTimeout(() => {
+                initAccordions();
+                document.querySelectorAll(".btn-save-match").forEach(btn => {
+                    btn.addEventListener("click", () => saveMatchResult(btn.dataset.matchId));
+                });
+            }, 100);
+        }
+
+        async function saveMatchResult(matchId) {
+            const homeInput = document.getElementById(`home-${matchId}`);
+            const awayInput = document.getElementById(`away-${matchId}`);
+            const statusSelect = document.getElementById(`status-${matchId}`);
+
+            const homeScore = homeInput.value;
+            const awayScore = awayInput.value;
+            const status = statusSelect.value;
+
+            if (homeScore === "" || awayScore === "") {
+                alert("Ingresa los resultados para ambos equipos");
+                return;
+            }
+
+            const btn = document.querySelector(`.btn-save-match[data-match-id="${matchId}"]`);
+            btn.disabled = true;
+            btn.textContent = "Guardando...";
+
+            const { error } = await supabase
+                .from("matches")
+                .update({
+                    home_score: parseInt(homeScore),
+                    away_score: parseInt(awayScore),
+                    status: status
+                })
+                .eq("id", matchId);
+
+            if (error) {
+                alert("Error guardando: " + error.message);
+                btn.disabled = false;
+                btn.textContent = "Guardar";
+            } else {
+                const matchIndex = allMatches.findIndex(m => m.id === matchId);
+                if (matchIndex !== -1) {
+                    allMatches[matchIndex].home_score = parseInt(homeScore);
+                    allMatches[matchIndex].away_score = parseInt(awayScore);
+                    allMatches[matchIndex].status = status;
+                }
+
+                const card = document.querySelector(`.match-card[data-match-id="${matchId}"]`);
+                if (card) {
+                    const inputs = card.querySelectorAll(".admin-input");
+                    const statusSelectEl = card.querySelector(".status-select");
+                    if (status === "finished") {
+                        inputs.forEach(i => i.disabled = true);
+                        if (statusSelectEl) statusSelectEl.disabled = true;
+                        btn.disabled = true;
+                        btn.textContent = "✓ Finalizado";
+                    } else {
+                        inputs.forEach(i => i.disabled = false);
+                        if (statusSelectEl) statusSelectEl.disabled = false;
+                        btn.disabled = false;
+                        btn.textContent = "Guardar";
+                    }
+                    btn.classList.add("saved");
+                }
+
+                showSaveNotification();
+            }
+        }
+
+        function showSaveNotification() {
+            const notification = document.createElement("div");
+            notification.className = "save-notification";
+            notification.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                </svg>
+                Resultados guardados
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
+        }
+
+        async function processPoints() {
+            const btn = document.getElementById("processPointsBtn");
+            btn.disabled = true;
+            btn.textContent = "Procesando...";
+
+            const resultDiv = document.getElementById("processResult");
+            resultDiv.classList.remove("hidden");
+            resultDiv.innerHTML = '<p class="processing">⏳ Procesando puntos...</p>';
+
+            try {
+                await processFinishedMatches();
+                resultDiv.innerHTML = '<p class="success">✅ Puntos calculados correctamente</p>';
+                setTimeout(() => resultDiv.classList.add("hidden"), 3000);
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+
+            btn.disabled = false;
+            btn.textContent = "Procesar Puntos";
+        }
+
+        document.getElementById("processPointsBtn").addEventListener("click", processPoints);
+
+        loadNavbar();
+        loadFooter();
+
+        (async () => {
+            const isAdmin = await checkAdminAccess();
+            if (isAdmin) {
+                loadMatches();
+            }
+        })();
+    </script>
+</body>
+</html>

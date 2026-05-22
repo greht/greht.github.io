@@ -4,7 +4,8 @@ export async function createProfile(userId, username, country) {
   return await supabase.from("profiles").insert({
     user_id: userId,
     user_name: username,
-    country_code: country
+    country_code: country,
+    avatar_url: "avatar.png"
   })
 }
 

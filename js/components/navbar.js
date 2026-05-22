@@ -1,92 +1,63 @@
-import { getCurrentUser, getCurrentUserFromSupabase } from "/js/data/users.js";
-
-import { signOut } from "/js/services/auth.js"
+import { supabase } from "/config/supabase.js";
+import { signOut } from "/js/services/auth.js";
+import { getUserRank } from "/js/services/ranking.js";
 
 export async function loadNavbar() {
   const container = document.getElementById("navbarContainer");
 
   if (!container) return;
+  if (container.innerHTML.trim() !== "") return;
 
   try {
     const res = await fetch("/navbar.html");
-
     if (!res.ok) throw new Error("Navbar no encontrada");
-
     container.innerHTML = await res.text();
-    
-    // Render user info (async)
     await renderNavbarUser();
-
   } catch (err) {
     console.error("Navbar error:", err);
   }
 }
 
 export async function renderNavbarUser() {
-  // Intentar obtener usuario de Supabase primero
-  let user = await getCurrentUserFromSupabase();
-  
-  // Fallback a datos locales si no hay sesión
-  if (!user) {
-    user = getCurrentUser();
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
   const rankEl = document.getElementById("navRank");
   const pointsEl = document.getElementById("navPoints");
   const avatarEl = document.getElementById("navAvatar");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  console.log("Navbar render - user:", user);
+  setupDropdownEvents();
 
-  // 🔒 seguridad DOM (más robusto)
-  if (!rankEl || !pointsEl || !avatarEl) {
-    console.log("Missing required elements, returning early");
+  if (!user || !rankEl || !pointsEl || !avatarEl) {
+    if (rankEl) rankEl.textContent = "RANK #--";
+    if (pointsEl) pointsEl.textContent = "-- pts";
+    if (avatarEl) avatarEl.src = "/assets/images/avatar.png";
     return;
   }
 
-  // 👤 fallback consistente
-  if (!user) {
-    rankEl.textContent = "RANK #--";
-    pointsEl.textContent = "-- pts";
-    avatarEl.src = "/assets/images/default.png";
-    return;
+  const profile = await getProfileData(user.id);
+  const { rank } = await getUserRank(user.id);
+
+  if (profile?.role === "admin") {
+    const adminLink = document.getElementById("adminLink");
+    if (adminLink) adminLink.style.display = "block";
   }
 
-  // 📊 render
-  rankEl.textContent = `RANK #${user.rank || "--"}`;
-  pointsEl.textContent = `${user.points?.toLocaleString() || "0"} pts`;
+  rankEl.textContent = `RANK #${rank || "--"}`;
+  pointsEl.textContent = `${profile?.points?.toLocaleString() || "0"} pts`;
 
-  // Si es URL completa (http/https), usarla directamente, si no, buscar en assets
-  const avatarSrc = user.avatar?.startsWith('http') 
-    ? user.avatar 
-    : `/assets/images/${user.avatar}`;
-  
+  const avatarSrc = profile?.avatar_url
+    ? profile.avatar_url.startsWith('http')
+        ? profile.avatar_url
+        : `/assets/images/${profile.avatar_url}`
+    : `/assets/images/avatar.png`;
+
   avatarEl.src = avatarSrc;
   avatarEl.onerror = () => {
-    avatarEl.onerror = null; // prevent infinite loop
+    avatarEl.onerror = null;
     avatarEl.src = "/assets/images/avatar.png";
   };
 
-  // Setup dropdown click
-  const dropdownMenu = document.getElementById("dropdownMenu");
-  const userDropdown = document.getElementById("userDropdown");
-  
-  if (avatarEl && userDropdown && dropdownMenu) {
-    userDropdown.onclick = function(e) {
-      e.stopPropagation();
-      const current = dropdownMenu.style.display;
-      dropdownMenu.style.display = current === "none" ? "block" : "none";
-    };
-  }
-
-  // Cerrar dropdown al hacer click fuera
-  document.addEventListener("click", function(e) {
-    if (dropdownMenu && userDropdown && !userDropdown.contains(e.target)) {
-      dropdownMenu.style.display = "none";
-    }
-  });
-
-  // Logout
   if (logoutBtn) {
     logoutBtn.addEventListener("click", async function(e) {
       e.preventDefault();
@@ -94,5 +65,49 @@ export async function renderNavbarUser() {
       await signOut();
       window.location.href = "/login.html";
     });
+  }
+}
+
+function setupDropdownEvents() {
+  const dropdownMenu = document.getElementById("dropdownMenu");
+  const userDropdown = document.getElementById("userDropdown");
+
+  if (!userDropdown || !dropdownMenu) return;
+
+  userDropdown.onclick = function(e) {
+    e.stopPropagation();
+    userDropdown.classList.toggle("active");
+  };
+
+  document.addEventListener("click", function(e) {
+    if (!userDropdown.contains(e.target)) {
+      userDropdown.classList.remove("active");
+    }
+  });
+}
+
+async function getProfileData(userId) {
+  const { data } = await supabase
+    .from("profiles")
+    .select("points, avatar_url, role")
+    .eq("user_id", userId)
+    .single();
+  return data;
+}
+
+export async function loadFooter() {
+  const container = document.getElementById("footer");
+
+  if (!container) return;
+
+  try {
+    const res = await fetch("/footer.html");
+
+    if (!res.ok) throw new Error("Footer no encontrado");
+
+    container.innerHTML = await res.text();
+
+  } catch (err) {
+    console.error("Footer error:", err);
   }
 }

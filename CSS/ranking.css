@@ -35,20 +35,6 @@ body {
   flex-direction: column;
 }
 
-.navbar-secondary {
-  position: sticky;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 1000;
-
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.85);
-
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
 main {
   flex: 1;
   background: var(--color-bg-secondary-2);
@@ -446,7 +432,7 @@ main {
   border-radius: 8px;
   padding: 35px 40px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  margin-bottom:30px;
+  margin-bottom: 30px;
 }
 
 .table-header {
@@ -659,6 +645,7 @@ tbody tr.is-you {
 .table-wrapper {
   opacity: 1;
   transform: translateY(0);
+  width: 100%;
 }
 
 .table-wrapper.fade-out {
@@ -913,7 +900,8 @@ tbody tr.is-you {
   right: 0;
   margin: 0 auto;
 
-  width: min(900px, 92%);
+  width: 100%;
+  max-width: calc(100% - 80px);
 
   transform: translate(0);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
@@ -925,8 +913,8 @@ tbody tr.is-you {
   position: relative;
   left: 0;
   right: 0;
-  width: min(900px, 92%);
-  margin: 0px auto 0 auto;
+  width: auto;
+  margin: 10px 0 0 0;
 
   transform: translateY(10px) scale(0.98);
   animation: settle 0.35s ease;
@@ -962,16 +950,59 @@ tbody tr.is-you {
 
 .sticky-row-top {
   display: grid;
-  grid-template-columns: auto auto 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
   align-items: center;
   justify-items: center;
   gap: 16px;
   width: 100%;
+  box-sizing: border-box;
+}
+
+.sticky-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sticky-flag-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.user-sticky-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  justify-self: end;
+}
+
+.user-sticky-flag {
+  width: 28px;
+  height: 20px;
+  border-radius: 3px;
+  justify-self: start;
+}
+
+.user-sticky-rank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.user-sticky-points {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  line-height: 1.1;
 }
 
 .user-sticky-message {
-  max-width: 100%;
-  width: auto;
   text-align: center;
   align-self: center;
   font-size: 18px;
@@ -983,6 +1014,7 @@ tbody tr.is-you {
   font-weight: 700;
   color: var(--color-bg);
   margin-top: 10px;
+  width: 100%;
 }
 
 .user-sticky-progress {
@@ -993,11 +1025,7 @@ tbody tr.is-you {
   box-sizing: border-box;
 }
 
-.user-sticky-rank {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
+
 
 .user-sticky-rank-main,
 .user-sticky-points-main {
@@ -1028,12 +1056,6 @@ tbody tr.is-you {
   font-weight: 600;
 }
 
-.user-sticky-points {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
 .user-sticky-points-main {
   font-weight: 600;
   color: var(--color-bg);
@@ -1046,18 +1068,3 @@ tbody tr.is-you {
   font-weight: 600;
 }
 
-.user-sticky-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  justify-self: center;
-  margin-left: 90px;
-}
-
-.user-sticky-flag {
-  width: 28px;
-  height: 20px;
-  border-radius: 3px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-  justify-self: center;
-}

@@ -1,273 +1,262 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ranking - Predictilab</title>
 
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/ranking.css">
-
-</head>
-<body>
-
+    <link rel="stylesheet" href="CSS/styles.css" />
+    <link rel="stylesheet" href="CSS/ranking.css" />
+    <link rel="stylesheet" href="CSS/footer.css" />
+  </head>
+  <body>
     <header class="navbar-secondary">
-        <div class="navbar-left">
-            <img class="logo-icon" src="assets/images//Fondo-oscuro.svg" alt="Logo PredictiLab">
-            <span class="logo1-text">PredictiLab</span>
-        </div>
+      <div class="navbar-left">
+        <img
+          class="logo-icon"
+          src="assets/images//Fondo-oscuro.svg"
+          alt="Logo PredictiLab"
+        />
+        <span class="logo1-text">PredictiLab</span>
+      </div>
 
-        <nav class="navbar-center">
+      <nav class="navbar-center">
         <a href="dashboard.html">Inicio</a>
         <a href="predictions.html">Torneos</a>
-        <!-- <a href="#">Mis Grupos</a> -->
         <a href="ranking.html" class="active">Ranking</a>
-        </nav>
+      </nav>
 
-        <div id="navbarContainer" class="navbar-right"></div>
+      <div id="navbarContainer" class="navbar-right"></div>
     </header>
-    
+
     <main class="ranking-container">
+      <section class="ranking-header">
+        <div class="ranking-header-left">
+          <h1>Ranking de jugadores</h1>
+          <p>Tabla de posiciones y puntuaciones</p>
+        </div>
 
+        <div class="ranking-header-right">
+          <div class="user-position">
+            <span class="subtitle-text">Tu posición ⭐</span>
+            <div class="user-stats">
+              <div class="stat stat-position">
+                <strong id="headerPosition"></strong>
+                <span>Posición</span>
+              </div>
 
-        <section class="ranking-header">
-            <div class="ranking-header-left">
-                <h1>Ranking de jugadores</h1>
-                <p>Tabla de posiciones y puntuaciones</p>
+              <div class="stat stat-points">
+                <strong id="headerPoints"></strong>
+                <span>Puntos</span>
+              </div>
+
+              <div class="stat stat-week">
+                <strong id="headerWeek"></strong>
+                <span>Semana</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ranking-podium">
+        <div class="rank-card second">
+          <div class="top-line"></div>
+
+          <div class="avatar-wrapper">
+            <img
+              src="assets/images/avatar.png"
+              alt="second-position"
+              class="rank-card-avatar"
+            />
+            <span class="rank-badge">2</span>
+          </div>
+
+          <div class="name-wrapper">
+            <img
+              src="assets/images/flag-usaV2.svg"
+              alt="flag-user"
+              class="flag"
+            />
+            <span class="name">Nombre Puesto 2</span>
+          </div>
+
+          <div class="stats-card-ranking">
+            <div class="stats-title">
+              <span class="stat-successes">150</span>
+              <span class="stat-cards-title">Aciertos</span>
             </div>
 
-            <div class="ranking-header-right">
-                <div class="user-position">
-                    <span class="subtitle-text">Tu posición ⭐</span>
-                    <div class="user-stats">
-                        <div class="stat stat-position">
-                            <strong id="headerPosition"></strong>
-                            <span>Posición</span>
-                        </div>
-
-                        <div class="stat stat-points">
-                            <strong id="headerPoints"></strong>
-                            <span>Puntos</span>
-                        </div>
-
-                        <div class="stat stat-week">
-                            <strong id="headerWeek"></strong>
-                            <span>Semana</span>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </section>
-
-
-        <section class="ranking-podium">
-
-            <div class="rank-card second">
-                <div class="top-line"></div>
-
-                <div class="avatar-wrapper">
-                    <img src="assets/images/avatar.png" alt="second-position" class="rank-card-avatar">
-                    <span class="rank-badge">2</span>
-                </div>
-
-                <div class="name-wrapper">
-                    <img src="assets/images/flag-usaV2.svg" alt="flag-user" class="flag">
-                    <span class="name">Nombre Puesto 2</span>
-                </div>
-
-                <div class="stats-card-ranking">
-                    <div class="stats-title">
-                        <span class="stat-successes">150</span>
-                        <span class="stat-cards-title">Aciertos</span>
-                    </div>
-
-                    <div class="stats-title">
-                        <span class="stats-result">2980</span>
-                        <span class="stat-cards-title">Puntos</span>
-                    </div>
-                    
-                    <div class="stats-title">
-                        <span class="stat-pos">+8</span>
-                        <span class="stat-cards-title">Semana</span>
-                    </div>
-                    
-                </div>
+            <div class="stats-title">
+              <span class="stats-result">2980</span>
+              <span class="stat-cards-title">Puntos</span>
             </div>
 
-            <div class="rank-card first">
-                <div class="top-line"></div>
+            <div class="stats-title">
+              <span class="stat-pos">+8</span>
+              <span class="stat-cards-title">Semana</span>
+            </div>
+          </div>
+        </div>
 
-                <div class="avatar-wrapper">
-                    <img src="assets/images/avatar.png" alt="first-position" class="rank-card-avatar">
-                    <span class="rank-badge">1</span>
-                </div>
+        <div class="rank-card first">
+          <div class="top-line"></div>
 
-                <div class="name-wrapper">
-                    <img src="assets/images/flag-usaV2.svg" alt="flag-user" class="flag">
-                    <span class="name">Nombre Puesto 1</span>
-                </div>
+          <div class="avatar-wrapper">
+            <img
+              src="assets/images/avatar.png"
+              alt="first-position"
+              class="rank-card-avatar"
+            />
+            <span class="rank-badge">1</span>
+          </div>
 
-                <div class="stats-card-ranking">
-                    <div class="stats-title">
-                        <span class="stat-successes">162</span>
-                        <span class="stat-cards-title">Aciertos</span>
-                    </div>
+          <div class="name-wrapper">
+            <img
+              src="assets/images/flag-usaV2.svg"
+              alt="flag-user"
+              class="flag"
+            />
+            <span class="name">Nombre Puesto 1</span>
+          </div>
 
-                    <div class="stats-title">
-                        <span class="stats-result">3120</span>
-                        <span class="stat-cards-title">Puntos</span>
-                    </div>
-                    
-                    <div class="stats-title">
-                        <span class="stat-pos">+12</span>
-                        <span class="stat-cards-title">Semana</span>
-                    </div>
-                    
-                </div>
+          <div class="stats-card-ranking">
+            <div class="stats-title">
+              <span class="stat-successes">162</span>
+              <span class="stat-cards-title">Aciertos</span>
             </div>
 
-            <div class="rank-card third">
-                <div class="top-line"></div>
-
-                <div class="avatar-wrapper">
-                    <img src="assets/images/avatar.png" alt="third-position" class="rank-card-avatar">
-                    <span class="rank-badge">3</span>
-                </div>
-                
-                <div class="name-wrapper">
-                    <img src="assets/images/flag-usaV2.svg" alt="flag-user" class="flag">
-                    <span class="name">Nombre Puesto 3</span>
-                </div>
-    
-                <div class="stats-card-ranking">
-                    <div class="stats-title">
-                        <span class="stat-successes">120</span>
-                        <span class="stat-cards-title">Aciertos</span>
-                    </div>
-
-                    <div class="stats-title">
-                        <span class="stats-result">2710</span>
-                        <span class="stat-cards-title">Puntos</span>
-                    </div>
-                    
-                    <div class="stats-title">
-                        <span class="stat-pos">+1</span>
-                        <span class="stat-cards-title">Semana</span>
-                    </div>
-                    
-                </div>
-
+            <div class="stats-title">
+              <span class="stats-result">3120</span>
+              <span class="stat-cards-title">Puntos</span>
             </div>
 
-        </section>
+            <div class="stats-title">
+              <span class="stat-pos">+12</span>
+              <span class="stat-cards-title">Semana</span>
+            </div>
+          </div>
+        </div>
 
+        <div class="rank-card third">
+          <div class="top-line"></div>
 
-        <section class="ranking-table">
+          <div class="avatar-wrapper">
+            <img
+              src="assets/images/avatar.png"
+              alt="third-position"
+              class="rank-card-avatar"
+            />
+            <span class="rank-badge">3</span>
+          </div>
 
-            <div class="table-header">
-                <h3>Clasificación mundial</h3>
-                <select id="countryFilter">
-                    <option value="global">Global</option>
-                </select>
+          <div class="name-wrapper">
+            <img
+              src="assets/images/flag-usaV2.svg"
+              alt="flag-user"
+              class="flag"
+            />
+            <span class="name">Nombre Puesto 3</span>
+          </div>
+
+          <div class="stats-card-ranking">
+            <div class="stats-title">
+              <span class="stat-successes">120</span>
+              <span class="stat-cards-title">Aciertos</span>
             </div>
 
-
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Usuario</th>
-                            <th>País</th>
-                            <th>Predicciones correctas</th>
-                            <th>Puntos</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="ranking-body"></tbody>
-                </table>
+            <div class="stats-title">
+              <span class="stats-result">2710</span>
+              <span class="stat-cards-title">Puntos</span>
             </div>
 
-            <div id="userStickyCard" class="user-sticky-card">
+            <div class="stats-title">
+              <span class="stat-pos">+1</span>
+              <span class="stat-cards-title">Semana</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-                <div class="sticky-row-top">
-                    <img id="stickyAvatar" class="user-sticky-avatar" alt=""/>
-                    <img id="stickyFlag" class="user-sticky-flag" alt="" />
+      <section class="ranking-table">
+        <div class="table-header">
+          <h3>Clasificación mundial</h3>
+          <select id="countryFilter">
+            <option value="global">Global</option>
+          </select>
+        </div>
 
-                    <div class="user-sticky-rank">
-                        <div id="stickyRankMain" class="user-sticky-rank-main"></div>
-                        <div id="stickyRankSub" class="user-sticky-rank-sub"></div>
-                    </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Usuario</th>
+                <th>País</th>
+                <th>Predicciones correctas</th>
+                <th>Puntos</th>
+              </tr>
+            </thead>
 
-                    <div class="user-sticky-points">
-                        <div id="stickyPointsMain" class="user-sticky-points-main"></div>
-                        <div id="stickyPointsSub" class="user-sticky-points-sub"></div>
-                    </div>
-                </div>
+            <tbody id="ranking-body"></tbody>
+          </table>
+        </div>
 
-                <div id="stickyMessage" class="user-sticky-message"></div>
-
+        <div id="userStickyCard" class="user-sticky-card">
+          <div class="sticky-row-top">
+            <div class="sticky-avatar-container">
+              <img id="stickyAvatar" class="user-sticky-avatar" alt="" />
             </div>
 
-            <div class="pagination">
-
-                <select id="rowsPerPageSelect">
-                    <option value="10">10 por página</option>
-                    <option value="30">30 por página</option>
-                    <option value="50">50 por página</option>
-                </select>
-
-                <div class="pagination-wrapper">
-
-                    <button class="btn-page prev">
-                        <svg class="icon-pag">
-                            <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
-                        </svg>
-                    </button>
-
-                    <div class="pages"></div>
-
-                    <button class="btn-page next">
-                        <svg class="icon-pag">
-                            <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
-                        </svg>
-                    </button>
-
-                </div>
-
-                <div class="pagination-info"></div>
-
+            <div class="sticky-flag-container">
+              <img id="stickyFlag" class="user-sticky-flag" alt="" />
             </div>
 
-        </section>
+            <div class="user-sticky-rank">
+              <div id="stickyRankMain" class="user-sticky-rank-main"></div>
+              <div id="stickyRankSub" class="user-sticky-rank-sub"></div>
+            </div>
 
+            <div class="user-sticky-points">
+              <div id="stickyPointsMain" class="user-sticky-points-main"></div>
+              <div id="stickyPointsSub" class="user-sticky-points-sub"></div>
+            </div>
+          </div>
 
+          <div id="stickyMessage" class="user-sticky-message"></div>
+        </div>
 
+        <div class="pagination">
+          <select id="rowsPerPageSelect">
+            <option value="10">10 por página</option>
+            <option value="30">30 por página</option>
+            <option value="50">50 por página</option>
+          </select>
+
+          <div class="pagination-wrapper">
+            <button class="btn-page prev">
+              <svg class="icon-pag">
+                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
+              </svg>
+            </button>
+
+            <div class="pages"></div>
+
+            <button class="btn-page next">
+              <svg class="icon-pag">
+                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
+              </svg>
+            </button>
+          </div>
+
+          <div class="pagination-info"></div>
+        </div>
+      </section>
     </main>
 
-    
-    <footer class="footer-system">
-        <div class="footer-container">
-
-            <div class="footer-left">
-            <span class="logo-text">PredictiLab.com</span>
-            </div>
-
-            <div class="footer-center">
-            <a href="#">Políticas de privacidad</a>
-            <a href="#">Términos del servicio</a>
-            <a href="#">Contáctanos</a>
-            </div>
-
-            <div class="footer-right">
-            <span>© 2026 PredictiLab - Greht Fernández</span>
-            </div>
-
-        </div>
-    </footer>
+    <footer id="footer" class="footer-system"></footer>
 
     <script type="module" src="/js/app/init.js"></script>
     <script type="module" src="/js/pages/ranking.js"></script>
-</body>
+  </body>
 </html>

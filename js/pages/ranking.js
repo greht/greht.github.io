@@ -1,23 +1,33 @@
 import { loadNavbar, renderNavbarUser } from "/js/components/navbar.js";
+import { supabase } from "/config/supabase.js";
 import { renderTable } from "/js/modules/ranking/table.js";
 import { renderPodium } from "/js/modules/ranking/podium.js";
 import { renderHeaderStats } from "/js/modules/ranking/headerStats.js";
-import { initPagination, getState, setPage, updatePaginationButtons, resetPagination, setFilter } from "/js/modules/ranking/pagination.js";
+import { initPagination, getState, setPage, updatePaginationButtons, resetPagination, setFilter, setUsers } from "/js/modules/ranking/pagination.js";
 import { renderUserStickyCard } from "/js/modules/ranking/userStickyCard.js";
 import { renderPaginationUI } from "/js/modules/ranking/paginationUI.js";
-import { getCountries, getUsersByCountry } from "/js/data/users.js";
+import { getAllUsers } from "/js/services/ranking.js";
 
 let currentFilter = "global";
 
 async function renderAll() {
+  let users = [];
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (currentFilter === "global") {
+    users = await getAllUsers();
+    setUsers(users);
+  }
+
   const state = getState(currentFilter);
+  state.currentUserId = user?.id;
 
   renderTable(state, currentFilter);
-  renderPodium(currentFilter);
+  renderPodium(currentFilter, users);
   await renderHeaderStats();
   await renderNavbarUser();
 
-  await renderUserStickyCard(state);
+  await renderUserStickyCard({ ...state, usersPage: users });
 
   renderPaginationUI(state, (page) => {
     setPage(page);
@@ -31,22 +41,18 @@ function loadCountryFilter() {
   const select = document.getElementById("countryFilter");
   if (!select) return;
 
-  // Add "País" separator option
+  select.innerHTML = "";
+
   const separator = document.createElement("option");
   separator.value = "";
   separator.textContent = "────────────";
   separator.disabled = true;
   select.appendChild(separator);
 
-  // Sort countries alphabetically
-  const countries = getCountries().sort((a, b) => a.name.localeCompare(b.name));
-  
-  countries.forEach(({ code, name }) => {
-    const option = document.createElement("option");
-    option.value = code;
-    option.textContent = name;
-    select.appendChild(option);
-  });
+  const globalOption = document.createElement("option");
+  globalOption.value = "global";
+  globalOption.textContent = "🌍 Todos los países";
+  select.appendChild(globalOption);
 
   select.addEventListener("change", (e) => {
     currentFilter = e.target.value;

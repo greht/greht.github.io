@@ -123,7 +123,6 @@ if (!profile) {
     return null;
   }
 
-  console.log("Profile from Supabase:", profile);
 
   return {
     id: profile.user_id,

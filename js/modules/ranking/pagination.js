@@ -1,39 +1,27 @@
-import { getProcessedUsers, getUsersByCountry } from "/js/data/users.js";
-
 let currentPage = 1;
 let rowsPerPage = 10;
 let currentFilter = "global";
+let allUsers = [];
 
 export function setFilter(filter) {
     currentFilter = filter;
+}
+
+export function setUsers(users) {
+    allUsers = users;
 }
 
 export function getState(filterCountry = "global") {
     if (filterCountry !== "global") {
         currentFilter = filterCountry;
     }
-    
-    let allUsers = filterCountry === "global" 
-        ? getProcessedUsers() 
-        : getUsersByCountry(filterCountry);
 
-    // Recalcular rank para país (empezar desde 1)
-    if (filterCountry !== "global") {
-        allUsers = allUsers.map((user, index) => ({
-            ...user,
-            rank: index + 1
-        }));
-        
-        // Para país, excluir podium (rank 1-3) de la tabla
-        allUsers = allUsers.filter(u => u.rank > 3);
-    } else {
-        // Para global, excluir podium (rank 1-3)
-        allUsers = allUsers.filter(u => u.rank > 3);
-    }
+    let users = allUsers;
 
-    const users = allUsers;
+    // Excluir podium (primeros 3) de la tabla
+    const tableUsers = users.slice(3);
 
-    const totalPages = Math.max(1, Math.ceil(users.length / rowsPerPage));
+    const totalPages = Math.max(1, Math.ceil(tableUsers.length / rowsPerPage));
 
     const start = (currentPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
@@ -42,14 +30,14 @@ export function getState(filterCountry = "global") {
         currentPage,
         rowsPerPage,
         totalPages,
-        usersPage: users.slice(start, end),
-        totalUsers: users.length,
+        usersPage: tableUsers.slice(start, end),
+        totalUsers: tableUsers.length,
         filterCountry
     };
 }
 
-export function nextPage(filterCountry = "global") {
-    const state = getState(filterCountry);
+export function nextPage() {
+    const state = getState();
     if (currentPage < state.totalPages) currentPage++;
 }
 
@@ -74,20 +62,20 @@ export function initPagination(onChange) {
 
     document.querySelector(".btn-page.next")
         ?.addEventListener("click", () => {
-            nextPage(currentFilter);
-            onChange(getState(currentFilter));
+            nextPage();
+            onChange(getState());
         });
 
     document.querySelector(".btn-page.prev")
         ?.addEventListener("click", () => {
             prevPage();
-            onChange(getState(currentFilter));
+            onChange(getState());
         });
 
     document.getElementById("rowsPerPageSelect")
         ?.addEventListener("change", (e) => {
             setRowsPerPage(Number(e.target.value));
-            onChange(getState(currentFilter));
+            onChange(getState());
         });
 }
 

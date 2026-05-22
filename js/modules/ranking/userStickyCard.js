@@ -1,102 +1,62 @@
-import { getCurrentUser, getCurrentUserFromSupabase, currentUserId } from "/js/data/users.js";
+import { supabase } from "/config/supabase.js";
 
 function randomMessage(messages) {
     return messages[Math.floor(Math.random() * messages.length)];
 }
 
-export async function renderUserStickyCard(state) {
+function syncStickyCardWidth() {
+    const table = document.querySelector(".table-wrapper");
+    const sticky = document.getElementById("userStickyCard");
 
+    if (!table || !sticky) return;
+
+    const tableWidth = table.offsetWidth;
+    sticky.style.width = `${tableWidth}px`;
+}
+
+export async function renderUserStickyCard(state) {
     const container = document.getElementById("userStickyCard");
     if (!container) return;
 
-    const rankMainEl = document.getElementById("stickyRankMain");
-    const rankSubEl = document.getElementById("stickyRankSub");
+    syncStickyCardWidth();
 
-    const pointsMainEl = document.getElementById("stickyPointsMain");
-    const pointsSubEl = document.getElementById("stickyPointsSub");
+    window.addEventListener("resize", syncStickyCardWidth);
 
-    const messageEl = document.getElementById("stickyMessage");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-    const progressFill = document.getElementById("progressFill");
-    const progressText = document.getElementById("progressText");
-
-    const avatarEl = document.getElementById("stickyAvatar");
-    const flagEl = document.getElementById("stickyFlag");
-
-    // Obtener usuario de Supabase primero
-    let user = await getCurrentUserFromSupabase();
-    console.log("Sticky - User from Supabase:", user);
-    
-    // Fallback a datos locales
     const users = state?.usersPage || [];
-    if (!user) {
-        user = users.find(u => u.id === currentUserId) || getCurrentUser();
-    }
-    console.log("Sticky - User final:", user);
 
-    // Si aún no hay usuario, no mostrar sticky
-    if (!user) {
-        console.log("Sticky - No user, returning");
-        return;
-    }
+    const profile = users.find(u => u.user_id === user.id);
+    const points = profile?.points || 0;
+    const userName = profile?.user_name || user.email;
+    const avatarUrl = profile?.avatar_url
+        ? `/assets/images/${profile.avatar_url}`
+        : "/assets/images/avatar.png";
+    const countryCode = profile?.country_code || "";
 
-    const prev = JSON.parse(sessionStorage.getItem("sticky_prev")) || null;
-
-    // 🛑 safety - solo verificar que existe usuario
-    if (!user) {
-        console.log("Sticky - No user, returning");
-        return;
-    }
-
-    // ==============================
-    // VISIBILIDAD
-    // ==============================
-    const row = document.querySelector("tr.is-you");
-
-    const isVisible = row
-        ? (row.getBoundingClientRect().top < window.innerHeight &&
-            row.getBoundingClientRect().bottom > 0)
-        : false;
-
-    container.classList.toggle("in-table-view", isVisible);
-    container.classList.toggle("floating", !isVisible);
-
-    // 🖼 avatar - si es URL completa usarla, si no buscar en assets
-    if (avatarEl && user.avatar) {
-        const avatarSrc = user.avatar.startsWith('http') 
-            ? user.avatar 
-            : `assets/images/${user.avatar}`;
-        avatarEl.src = avatarSrc;
-    }
-
-    // 🖼 bandera
-    if (flagEl && user.country) {
-        flagEl.src = `https://flagcdn.com/w40/${user.country.toLowerCase()}.png`;
-        flagEl.title = user.countryName || user.country;
-    }
-
-    const rank = user?.rank || 0;
-    const points = user?.points || 0;
+    const rankIndex = users.findIndex(u => u.user_id === user.id);
+    const rank = rankIndex >= 0 ? rankIndex + 4 : null;
 
     const top1 = users[0];
     const top3 = users[2];
-    const nextUser = rank > 0 ? users.find(u => u.rank === rank - 1) : null;
+    const nextUser = rank > 1 ? users[rank - 2] : null;
 
-    // 📊 PROGRESO
+    const rankMainEl = document.getElementById("stickyRankMain");
+    const rankSubEl = document.getElementById("stickyRankSub");
+    const pointsMainEl = document.getElementById("stickyPointsMain");
+    const pointsSubEl = document.getElementById("stickyPointsSub");
+    const messageEl = document.getElementById("stickyMessage");
+    const avatarEl = document.getElementById("stickyAvatar");
+    const flagEl = document.getElementById("stickyFlag");
+
     const top10 = users.slice(0, 10);
     const top10MinPoints = top10?.[top10.length - 1]?.points || 1;
 
-    let progress = Math.min((points / top10MinPoints) * 100, 100);
+    let progress = top10MinPoints > 0 ? Math.min((points / top10MinPoints) * 100, 100) : 0;
     progress = progress.toFixed(0);
 
-    if (progressFill) progressFill.style.width = `${progress}%`;
-    if (progressText) {
-        progressText.textContent = `Progreso hacia Top 10 (${progress}%)`;
-    }
-
-    // 💬 MENSAJES (nuevo cada vez que se refresca)
     let baseMessage = "";
-    let movementMessage = "";
 
     if (rank === 1) {
         baseMessage = randomMessage([
@@ -111,13 +71,10 @@ export async function renderUserStickyCard(state) {
             "💎 Estás en otro nivel ahora mismo",
             "🚀 Dominio total del ranking",
             "👑 El trono es tuyo… por ahora",
-"🔥 La presión está en ti, no en ellos"
+            "🔥 La presión está en ti, no en ellos"
         ]);
-        }
-    else if (rank <= 3) {
-
-        const diffTop1 = top1?.points - points;
-
+    } else if (rank <= 3) {
+        const diffTop1 = (top1?.points || 0) - points;
         baseMessage = randomMessage([
             `🔥 A ${diffTop1.toLocaleString()} pts del #1`,
             "🏆 Estás dentro del podio",
@@ -132,15 +89,12 @@ export async function renderUserStickyCard(state) {
             "🔥 El primer lugar te está mirando",
             "🏁 La carrera sigue abierta"
         ]);
-        }
-    else if (rank <= 10) {
-
-        const diffPodium = top3?.points - points;
-
+    } else if (rank <= 10) {
+        const diffPodium = (top3?.points || 0) - points;
         baseMessage = randomMessage([
             `🚀 Te faltan ${diffPodium.toLocaleString()} pts para entrar al podio`,
             "🔥 El Top 3 está cada vez más cerca",
-            "⚡ Una buena jornada lo cambia todo",
+            "⚡ Una buena fecha lo cambia todo",
             "🏆 Estás compitiendo con los mejores",
             "🚀 Estás en zona de élite",
             "🔥 El podio está a tu alcance",
@@ -151,16 +105,13 @@ export async function renderUserStickyCard(state) {
             "🎯 Estás en la pelea seria",
             "🔥 No bajes el ritmo ahora"
         ]);
-    }
-    else if (rank <= 20 && nextUser) {
-
+    } else if (rank <= 20 && nextUser) {
         const diffNext = nextUser.points - points;
-
         baseMessage = randomMessage([
-            `⚡ Estás a ${diffNext} pts de superar a ${nextUser.name}`,
+            `⚡ Estás a ${diffNext} pts de superar a ${nextUser.user_name || 'otro'}`,
             "🔥 Vas subiendo poco a poco",
             "💪 Mantén el ritmo",
-            "🚀 Cada jornada puede hacerte subir",
+            "🚀 Cada fecha puede hacerte subir",
             "💪 Estás escalando posiciones",
             "🚀 El top 10 no está tan lejos",
             "⚡ Cada acierto te impulsa",
@@ -168,10 +119,9 @@ export async function renderUserStickyCard(state) {
             "📊 Estás en zona de crecimiento",
             "🎯 Un buen sprint te hace subir rápido",
             "💪 Sigue así, estás avanzando",
-            "🚀 El ranking se está moviendo a tu favor",
+            "🚀 El ranking se está moviendo a tu favor"
         ]);
-    }
-    else {
+    } else {
         baseMessage = randomMessage([
             "💪 No te desanimes. Cada predicción puede cambiar el ranking",
             "🔥 Sigue jugando y escala posiciones",
@@ -184,23 +134,23 @@ export async function renderUserStickyCard(state) {
             "📊 Estás construyendo tu progreso",
             "🎯 El primer paso ya lo diste",
             "🔥 La consistencia te va a subir",
-            "💡 Todos empezaron desde abajo",
+            "💡 Todos empezaron desde abajo"
         ]);
-        }
+    }
 
-    const finalMessage =
-        movementMessage && baseMessage
-            ? `${movementMessage} • ${baseMessage}`
-            : baseMessage;
+    if (avatarEl) avatarEl.src = avatarUrl;
+    if (flagEl && countryCode) {
+        flagEl.src = `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
+        flagEl.title = countryCode;
+    }
 
-    // 🎯 render
-    if (rankMainEl) rankMainEl.textContent = `#${rank}`;
+    if (rankMainEl) rankMainEl.textContent = `#${rank || '--'}`;
     if (rankSubEl) rankSubEl.textContent = `Tu posición actual`;
 
     if (pointsMainEl) pointsMainEl.textContent = `${points.toLocaleString()} pts`;
     if (pointsSubEl) pointsSubEl.textContent = `Puntos acumulados`;
 
-    if (messageEl) messageEl.textContent = finalMessage;
+    if (messageEl) messageEl.textContent = baseMessage;
 
     container.classList.remove("hidden");
 }

@@ -30,7 +30,7 @@ export async function getPredictions(userId) {
 
     const { data, error } = await supabase
         .from("predictions")
-        .select("*")
+        .select("*, points_earned, is_exact")
         .eq("user_id", userId)
 
     if (error) {

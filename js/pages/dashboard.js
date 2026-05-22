@@ -1,27 +1,32 @@
 import { loadNavbar, renderNavbarUser } from "/js/components/navbar.js"
-import { getCurrentUser, getCurrentUserFromSupabase } from "/js/data/users.js"
-import { getProcessedUsers } from "/js/data/users.js"
+import { supabase } from "/config/supabase.js"
+import { getUserRank } from "/js/services/ranking.js"
+import { getPredictions } from "/js/services/predictions.js"
 
 document.addEventListener("DOMContentLoaded", async () => {
 
     await loadNavbar()
     await renderNavbarUser()
-    
-    // Obtener usuario de Supabase
-    let currentUser = await getCurrentUserFromSupabase();
-    
-    // Fallback a datos locales
-    if (!currentUser) {
-        currentUser = getCurrentUser();
-    }
-    
-    if (currentUser) {
-        document.getElementById("userName").textContent = currentUser.name
-        document.getElementById("position").textContent = `#${currentUser.rank || "--"}`
-        document.getElementById("predictions").textContent = currentUser.correct || "0"
-        document.getElementById("correct").textContent = currentUser.correct || "0"
-        document.getElementById("points").textContent = currentUser.points || "0"
-    } else {
-        document.getElementById("userName").textContent = "Invitado"
-    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const profile = await getProfileData(user.id)
+    const { rank } = await getUserRank(user.id)
+    const predictions = await getPredictions(user.id)
+
+    document.getElementById("userName").textContent = profile?.user_name || user.email
+    document.getElementById("position").textContent = `#${rank || "--"}`
+    document.getElementById("predictions").textContent = predictions?.length || 0
+    document.getElementById("correct").textContent = "--"
+    document.getElementById("points").textContent = profile?.points?.toLocaleString() || "0"
 })
+
+async function getProfileData(userId) {
+    const { data } = await supabase
+        .from("profiles")
+        .select("user_name, points")
+        .eq("user_id", userId)
+        .single()
+    return data
+}

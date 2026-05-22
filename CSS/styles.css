@@ -119,8 +119,15 @@ button {
   align-items: center;
   justify-content: space-between;
 
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+
+  backdrop-filter: blur(10px);
   padding: 16px 40px;
-  background: var(--color-bg);
+  background: rgba(255, 255, 255, 0.85);
   border-bottom: 1px solid var(--color-line-navbar-secondary);
 }
 
@@ -211,12 +218,15 @@ button {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 180px;
+  height: 40px;
 }
 
 .user-rank {
   display: flex;
   flex-direction: column;
   text-align: right;
+  min-width: 70px;
 }
 
 .rank {
@@ -224,6 +234,7 @@ button {
   color: var(--color-text-secundary);
   font-weight: 600;
   padding-bottom: 3px;
+  min-width: 60px;
 }
 
 .points {
@@ -239,6 +250,7 @@ button {
   border-radius: 50%;
   object-fit: cover;
   cursor: pointer;
+  background: #ccc;
 }
 
 .user-dropdown {

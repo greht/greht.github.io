@@ -1,249 +1,163 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title>Predicciones - PredictiLab</title>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Predicciones - PredictiLab</title>
 
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/predictions.css">
-</head>
+    <link rel="stylesheet" href="CSS/styles.css" />
+    <link rel="stylesheet" href="CSS/predictions.css" />
+    <link rel="stylesheet" href="CSS/footer.css" />
+  </head>
 
-<body>
-
+  <body>
     <header class="navbar-secondary">
-        <div class="navbar-left">
-            <img class="logo-icon" src="assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab">
-            <span class="logo1-text">PredictiLab</span>
-        </div>
+      <div class="navbar-left">
+        <img
+          class="logo-icon"
+          src="assets/images/Fondo-oscuro.svg"
+          alt="Logo PredictiLab"
+        />
+        <span class="logo1-text">PredictiLab</span>
+      </div>
 
-        <nav class="navbar-center">
+      <nav class="navbar-center">
         <a href="dashboard.html">Inicio</a>
         <a href="predictions.html" class="active">Torneos</a>
         <a href="ranking.html">Ranking</a>
-        </nav>
+      </nav>
 
-        <div id="navbarContainer" class="navbar-right"></div>
+      <div id="navbarContainer" class="navbar-right"></div>
     </header>
 
     <main class="predictions-container">
+      <section class="header-section">
+        <h1>Tus predicciones</h1>
+        <p>
+          Envía tus pronósticos antes de que termine la cuenta atrás y suma
+          puntos
+        </p>
+      </section>
 
-        <section class="header-section">
-            <h1>Tus predicciones</h1>
-            <p>Envía tus pronósticos antes de que termine la cuenta atrás y suma puntos</p>
-        </section>
+      <section class="stats">
+        <div class="stat-card">
+          <div class="stat-card-left1">
+            <svg class="stat-card-icon1">
+              <use href="assets/icons/icons.svg#icon-predict"></use>
+            </svg>
+          </div>
+          <div class="stat-card-right">
+            <span>Predicciones enviadas</span>
+            <strong id="stat-predictions">0 / 0</strong>
+          </div>
+        </div>
 
-        <section class="stats">
-            <div class="stat-card">
-                <div class="stat-card-left1">
-                    <svg class="stat-card-icon1">
-                        <use href="assets/icons/icons.svg#icon-predict"></use>
-                    </svg>
-                </div>
-                <div class="stat-card-right">
-                    <span>Predicciones enviadas</span>
-                    <strong>24 / 32</strong>
-                </div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-card-left2">
+            <svg class="stat-card-icon2">
+              <use href="assets/icons/icons.svg#icon-check"></use>
+            </svg>
+          </div>
+          <div class="stat-card-right">
+            <span>Resultados exactos</span>
+            <strong id="stat-exact">0</strong>
+          </div>
+        </div>
 
-            <div class="stat-card">
-                <div class="stat-card-left2">
-                    <svg class="stat-card-icon2">
-                        <use href="assets/icons/icons.svg#icon-check"></use>
-                    </svg>
-                </div>
-                <div class="stat-card-right">
-                    <span>Resultados exactos</span>
-                    <strong>5</strong>
-                </div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-card-left3">
+            <svg class="stat-card-icon3">
+              <use href="assets/icons/icons.svg#icon-star"></use>
+            </svg>
+          </div>
+          <div class="stat-card-right">
+            <span>Tu posición</span>
+            <strong id="stat-position">#--</strong>
+          </div>
+        </div>
+      </section>
 
-            <div class="stat-card">
-                <div class="stat-card-left3">
-                    <svg class="stat-card-icon3">
-                        <use href="assets/icons/icons.svg#icon-star"></use>
-                    </svg>
-                </div>
-                <div class="stat-card-right">
-                    <span>Tu posición</span>
-                    <strong>12</strong>
-                </div>
-            </div>
+      <section class="insight-banner">
+        <div class="insight-header">
+          <svg class="icon">
+            <use href="assets/icons/icons.svg#icon-sparkle"></use>
+          </svg>
 
-        </section>
+          <p>
+            <span class="insight-text">Estás a</span>
+            <strong> <span id="remaining"></span> predicciones </strong>
+            <span class="insight-text">para completar esta fase ⚽</span>
+          </p>
+        </div>
 
-        <section class="insight-banner">
+        <div class="insight-right">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
 
-            <div class="insight-header">
-                <svg class="icon">
-                    <use href="assets/icons/icons.svg#icon-sparkle"></use>
-                </svg>
+          <span class="progress-text" id="progressText"
+            >0 de 0 completadas</span
+          >
+        </div>
+      </section>
 
-                <p>
-                    <span class="insight-text">Estás a</span>
-                    <strong>
-                        <span id="remaining">3</span> predicciones
-                    </strong>
-                    <span class="insight-text">para completar la jornada ⚽</span>
-                </p>
-            </div>
-
-            <div class="insight-right">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-
-                <span class="progress-text" id="progressText">0 de 0 completadas</span>
-            </div>
-
-        </section>
-
-        <section class="matches">
-            <div class="card-order" id="matches-container">
-
-                <div class="match-card empty-state">
-
-                    <div class="match-header">
-                        <div class="match-header-left">
-                            <span class="tag">Fase de grupos</span>
-                            <span class="time">Próximamente</span>
-                        </div>
-
-                        <div class="match-header-right">
-                            <svg class="stat-card-icon4">
-                                <use href="assets/icons/icons.svg#icon-time"></use>
-                            </svg>
-
-                            <span>--:--:--</span>
-                        </div>
-                    </div>
-
-                    <div class="match-body">
-
-                        <div class="team">
-                            <span>Equipo local</span>
-                            <div class="placeholder-flag"></div>
-                        </div>
-
-                        <div class="score">
-
-                            <div class="score-control disabled">
-                                <button type="button" class="score-btn minus">−</button>
-
-                                <input
-                                    class="score-input"
-                                    type="text"
-                                    placeholder="-"
-                                    disabled
-                                >
-
-                                <button type="button" class="score-btn plus">+</button>
-                            </div>
-
-                            <span>vs</span>
-
-                            <div class="score-control disabled">
-                                <button type="button" class="score-btn minus">−</button>
-
-                                <input
-                                    class="score-input"
-                                    type="text"
-                                    placeholder="-"
-                                    disabled
-                                >
-
-                                <button type="button" class="score-btn plus">+</button>
-                            </div>
-
-                        </div>
-
-                        <div class="team">
-                            <span>Equipo visitante</span>
-                            <div class="placeholder-flag"></div>
-                        </div>
-
-                    </div>
-
-</div>
-
-    
-
-            </div>
-
-        
-
-        </section>
-
+      <section class="matches">
+        <div class="card-order" id="matches-container"></div>
+      </section>
     </main>
 
     <section class="how-it-works">
-            <div class="container-how-it-works">
-
-                <div class="desplegables">
-
-                    <div class="accordion-item">
-                        <button class="accordion-header">
-                            <span class="accordion-left">
-                                <div class="arrow">
-                                    <svg class="icon-dark">
-                                        <use href="assets/icons/icons.svg#icon-info"></use>
-                                    </svg>
-                                </div>
-                                <span>Ver cómo se otorgan los puntos</span>
-                            </span>
-                            
-                            <svg class="icon-wrapper">
-                                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
-                            </svg>
-                        </button>
-
-                        <div class="accordion-content">
-                            <ul class="points-list">
-                                <li>
-                                    <strong>Marcador exacto:</strong>
-                                    3 puntos (ej.: Tu pronosticas 2-1 y termina 2-1)
-                                </li>
-
-                                <li>
-                                    <strong>Resultado correcto:</strong>
-                                    1 punto (ej.: Tu pronosticas 1-0 y termina 3-2)
-                                </li>
-
-                                <li>
-                                    <strong>Fecha límite:</strong>
-                                    Las predicciones se cierran 15 minutos antes del inicio del partido.
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
+      <div class="container-how-it-works">
+        <div class="desplegables">
+          <div class="accordion-item">
+            <button class="accordion-header">
+              <span class="accordion-left">
+                <div class="arrow">
+                  <svg class="icon-dark">
+                    <use href="assets/icons/icons.svg#icon-info"></use>
+                  </svg>
                 </div>
+                <span>Ver cómo se otorgan los puntos</span>
+              </span>
+
+              <svg class="icon-wrapper">
+                <use href="assets/icons/icons.svg#icon-arrow-simple"></use>
+              </svg>
+            </button>
+
+            <div class="accordion-content">
+              <ul class="points-list">
+                <li>
+                  <strong>Marcador exacto:</strong>
+                  3 puntos (ej.: pronosticas 2-1 y termina 2-1)
+                </li>
+
+                <li>
+                  <strong>Resultado correcto (1X2):</strong>
+                  1 punto si aciertas el resultado del partido (victoria local,
+                  empate o victoria visitante), sin importar el marcador.
+                </li>
+
+                <li>
+                  <strong>Sin acierto:</strong>
+                  0 puntos (resultado diferente al pronosticado)
+                </li>
+
+                <li>
+                  <strong>Fecha límite:</strong>
+                  Las predicciones se cierran 15 minutos antes del inicio del
+                  partido.
+                </li>
+              </ul>
             </div>
-        </section>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        <footer class="footer-system">
-                <div class="footer-container">
-
-                    <div class="footer-left">
-                    <span class="logo-text">PredictiLab.com</span>
-                    </div>
-
-                    <div class="footer-center">
-                    <a href="#">Políticas de privacidad</a>
-                    <a href="#">Términos del servicio</a>
-                    <a href="#">Contáctanos</a>
-                    </div>
-
-                    <div class="footer-right">
-                    <span>© 2026 PredictiLab - Greht Fernández</span>
-                    </div>
-
-                </div>
-            </footer>
-
+    <footer id="footer" class="footer-system"></footer>
 
     <script type="module" src="/js/app/init.js"></script>
     <script type="module" src="/js/pages/predictions.js"></script>
     <script src="js/main.js"></script>
-
-</body>
+  </body>
 </html>

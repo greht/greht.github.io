@@ -4,32 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - PredictiLab</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="CSS/styles.css">
+    <link rel="stylesheet" href="CSS/dashboard.css">
+    <link rel="stylesheet" href="CSS/footer.css">
 </head>
 <body>
 
     <header class="navbar-secondary">
         <div class="navbar-left">
-            <img class="logo-icon" src="assets/images//Fondo-oscuro.svg" alt="Logo PredictiLab">
+            <img class="logo-icon" src="assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab">
             <span class="logo1-text">PredictiLab</span>
         </div>
 
         <nav class="navbar-center">
             <a href="#" class="active">Inicio</a>
             <a href="predictions.html">Torneos</a>
-            <!-- <a href="#">Mis Grupos</a> -->
             <a href="ranking.html">Ranking</a>
         </nav>
 
         <div id="navbarContainer" class="navbar-right"></div>
     </header>
 
+
     <main class="dashboard-container">
 
         <div class="welcome-section">
-            <h1>Bienvenido, <span id="userName">Usuario</span> 👋</h1>
-            <p>Estas son tus estadísticas</p>
+            <h1>Estás de vuelta, <span id="userName"></span> 👋</h1>
+            <p>Aquí tienes tus estadísticas</p>
         </div>
 
         <div class="stats-grid">
@@ -80,23 +81,23 @@
 
     </main>
 
-    <footer class="secondary-footer">
-        <div class="secondary-footer-container">
-            <div class="secondary-footer-left">
+    <footer id="footer" class="footer-system">
+        <div class="footer-container">
+            <div class="footer-left">
                 <span class="logo-text">PredictiLab.com</span>
             </div>
-            <div class="secondary-footer-center">
+            <div class="footer-center">
                 <a href="#">Políticas de privacidad</a>
                 <a href="#">Términos del servicio</a>
                 <a href="#">Contáctanos</a>
             </div>
-            <div class="secondary-footer-right">
+            <div class="footer-right">
                 <span>© 2026 PredictiLab - Greht Fernández</span>
             </div>
         </div>
     </footer>
 
-    <script type="module" src="js/app/init.js"></script>
-    <script type="module" src="js/pages/dashboard.js"></script>
+    <script type="module" src="/js/app/init.js"></script>
+    <script type="module" src="/js/pages/dashboard.js"></script>
 </body>
 </html>

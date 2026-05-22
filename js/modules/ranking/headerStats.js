@@ -1,21 +1,27 @@
-import { getCurrentUser, getCurrentUserFromSupabase } from "/js/data/users.js";
+import { supabase } from "/config/supabase.js";
+import { getUserRank } from "/js/services/ranking.js";
 
 export async function renderHeaderStats() {
-    // Obtener usuario de Supabase primero
-    let user = await getCurrentUserFromSupabase();
-    
-    // Fallback a datos locales
-    if (!user) {
-        user = getCurrentUser();
-    }
-    
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
     const positionEl = document.getElementById("headerPosition");
     const pointsEl = document.getElementById("headerPoints");
     const weekEl = document.getElementById("headerWeek");
 
-    if (positionEl) positionEl.textContent = user?.rank || "--";
-    if (pointsEl) pointsEl.textContent = user?.points?.toLocaleString() || "0";
+    const profile = await getProfileData(user.id);
+    const { rank } = await getUserRank(user.id);
+
+    if (positionEl) positionEl.textContent = rank || "--";
+    if (pointsEl) pointsEl.textContent = profile?.points?.toLocaleString() || "0";
     if (weekEl) weekEl.textContent = "+0";
+}
+
+async function getProfileData(userId) {
+    const { data } = await supabase
+        .from("profiles")
+        .select("points")
+        .eq("user_id", userId)
+        .single();
+    return data;
 }

@@ -1,14 +1,9 @@
 import { signUp } from "/js/services/auth.js"
 import { insertConsents } from "/js/services/consents.js"
 
-
-console.log("📝 Script de registro cargado")
-
 document.addEventListener("DOMContentLoaded", () => {
 
     let isSubmitting = false
-
-    console.log("📝 DOM listo")
 
     const form = document.getElementById("registerForm")
 
@@ -23,8 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (isSubmitting) return
         isSubmitting = true
-
-        console.log("🚀 CLICK REGISTRO DETECTADO")
 
         // INPUTS
         const username = document.getElementById("username").value
@@ -56,21 +49,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const { data, error } = await signUp(email, password, username, country, age, terms)
 
             if (error) {
-                console.error("❌ Error auth:", error)
                 alert(error.message)
                 return
             }
 
-            console.log("✅ Usuario creado:", data.user)
-
-            // Guardar consentimientos
-            // await insertConsents(data.user.id)
-
-            alert("Usuario creado 🎉 Revisa tu correo para confirmar la cuenta.")
+            alert("Usuario creado. Revisa tu correo para confirmar la cuenta.")
 
         } catch (err) {
 
-            console.error("❌ Error general:", err)
+            alert("Error al registrar usuario")
 
         } finally {
 
