@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - PredictiLab</title>
+    <link rel="stylesheet" href="CSS/styles.css">
+    <link rel="stylesheet" href="CSS/profile.css">
+    <link rel="stylesheet" href="CSS/footer.css">
+</head>
+<body class="profile-page">
+
+    <header class="navbar-secondary">
+        <div class="navbar-left">
+            <img class="logo-icon" src="assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab">
+            <span class="logo1-text">PredictiLab</span>
+        </div>
+
+        <nav class="navbar-center">
+            <a href="dashboard.html">Inicio</a>
+            <a href="predictions.html">Torneos</a>
+            <a href="groups.html">Clasificación</a>
+            <a href="ranking.html">Ranking</a>
+        </nav>
+
+        <div id="navbarContainer" class="navbar-right"></div>
+    </header>
+
+    <main class="profile-container">
+        <div class="profile-header">
+            <h1>Mi Perfil</h1>
+            <p>Gestiona tu información personal</p>
+        </div>
+
+        <div class="profile-content">
+            <div class="user-card">
+                <div class="avatar-wrapper">
+                    <img id="avatarPreview" src="/assets/images/avatar.png" alt="Avatar">
+                    <button id="editAvatarBtn" class="avatar-edit-btn" title="Cambiar foto">
+                        ✏️
+                    </button>
+                </div>
+
+                <form id="avatarForm" class="avatar-form">
+                    <input type="file" id="avatarInput" accept="image/*">
+                    <button type="submit" class="btn-primary">Subir foto</button>
+                </form>
+
+                <div class="user-info">
+                    <div class="username-edit-wrapper">
+                        <h2 id="displayUsername">Usuario</h2>
+                        <button id="editUsernameBtn" class="icon-edit-btn" title="Editar nombre">
+                            ✏️
+                        </button>
+                    </div>
+
+                    <form id="usernameForm" class="username-form">
+                        <input type="text" id="usernameInput" placeholder="Nuevo nombre de usuario" required>
+                        <button type="submit" class="btn-primary btn-small">Guardar</button>
+                        <button type="button" id="cancelUsernameBtn" class="btn-secondary btn-small">Cancelar</button>
+                    </form>
+
+                    <p class="email" id="displayEmail">email@correo.com</p>
+                    <p class="country" id="displayCountry">🌍 País</p>
+                </div>
+
+                <div class="user-stats">
+                    <div class="user-stat">
+                        <div class="value" id="statRank">#--</div>
+                        <div class="label">Posición</div>
+                    </div>
+                    <div class="user-stat">
+                        <div class="value" id="statPoints">--</div>
+                        <div class="label">Puntos</div>
+                    </div>
+                    <div class="user-stat">
+                        <div class="value" id="statExact">--</div>
+                        <div class="label">Aciertos</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="password-card">
+                <h2>Seguridad</h2>
+
+                <form id="passwordForm" class="security-section">
+                    <div class="security-item">
+                        <label for="newPassword">Nueva contraseña</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="newPassword" name="newPassword" placeholder="Mínimo 8 caracteres" required>
+                            <button type="button" class="toggle-password" data-target="newPassword">👁️</button>
+                        </div>
+                    </div>
+
+                    <div class="security-item">
+                        <label for="confirmPassword">Confirmar contraseña</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Repite la contraseña" required>
+                            <button type="button" class="toggle-password" data-target="confirmPassword">👁️</button>
+                        </div>
+                    </div>
+
+                    <div id="passwordMessage"></div>
+
+                    <div class="form-buttons">
+                        <button type="submit" class="btn-primary">Actualizar contraseña</button>
+                    </div>
+                    <div class="form-buttons">
+                        <button type="button" id="cancelPasswordBtn" class="btn-secondary">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer id="footer" class="footer-system"></footer>
+
+    <script type="module" src="/js/app/init.js"></script>
+    <script type="module" src="/js/pages/profile.js"></script>
+</body>
+</html>

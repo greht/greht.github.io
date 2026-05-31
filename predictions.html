@@ -23,6 +23,7 @@
       <nav class="navbar-center">
         <a href="dashboard.html">Inicio</a>
         <a href="predictions.html" class="active">Torneos</a>
+        <a href="groups.html">Clasificación</a>
         <a href="ranking.html">Ranking</a>
       </nav>
 
@@ -85,7 +86,9 @@
           <p>
             <span class="insight-text">Estás a</span>
             <strong> <span id="remaining"></span> predicciones </strong>
-            <span class="insight-text">para completar esta fase ⚽</span>
+            <span class="insight-text">para completar</span>
+            <strong><span id="phaseLabel">esta fase</span></strong>
+            <span class="insight-text">⚽</span>
           </p>
         </div>
 
@@ -101,6 +104,8 @@
       </section>
 
       <section class="matches">
+        <div id="predictionsTabsContainer"></div>
+        <div id="phaseTabsContainer"></div>
         <div class="card-order" id="matches-container"></div>
       </section>
     </main>

@@ -30,11 +30,17 @@ export async function getTopUsers(limit = 10) {
   return data
 }
 
-export async function getAllUsers() {
-  const { data, error } = await supabase
+export async function getAllUsers(countryCode = null) {
+  let query = supabase
     .from("profiles")
     .select("user_id, user_name, country_code, points, avatar_url")
-    .order("points", { ascending: false })
+    .order("points", { ascending: false });
+
+  if (countryCode) {
+    query = query.eq("country_code", countryCode);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return []

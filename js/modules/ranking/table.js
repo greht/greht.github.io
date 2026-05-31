@@ -15,12 +15,18 @@ export function renderTable(state, filter = "global") {
     const flagUrl = user.country_code ? `https://flagcdn.com/w40/${user.country_code.toLowerCase()}.png` : "";
     const exactCount = user.exact_count || 0;
 
+    const avatarUrl = user.avatar_url
+        ? user.avatar_url.startsWith('http')
+            ? user.avatar_url
+            : `/assets/images/${user.avatar_url}`
+        : '/assets/images/avatar.png';
+
     return `
       <tr class="${isYou ? "is-you" : ""}">
         <td class="rank">${rank}</td>
 
         <td class="user-cell">
-          <img src="${user.avatar_url ? `/assets/images/${user.avatar_url}` : '/assets/images/avatar.png'}" class="avatar">
+          <img src="${avatarUrl}" class="avatar">
           <span>${user.user_name || 'Usuario'}</span>
           ${isYou ? '<span class="tag-you">TÚ</span>' : ""}
         </td>

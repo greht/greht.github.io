@@ -1,237 +1,288 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin - PredictiLab</title>
-    <link rel="stylesheet" href="/CSS/styles.css">
-    <link rel="stylesheet" href="/CSS/predictions.css">
-    <link rel="stylesheet" href="/CSS/footer.css">
-    <link rel="stylesheet" href="/CSS/admin.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/CSS/styles.css" />
+    <link rel="stylesheet" href="/CSS/predictions.css" />
+    <link rel="stylesheet" href="/CSS/footer.css" />
+    <link rel="stylesheet" href="/CSS/admin.css" />
+  </head>
+  <body>
     <header class="navbar-secondary">
-        <div class="navbar-left">
-            <img class="logo-icon" src="/assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab">
-            <span class="logo1-text">PredictiLab</span>
-        </div>
+      <div class="navbar-left">
+        <img
+          class="logo-icon"
+          src="/assets/images/Fondo-oscuro.svg"
+          alt="Logo PredictiLab"
+        />
+        <span class="logo1-text">PredictiLab</span>
+      </div>
 
-        <nav class="navbar-center">
-            <a href="/dashboard.html">Inicio</a>
-            <a href="/predictions.html">Torneos</a>
-            <a href="/ranking.html">Ranking</a>
-        </nav>
+      <nav class="navbar-center">
+        <a href="/dashboard.html">Inicio</a>
+        <a href="/predictions.html">Torneos</a>
+        <a href="/groups.html">Clasificación</a>
+        <a href="/ranking.html">Ranking</a>
+      </nav>
 
-        <div id="navbarContainer" class="navbar-right"></div>
+      <div id="navbarContainer" class="navbar-right"></div>
     </header>
 
     <main class="predictions-container">
-        <section class="header-section">
+      <section class="header-section">
+        <div class="header-title-row">
+          <div>
             <h1>Panel de Administración</h1>
             <p>Gestiona los partidos y resultados</p>
-        </section>
+          </div>
+        </div>
+      </section>
 
-        <div class="admin-actions">
-            <button id="processPointsBtn" class="btn-secondary">
-                Procesar Puntos
+      <section class="matches">
+        <div class="main-tabs">
+          <button class="main-tab-btn active" data-tab="dates">
+            <span class="tab-icon">📅</span>
+            <span class="tab-text">Fechas</span>
+          </button>
+          <button class="main-tab-btn" data-tab="tournament">
+            <span class="tab-icon">🏆</span>
+            <span class="tab-text">Crear Reglas</span>
+          </button>
+        </div>
+
+        <div id="dates-section" class="tab-content-section active">
+          <div class="dates-subtabs">
+            <button class="subtab-btn active" data-subtab="active">
+              Fechas Activas
+              <span class="tab-count" id="activeCount">0</span>
             </button>
-        </div>
+            <button class="subtab-btn" data-subtab="finished">
+              Fechas Finalizadas
+              <span class="tab-count finished" id="finishedCount">0</span>
+            </button>
+          </div>
 
-        <div id="processResult" class="process-result hidden"></div>
-
-        <section class="matches">
-            <div class="card-order" id="matches-container"></div>
-        </section>
-    </main>
-
-    <section class="how-it-works">
-        <div class="container-how-it-works">
-            <div class="desplegables">
-                <div class="accordion-item">
-                    <button class="accordion-header">
-                        <span class="accordion-left">
-                            <span>Ingresar Resultados</span>
-                        </span>
-                        <span class="accordion-arrow">▼</span>
-                    </button>
-
-                    <div class="accordion-content">
-                        <ul class="points-list">
-                            <li><strong>Para editar:</strong> Haz click en los números de cada partido y escribe el resultado</li>
-                            <li><strong>Guardar:</strong> Click en el botón "Guardar" debajo del partido</li>
-                            <li><strong>Finalizar:</strong> Selecciona "Finalizado" en el estado para bloquear el resultado</li>
-                            <li><strong>Procesar puntos:</strong> Una vez guardados todos los resultados, clickea "Procesar Puntos"</li>
-                        </ul>
-                    </div>
-                </div>
+          <div class="admin-actions">
+            <div id="processResult" class="process-result hidden"></div>
+            <div class="admin-info-tip">
+              <span class="admin-info-icon">ℹ️</span>
+              <div class="admin-info-tooltip">
+                <strong>Pasos:</strong><br />
+                <strong>Registra</strong> el resultado del partido
+                <br />Presiona <strong>Guardar</strong> <br />
+                Cambia estado a <strong>Finalizado</strong> <br />
+                Click en
+                <strong>Procesar Puntos</strong>
+              </div>
             </div>
+            <button id="processPointsBtn" class="btn-secondary">
+              Procesar Puntos
+            </button>
+          </div>
+
+          <div class="card-order" id="matches-container"></div>
         </div>
-    </section>
+
+        <div id="tournament-section" class="tab-content-section"></div>
+      </section>
+    </main>
 
     <footer id="footer" class="footer-system"></footer>
 
     <script type="module">
-        import { supabase } from "/config/supabase.js";
-        import { processFinishedMatches } from "/js/services/scoring.js";
-        import { loadNavbar, loadFooter } from "/js/components/navbar.js";
+      import { supabase } from "/config/supabase.js";
+      import { processFinishedMatches } from "/js/services/scoring.js";
+      import { loadNavbar, loadFooter } from "/js/components/navbar.js";
+      import { loadQualifiedTeamsSection } from "/js/services/admin/tournament-ui.js";
 
-        let currentUser = null;
-        let allMatches = [];
+      let currentUser = null;
+      let allMatches = [];
 
-        async function checkAdminAccess() {
-            const { data: { user }, error } = await supabase.auth.getUser();
+      async function checkAdminAccess() {
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
 
-            if (error || !user) {
-                window.location.href = "/login.html";
-                return false;
-            }
+        if (error || !user) {
+          window.location.href = "/login.html";
+          return false;
+        }
 
-            currentUser = user;
+        currentUser = user;
 
-            const { data: profile, error: profileError } = await supabase
-                .from("profiles")
-                .select("role")
-                .eq("user_id", user.id)
-                .single();
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", user.id)
+          .single();
 
-            if (profileError || !profile || profile.role !== "admin") {
-                document.querySelector(".header-section").innerHTML = `
+        if (profileError || !profile || profile.role !== "admin") {
+          document.querySelector(".header-section").innerHTML = `
                     <h1>Acceso Denegado</h1>
                     <p>No tienes permisos para acceder a esta sección.</p>
                     <a href="/dashboard.html" class="btn-primary" style="display:inline-block;margin-top:1rem;">Volver al Inicio</a>
                 `;
-                document.querySelector(".matches").remove();
-                document.querySelector(".admin-actions").remove();
-                return false;
-            }
-
-            return true;
+          document.querySelector(".matches").remove();
+          document.querySelector(".admin-actions").remove();
+          return false;
         }
 
-        async function loadMatches() {
-            const { data: matches, error } = await supabase
-                .from("matches")
-                .select("*")
-                .order("match_date", { ascending: true });
+        return true;
+      }
 
-            if (error) {
-                document.getElementById("matches-container").innerHTML =
-                    `<p class="error">Error cargando partidos: ${error.message}</p>`;
-                return;
-            }
+      async function loadMatches() {
+        const { data: matches, error } = await supabase
+          .from("matches")
+          .select("*")
+          .order("match_date", { ascending: true });
 
-            const teamIds = [...new Set(matches.flatMap(m => [m.home_team_id, m.away_team_id]).filter(Boolean))];
-            const groupIds = [...new Set(matches.map(m => m.group_id).filter(Boolean))];
-
-            let teamsMap = {};
-            let groupsMap = {};
-            let phasesMap = {};
-
-            if (teamIds.length > 0) {
-                const { data: teams } = await supabase
-                    .from("teams")
-                    .select("id, name, flag_url")
-                    .in("id", teamIds);
-                if (teams) {
-                    teamsMap = teams.reduce((acc, t) => { acc[t.id] = t; return acc; }, {});
-                }
-            }
-
-            if (groupIds.length > 0) {
-                const { data: groups } = await supabase
-                    .from("groups")
-                    .select("id, name")
-                    .in("id", groupIds);
-                if (groups) {
-                    groupsMap = groups.reduce((acc, g) => { acc[g.id] = g; return acc; }, {});
-                }
-            }
-
-            const { data: phases } = await supabase
-                .from("phases")
-                .select("id, name, display_order")
-                .order("display_order", { ascending: true });
-
-            if (phases) {
-                phasesMap = phases.reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
-            }
-
-            allMatches = matches.map(m => ({
-                ...m,
-                home_team: teamsMap[m.home_team_id] || null,
-                away_team: teamsMap[m.away_team_id] || null,
-                group: groupsMap[m.group_id] || null,
-                phase: phasesMap[m.phase_id] || null
-            }));
-
-            renderMatches(allMatches);
+        if (error) {
+          document.getElementById("matches-container").innerHTML =
+            `<p class="error">Error cargando partidos: ${error.message}</p>`;
+          return;
         }
 
-        function groupMatchesByDay(matches) {
-            return matches.reduce((groups, match) => {
-                const date = new Date(match.match_date);
-                const key = date.toLocaleDateString("es-ES", {
-                    weekday: "long",
-                    day: "2-digit",
-                    month: "long"
-                });
-                if (!groups[key]) groups[key] = [];
-                groups[key].push(match);
-                return groups;
+        const teamIds = [
+          ...new Set(
+            matches
+              .flatMap((m) => [m.home_team_id, m.away_team_id])
+              .filter(Boolean),
+          ),
+        ];
+        const groupIds = [
+          ...new Set(matches.map((m) => m.group_id).filter(Boolean)),
+        ];
+
+        let teamsMap = {};
+        let groupsMap = {};
+        let phasesMap = {};
+
+        if (teamIds.length > 0) {
+          const { data: teams } = await supabase
+            .from("teams")
+            .select("id, name, flag_url")
+            .in("id", teamIds);
+          if (teams) {
+            teamsMap = teams.reduce((acc, t) => {
+              acc[t.id] = t;
+              return acc;
             }, {});
+          }
         }
 
-        function capitalize(text) {
-            return text.charAt(0).toUpperCase() + text.slice(1);
+        if (groupIds.length > 0) {
+          const { data: groups } = await supabase
+            .from("groups")
+            .select("id, name")
+            .in("id", groupIds);
+          if (groups) {
+            groupsMap = groups.reduce((acc, g) => {
+              acc[g.id] = g;
+              return acc;
+            }, {});
+          }
         }
 
-        function formatMatchDate(dateStr) {
-            const date = new Date(dateStr);
-            const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
-            return argentinaDate.toLocaleString("es-ES", {
-                weekday: "long",
-                day: "numeric",
-                month: "short",
-                hour: "2-digit",
-                minute: "2-digit"
-            }).replace(".", "");
+        const { data: phases } = await supabase
+          .from("phases")
+          .select("id, name, display_order")
+          .order("display_order", { ascending: true });
+
+        if (phases) {
+          phasesMap = phases.reduce((acc, p) => {
+            acc[p.id] = p;
+            acc[p.id?.toString()] = p;
+            acc[p.name] = p;
+            return acc;
+          }, {});
         }
 
-        function getScoreValue(value) {
-            return value !== null && value !== undefined ? value : "";
+        allMatches = matches.map((m) => ({
+          ...m,
+          home_team: teamsMap[m.home_team_id] || null,
+          away_team: teamsMap[m.away_team_id] || null,
+          group: groupsMap[m.group_id] || null,
+          phase:
+            phasesMap[m.phase_id] || phasesMap[parseInt(m.phase_id)] || null,
+        }));
+
+        const { active, finished } = splitMatchesByStatus(allMatches);
+        updateTabCounts();
+        initAdminTabs();
+      }
+
+      function groupMatchesByDay(matches) {
+        return matches.reduce((groups, match) => {
+          const date = new Date(match.match_date);
+          const key = date.toLocaleDateString("es-ES", {
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+          });
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(match);
+          return groups;
+        }, {});
+      }
+
+      function capitalize(text) {
+        return text.charAt(0).toUpperCase() + text.slice(1);
+      }
+
+      function formatMatchDate(dateStr) {
+        const date = new Date(dateStr);
+        const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+        return argentinaDate
+          .toLocaleString("es-ES", {
+            weekday: "long",
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+          .replace(".", "");
+      }
+
+      function getScoreValue(value) {
+        return value !== null && value !== undefined ? value : "";
+      }
+
+      function isMatchLocked(match) {
+        if (match.status === "finished") return true;
+
+        if (match.match_date) {
+          const matchTime = new Date(match.match_date).getTime();
+          const now = new Date().getTime();
+          const diffMinutes = (matchTime - now) / (1000 * 60);
+          if (diffMinutes <= 15) return true;
         }
 
-        function isMatchLocked(match) {
-            if (match.status === "finished") return true;
+        return false;
+      }
 
-            if (match.match_date) {
-                const matchTime = new Date(match.match_date).getTime();
-                const now = new Date().getTime();
-                const diffMinutes = (matchTime - now) / (1000 * 60);
-                if (diffMinutes <= 15) return true;
-            }
+      function renderMatchCard(match) {
+        const homeTeam = match.home_team?.name || "Equipo Local";
+        const awayTeam = match.away_team?.name || "Equipo Visitante";
+        const homeFlag =
+          match.home_team?.flag_url || "/assets/images/flag-mexV2.svg";
+        const awayFlag =
+          match.away_team?.flag_url || "/assets/images/flag-mexV2.svg";
+        const group = match.group?.name || "Grupo";
+        const matchDate = formatMatchDate(match.match_date);
 
-            return false;
-        }
+        const statusMap = {
+          scheduled: "Pr&oacute;ximamente",
+          pending: "Pr&oacute;ximamente",
+          live: "EN VIVO",
+          finished: "Finalizado",
+        };
+        const statusText = statusMap[match.status] || "Sin registrar";
+        const isLocked = isMatchLocked(match);
 
-        function renderMatchCard(match) {
-            const homeTeam = match.home_team?.name || "Equipo Local";
-            const awayTeam = match.away_team?.name || "Equipo Visitante";
-            const homeFlag = match.home_team?.flag_url || "/assets/images/flag-mexV2.svg";
-            const awayFlag = match.away_team?.flag_url || "/assets/images/flag-mexV2.svg";
-            const group = match.group?.name || "Grupo";
-            const matchDate = formatMatchDate(match.match_date);
-
-            const statusMap = {
-                scheduled: "Pr&oacute;ximamente",
-                pending: "Pr&oacute;ximamente",
-                live: "EN VIVO",
-                finished: "Finalizado"
-            };
-            const statusText = statusMap[match.status] || "Sin registrar";
-            const isLocked = isMatchLocked(match);
-
-            return `
+        return `
                 <div class="match-card admin-match-card" data-match-id="${match.id}">
                     <div class="match-header">
                         <div class="match-header-left">
@@ -260,7 +311,7 @@
                                        placeholder="0"
                                        min="0"
                                        max="15"
-                                       ${isLocked ? 'disabled' : ''}>
+                                       ${isLocked ? "disabled" : ""}>
                             </div>
                             <span>vs</span>
                             <div class="score-control">
@@ -271,7 +322,7 @@
                                        placeholder="0"
                                        min="0"
                                        max="15"
-                                       ${isLocked ? 'disabled' : ''}>
+                                       ${isLocked ? "disabled" : ""}>
                             </div>
                         </div>
 
@@ -284,58 +335,69 @@
                     </div>
 
                     <div class="match-status admin-status">
-                        <select class="status-select" id="status-${match.id}" ${isLocked ? 'disabled' : ''}>
-                            <option value="scheduled" ${match.status === 'scheduled' || match.status === 'pending' ? 'selected' : ''}>Pr&oacute;ximamente</option>
-                            <option value="live" ${match.status === 'live' ? 'selected' : ''}>En Vivo</option>
-                            <option value="finished" ${match.status === 'finished' ? 'selected' : ''}>Finalizado</option>
+                        <select class="status-select" id="status-${match.id}" ${isLocked ? "disabled" : ""}>
+                            <option value="scheduled" ${match.status === "scheduled" || match.status === "pending" ? "selected" : ""}>Pr&oacute;ximamente</option>
+                            <option value="live" ${match.status === "live" ? "selected" : ""}>En Vivo</option>
+                            <option value="finished" ${match.status === "finished" ? "selected" : ""}>Finalizado</option>
                         </select>
-                        <button class="btn-save-match" data-match-id="${match.id}" ${isLocked ? 'disabled' : ''}>
+                        <button class="btn-save-match" data-match-id="${match.id}" ${isLocked ? "disabled" : ""}>
                             Guardar
                         </button>
                     </div>
                 </div>
             `;
-        }
+      }
 
-        function initAccordions() {
-            document.querySelectorAll(".matches-group").forEach((group, index) => {
-                const btn = group.querySelector(".matches-group-header");
-                const content = group.querySelector(".matches-group-content");
+      function initAccordions() {
+        document.querySelectorAll(".matches-group").forEach((group, index) => {
+          const btn = group.querySelector(".matches-group-header");
+          const content = group.querySelector(".matches-group-content");
 
-                if (!btn || !content) return;
+          if (!btn || !content) return;
 
-                if (index === 0) {
-                    group.classList.add("open");
-                    content.style.maxHeight = content.scrollHeight + "px";
-                }
+          function onTransitionEnd() {
+            content.removeEventListener("transitionend", onTransitionEnd);
+            if (group.classList.contains("open")) {
+              content.style.maxHeight = "none";
+              content.style.overflow = "visible";
+            }
+          }
 
-                btn.addEventListener("click", () => {
-                    const isOpen = group.classList.contains("open");
+          btn.addEventListener("click", () => {
+            const isOpen = group.classList.contains("open");
 
-                    if (isOpen) {
-                        group.classList.remove("open");
-                        content.style.maxHeight = "0";
-                        content.style.padding = "0 12px";
-                    } else {
-                        group.classList.add("open");
-                        content.style.maxHeight = content.scrollHeight + "px";
-                        content.style.padding = "16px";
-                    }
-                });
-            });
-        }
+            if (isOpen) {
+              content.style.overflow = "hidden";
+              content.style.maxHeight = content.scrollHeight + "px";
+              requestAnimationFrame(() => {
+                group.classList.remove("open");
+                content.style.maxHeight = "0";
+                content.style.padding = "0 12px";
+              });
+            } else {
+              group.classList.add("open");
+              content.style.maxHeight = content.scrollHeight + "px";
+              content.style.padding = "16px";
+              content.addEventListener("transitionend", onTransitionEnd);
+            }
+          });
+        });
+      }
 
-        function renderMatches(matches) {
-            const container = document.getElementById("matches-container");
-            if (!container) return;
+      function renderMatches(matches) {
+        const container = document.getElementById("matches-container");
+        if (!container) return;
 
-            const grouped = groupMatchesByDay(matches);
+        const grouped = groupMatchesByDay(matches);
 
-            container.innerHTML = Object.entries(grouped).map(([dayLabel, dayMatches], index) => {
-                const phaseName = dayMatches[0]?.phase?.name || "";
-                const journeyLabel = phaseName ? `Fecha ${index + 1} - ${phaseName}` : `Fecha ${index + 1}`;
+        container.innerHTML = Object.entries(grouped)
+          .map(([dayLabel, dayMatches], index) => {
+            const phaseName = dayMatches[0]?.phase?.name || "";
+            const journeyLabel = phaseName
+              ? `Fecha ${index + 1} - ${phaseName}`
+              : `Fecha ${index + 1}`;
 
-                return `
+            return `
                     <div class="matches-group" data-group-index="${index}">
                         <button type="button" class="matches-group-header">
                             <div class="accordion-info">
@@ -352,126 +414,326 @@
                             </div>
                         </button>
                         <div class="matches-group-content" style="max-height: 0; overflow: hidden;">
-                            ${dayMatches.map(match => renderMatchCard(match)).join("")}
+                            ${dayMatches.map((match) => renderMatchCard(match)).join("")}
                         </div>
                     </div>
                 `;
-            }).join("");
+          })
+          .join("");
 
-            setTimeout(() => {
-                initAccordions();
-                document.querySelectorAll(".btn-save-match").forEach(btn => {
-                    btn.addEventListener("click", () => saveMatchResult(btn.dataset.matchId));
-                });
-            }, 100);
-        }
+        setTimeout(() => {
+          initAccordions();
+          document.querySelectorAll(".btn-save-match").forEach((btn) => {
+            btn.addEventListener("click", () =>
+              saveMatchResult(btn.dataset.matchId),
+            );
+          });
+        }, 100);
+      }
 
-        async function saveMatchResult(matchId) {
-            const homeInput = document.getElementById(`home-${matchId}`);
-            const awayInput = document.getElementById(`away-${matchId}`);
-            const statusSelect = document.getElementById(`status-${matchId}`);
+      function isGroupFinished(dayMatches) {
+        return dayMatches.every((m) => m.status === "finished");
+      }
 
-            const homeScore = homeInput.value;
-            const awayScore = awayInput.value;
-            const status = statusSelect.value;
+      function splitMatchesByStatus(matches) {
+        const grouped = groupMatchesByDay(matches);
+        const activeGroups = [];
+        const finishedGroups = [];
 
-            if (homeScore === "" || awayScore === "") {
-                alert("Ingresa los resultados para ambos equipos");
-                return;
-            }
+        Object.entries(grouped).forEach(([dayLabel, dayMatches]) => {
+          if (isGroupFinished(dayMatches)) {
+            finishedGroups.push([dayLabel, dayMatches]);
+          } else {
+            activeGroups.push([dayLabel, dayMatches]);
+          }
+        });
 
-            const btn = document.querySelector(`.btn-save-match[data-match-id="${matchId}"]`);
-            btn.disabled = true;
-            btn.textContent = "Guardando...";
+        return { active: activeGroups, finished: finishedGroups };
+      }
 
-            const { error } = await supabase
-                .from("matches")
-                .update({
-                    home_score: parseInt(homeScore),
-                    away_score: parseInt(awayScore),
-                    status: status
-                })
-                .eq("id", matchId);
+      function updateTabCounts() {
+        const { active, finished } = splitMatchesByStatus(allMatches);
+        document.getElementById("activeCount").textContent = active.length;
+        document.getElementById("finishedCount").textContent = finished.length;
+      }
 
-            if (error) {
-                alert("Error guardando: " + error.message);
-                btn.disabled = false;
-                btn.textContent = "Guardar";
+      function initAdminTabs() {
+        const mainTabs = document.querySelectorAll(".main-tab-btn");
+        const datesSection = document.getElementById("dates-section");
+        const tournamentSection = document.getElementById("tournament-section");
+
+        mainTabs.forEach((btn) => {
+          btn.addEventListener("click", () => {
+            mainTabs.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            if (btn.dataset.tab === "tournament") {
+              datesSection.classList.remove("active");
+              tournamentSection.classList.add("active");
+              loadQualifiedTeamsSection();
             } else {
-                const matchIndex = allMatches.findIndex(m => m.id === matchId);
-                if (matchIndex !== -1) {
-                    allMatches[matchIndex].home_score = parseInt(homeScore);
-                    allMatches[matchIndex].away_score = parseInt(awayScore);
-                    allMatches[matchIndex].status = status;
-                }
-
-                const card = document.querySelector(`.match-card[data-match-id="${matchId}"]`);
-                if (card) {
-                    const inputs = card.querySelectorAll(".admin-input");
-                    const statusSelectEl = card.querySelector(".status-select");
-                    if (status === "finished") {
-                        inputs.forEach(i => i.disabled = true);
-                        if (statusSelectEl) statusSelectEl.disabled = true;
-                        btn.disabled = true;
-                        btn.textContent = "✓ Finalizado";
-                    } else {
-                        inputs.forEach(i => i.disabled = false);
-                        if (statusSelectEl) statusSelectEl.disabled = false;
-                        btn.disabled = false;
-                        btn.textContent = "Guardar";
-                    }
-                    btn.classList.add("saved");
-                }
-
-                showSaveNotification();
+              datesSection.classList.add("active");
+              tournamentSection.classList.remove("active");
+              initDateSubTabs();
             }
+          });
+        });
+
+        const subtabsContainer = document.querySelector(".dates-subtabs");
+        if (subtabsContainer) {
+          subtabsContainer.addEventListener("click", (e) => {
+            const subtabBtn = e.target.closest(".subtab-btn");
+            if (!subtabBtn) return;
+
+            const subtab = subtabBtn.dataset.subtab;
+            subtabsContainer
+              .querySelectorAll(".subtab-btn")
+              .forEach((b) => b.classList.remove("active"));
+            subtabBtn.classList.add("active");
+
+            const { active, finished } = splitMatchesByStatus(allMatches);
+            const container = document.getElementById("matches-container");
+            if (subtab === "active") {
+              renderGroupList(active, container);
+            } else {
+              renderGroupList(finished, container);
+            }
+          });
+        }
+      }
+
+      function initDateSubTabs() {
+        const container = document.getElementById("matches-container");
+        const { active, finished } = splitMatchesByStatus(allMatches);
+        renderGroupList(active, container);
+      }
+
+      function renderGroupList(groups, container) {
+        if (groups.length === 0) {
+          container.innerHTML = `<p class="error">No hay fechas en esta sección.</p>`;
+          return;
         }
 
-        function showSaveNotification() {
-            const notification = document.createElement("div");
-            notification.className = "save-notification";
-            notification.innerHTML = `
+        const allGrouped = groupMatchesByDay(allMatches);
+        const allKeys = Object.keys(allGrouped);
+
+        container.innerHTML = groups
+          .map(([dayLabel, dayMatches]) => {
+            const originalIndex = allKeys.indexOf(dayLabel);
+            const phaseName = dayMatches[0]?.phase?.name || "";
+            const journeyLabel = phaseName
+              ? `Fecha ${originalIndex + 1} - ${phaseName}`
+              : `Fecha ${originalIndex + 1}`;
+            return `
+                    <div class="matches-group">
+                        <button type="button" class="matches-group-header">
+                            <div class="accordion-info">
+                                <span class="journey">${journeyLabel}</span>
+                                <span class="date-label">${capitalize(dayLabel)}</span>
+                            </div>
+                            <div class="accordion-right">
+                                <div class="accordion-progress">
+                                    <span class="count">${dayMatches.length} partidos</span>
+                                </div>
+                                <svg class="accordion-arrow" viewBox="0 0 24 24">
+                                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </button>
+                        <div class="matches-group-content">
+                            ${dayMatches.map((match) => renderMatchCard(match)).join("")}
+                        </div>
+                    </div>
+                `;
+          })
+          .join("");
+
+        setTimeout(() => {
+          initAccordions();
+          document.querySelectorAll(".btn-save-match").forEach((btn) => {
+            btn.addEventListener("click", () =>
+              saveMatchResult(btn.dataset.matchId),
+            );
+          });
+        }, 100);
+      }
+
+      function renderMatchesList(matches, container) {
+        if (matches.length === 0) {
+          container.innerHTML = `<p class="error">No hay partidos en esta sección.</p>`;
+          return;
+        }
+
+        const grouped = groupMatchesByDay(matches);
+        const allKeys = Object.keys(grouped);
+
+        container.innerHTML = Object.entries(grouped)
+          .map(([dayLabel, dayMatches]) => {
+            const originalIndex = allKeys.indexOf(dayLabel);
+            const phaseName = dayMatches[0]?.phase?.name || "";
+            const journeyLabel = phaseName
+              ? `Fecha ${originalIndex + 1} - ${phaseName}`
+              : `Fecha ${originalIndex + 1}`;
+
+            return `
+                    <div class="matches-group">
+                        <button type="button" class="matches-group-header">
+                            <div class="accordion-info">
+                                <span class="journey">${journeyLabel}</span>
+                                <span class="date-label">${capitalize(dayLabel)}</span>
+                            </div>
+                            <div class="accordion-right">
+                                <div class="accordion-progress">
+                                    <span class="count">${dayMatches.length} partidos</span>
+                                </div>
+                                <svg class="accordion-arrow" viewBox="0 0 24 24">
+                                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </button>
+                        <div class="matches-group-content">
+                            ${dayMatches.map((match) => renderMatchCard(match)).join("")}
+                        </div>
+                    </div>
+                `;
+          })
+          .join("");
+
+        setTimeout(() => {
+          document.querySelectorAll(".btn-save-match").forEach((btn) => {
+            btn.addEventListener("click", () =>
+              saveMatchResult(btn.dataset.matchId),
+            );
+          });
+        }, 100);
+      }
+
+      async function saveMatchResult(matchId) {
+        const homeInput = document.getElementById(`home-${matchId}`);
+        const awayInput = document.getElementById(`away-${matchId}`);
+        const statusSelect = document.getElementById(`status-${matchId}`);
+
+        const homeScore = homeInput.value;
+        const awayScore = awayInput.value;
+        const status = statusSelect.value;
+
+        if (homeScore === "" || awayScore === "") {
+          alert("Ingresa los resultados para ambos equipos");
+          return;
+        }
+
+        const btn = document.querySelector(
+          `.btn-save-match[data-match-id="${matchId}"]`,
+        );
+        btn.disabled = true;
+        btn.textContent = "Guardando...";
+
+        const { error } = await supabase
+          .from("matches")
+          .update({
+            home_score: parseInt(homeScore),
+            away_score: parseInt(awayScore),
+            status: status,
+          })
+          .eq("id", matchId);
+
+        if (error) {
+          alert("Error guardando: " + error.message);
+          btn.disabled = false;
+          btn.textContent = "Guardar";
+        } else {
+          const matchIndex = allMatches.findIndex((m) => m.id === matchId);
+          if (matchIndex !== -1) {
+            allMatches[matchIndex].home_score = parseInt(homeScore);
+            allMatches[matchIndex].away_score = parseInt(awayScore);
+            allMatches[matchIndex].status = status;
+          }
+
+          const card = document.querySelector(
+            `.match-card[data-match-id="${matchId}"]`,
+          );
+          if (card) {
+            const inputs = card.querySelectorAll(".admin-input");
+            const statusSelectEl = card.querySelector(".status-select");
+            if (status === "finished") {
+              inputs.forEach((i) => (i.disabled = true));
+              if (statusSelectEl) statusSelectEl.disabled = true;
+              btn.disabled = true;
+              btn.textContent = "✓ Finalizado";
+            } else {
+              inputs.forEach((i) => (i.disabled = false));
+              if (statusSelectEl) statusSelectEl.disabled = false;
+              btn.disabled = false;
+              btn.textContent = "Guardar";
+            }
+            btn.classList.add("saved");
+          }
+
+          updateTabCounts();
+          const activeTab = document.querySelector(".tab-btn.active");
+          const currentTab = activeTab ? activeTab.dataset.tab : "active";
+          const { active, finished } = splitMatchesByStatus(allMatches);
+          const container = document.getElementById("matches-container");
+
+          if (currentTab === "active") {
+            renderGroupList(active, container);
+          } else {
+            renderGroupList(finished, container);
+          }
+
+          showSaveNotification();
+        }
+      }
+
+      function showSaveNotification() {
+        const notification = document.createElement("div");
+        notification.className = "save-notification";
+        notification.innerHTML = `
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
                 Resultados guardados
             `;
-            document.body.appendChild(notification);
-            setTimeout(() => notification.remove(), 2000);
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 2000);
+      }
+
+      async function processPoints() {
+        const btn = document.getElementById("processPointsBtn");
+        btn.disabled = true;
+        btn.textContent = "Procesando...";
+
+        const resultDiv = document.getElementById("processResult");
+        resultDiv.classList.remove("hidden");
+        resultDiv.innerHTML =
+          '<p class="processing">⏳ Procesando puntos...</p>';
+
+        try {
+          await processFinishedMatches();
+          resultDiv.innerHTML =
+            '<p class="success">✅ Puntos calculados correctamente</p>';
+          setTimeout(() => resultDiv.classList.add("hidden"), 3000);
+        } catch (error) {
+          resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
         }
 
-        async function processPoints() {
-            const btn = document.getElementById("processPointsBtn");
-            btn.disabled = true;
-            btn.textContent = "Procesando...";
+        btn.disabled = false;
+        btn.textContent = "Procesar Puntos";
+      }
 
-            const resultDiv = document.getElementById("processResult");
-            resultDiv.classList.remove("hidden");
-            resultDiv.innerHTML = '<p class="processing">⏳ Procesando puntos...</p>';
+      document
+        .getElementById("processPointsBtn")
+        .addEventListener("click", processPoints);
 
-            try {
-                await processFinishedMatches();
-                resultDiv.innerHTML = '<p class="success">✅ Puntos calculados correctamente</p>';
-                setTimeout(() => resultDiv.classList.add("hidden"), 3000);
-            } catch (error) {
-                resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
-            }
+      loadNavbar();
+      loadFooter();
 
-            btn.disabled = false;
-            btn.textContent = "Procesar Puntos";
+      (async () => {
+        const isAdmin = await checkAdminAccess();
+        if (isAdmin) {
+          loadMatches();
         }
-
-        document.getElementById("processPointsBtn").addEventListener("click", processPoints);
-
-        loadNavbar();
-        loadFooter();
-
-        (async () => {
-            const isAdmin = await checkAdminAccess();
-            if (isAdmin) {
-                loadMatches();
-            }
-        })();
+      })();
     </script>
-</body>
+  </body>
 </html>

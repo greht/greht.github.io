@@ -37,7 +37,9 @@ export function renderPodium(filterCountry = "global", allUsers = []) {
             el.querySelector(".stats-result").textContent = user.points || 0;
             el.querySelector(".stat-successes").textContent = user.exact_count || 0;
             const avatarSrc = user.avatar_url
-                ? `/assets/images/${user.avatar_url}`
+                ? user.avatar_url.startsWith('http')
+                    ? user.avatar_url
+                    : `/assets/images/${user.avatar_url}`
                 : "/assets/images/avatar.png";
             const avatarEl = el.querySelector(".rank-card-avatar");
             if (avatarEl) {

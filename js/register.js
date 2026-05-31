@@ -1,7 +1,26 @@
 import { signUp } from "/js/services/auth.js"
 import { insertConsents } from "/js/services/consents.js"
 
+async function loadCountries() {
+    try {
+        const res = await fetch("/data/countries.json")
+        const countries = await res.json()
+        const select = document.getElementById("country")
+        
+        countries.forEach(c => {
+            const option = document.createElement("option")
+            option.value = c.code
+            option.textContent = `${c.flag} ${c.name}`
+            select.appendChild(option)
+        })
+    } catch (err) {
+        console.error("Error loading countries:", err)
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+
+    loadCountries()
 
     let isSubmitting = false
 

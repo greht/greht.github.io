@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clasificación - PredictiLab</title>
+    <link rel="stylesheet" href="CSS/styles.css" />
+    <link rel="stylesheet" href="CSS/groups.css" />
+    <link rel="stylesheet" href="CSS/footer.css" />
+  </head>
+  <body>
+    <header class="navbar-secondary">
+      <div class="navbar-left">
+        <img
+          class="logo-icon"
+          src="assets/images/Fondo-oscuro.svg"
+          alt="Logo PredictiLab"
+        />
+        <span class="logo1-text">PredictiLab</span>
+      </div>
+
+      <nav class="navbar-center">
+        <a href="dashboard.html">Inicio</a>
+        <a href="predictions.html">Torneos</a>
+        <a href="groups.html" class="active">Clasificación</a>
+        <a href="ranking.html">Ranking</a>
+      </nav>
+
+      <div id="navbarContainer" class="navbar-right"></div>
+    </header>
+
+<main class="groups-container">
+      <section class="groups-header">
+        <h1>Clasificación</h1>
+        <p>Posiciones actualizadas según los resultados de los partidos</p>
+      </section>
+
+      <section class="groups-list" id="groupsList"></section>
+    </main>
+
+    <footer id="footer"></footer>
+
+    <script type="module">
+      import { loadNavbar, loadFooter } from "/js/components/navbar.js";
+      import { renderGroups } from "/js/pages/groups.js";
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        await loadNavbar();
+        await loadFooter();
+        await renderGroups();
+      });
+    </script>
+  </body>
+</html>

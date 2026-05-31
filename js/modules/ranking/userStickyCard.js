@@ -31,12 +31,14 @@ export async function renderUserStickyCard(state) {
     const points = profile?.points || 0;
     const userName = profile?.user_name || user.email;
     const avatarUrl = profile?.avatar_url
-        ? `/assets/images/${profile.avatar_url}`
+        ? profile.avatar_url.startsWith('http')
+            ? profile.avatar_url
+            : `/assets/images/${profile.avatar_url}`
         : "/assets/images/avatar.png";
     const countryCode = profile?.country_code || "";
 
     const rankIndex = users.findIndex(u => u.user_id === user.id);
-    const rank = rankIndex >= 0 ? rankIndex + 4 : null;
+    const rank = rankIndex >= 0 ? rankIndex + 1 : null;
 
     const top1 = users[0];
     const top3 = users[2];

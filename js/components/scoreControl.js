@@ -9,19 +9,24 @@ export function initScoreControls() {
         if (!input || !plus || !minus) return;
 
         plus.addEventListener("click", () => {
-            let value = parseInt(input.value) || 0;
-            if (value < 20) {
-                input.value = value + 1;
-                input.dispatchEvent(new Event("input"));
+            const isEmpty = !input.value || input.value === "";
+            if (isEmpty) {
+                input.value = 0;
+            } else {
+                let value = parseInt(input.value) || 0;
+                if (value < 20) {
+                    input.value = value + 1;
+                }
             }
+            input.dispatchEvent(new Event("input"));
         });
 
         minus.addEventListener("click", () => {
             let value = parseInt(input.value) || 0;
             if (value > 0) {
                 input.value = value - 1;
-                input.dispatchEvent(new Event("input"));
             }
+            input.dispatchEvent(new Event("input"));
         });
 
         input.addEventListener("input", () => {

@@ -7,39 +7,49 @@ import { getMatches } from "/js/services/matches.js"
 import { supabase } from "/config/supabase.js"
 import { savePrediction, getPredictions } from "/js/services/predictions.js"
 
+let matchesGlobal = [];
+
 function renderSkeletons() {
   const container = document.querySelector(".card-order");
   if (!container) return;
 
-  container.innerHTML = Array.from({ length: 3 }).map(() => `
-    <div class="match-card empty-state">
-      <div class="match-header">
-        <div class="match-header-left">
-          <span class="tag">Cargando...</span>
-          <span class="time">--</span>
-        </div>
-        <div class="match-header-right">
-          <span>--:--</span>
+  container.innerHTML = `
+    <div class="matches-group open">
+      <div class="matches-group-header">
+        <div class="accordion-info">
+          <span class="journey skeleton-text">Cargando fechas...</span>
         </div>
       </div>
-
-      <div class="match-body">
-        <div class="team">
-          <span>Equipo local</span>
-          <div class="placeholder-flag"></div>
-        </div>
-
-        <div class="score">
-          <span>vs</span>
-        </div>
-
-        <div class="team">
-          <span>Equipo visitante</span>
-          <div class="placeholder-flag"></div>
-        </div>
+      <div class="matches-group-content">
+        ${Array.from({ length: 2 }).map(() => `
+          <div class="match-card empty-state">
+            <div class="match-header">
+              <div class="match-header-left">
+                <span class="tag skeleton-text">...</span>
+                <span class="time skeleton-text">--</span>
+              </div>
+              <div class="match-header-right">
+                <span class="skeleton-text">--:--</span>
+              </div>
+            </div>
+            <div class="match-body">
+              <div class="team">
+                <span class="skeleton-text">Cargando...</span>
+                <div class="placeholder-flag"></div>
+              </div>
+              <div class="score">
+                <span class="skeleton-text">vs</span>
+              </div>
+              <div class="team">
+                <span class="skeleton-text">Cargando...</span>
+                <div class="placeholder-flag"></div>
+              </div>
+            </div>
+          </div>
+        `).join("")}
       </div>
     </div>
-  `).join("");
+  `;
 }
 
 function groupMatchesByDay(matches) {
@@ -158,7 +168,7 @@ function renderMatchCard(match) {
         <div class="score">
           <div class="score-control">
             <button type="button" class="score-btn minus" ${isLocked ? 'disabled' : ''}>−</button>
-            <input class="score-input" type="number" min="0" inputmode="numeric" placeholder="0" data-team="home" ${isLocked ? 'disabled' : ''}>
+            <input class="score-input" type="number" min="0" inputmode="numeric" placeholder="—" data-team="home" ${isLocked ? 'disabled' : ''}>
             <button type="button" class="score-btn plus" ${isLocked ? 'disabled' : ''}>+</button>
           </div>
 
@@ -166,7 +176,7 @@ function renderMatchCard(match) {
 
           <div class="score-control">
             <button type="button" class="score-btn minus" ${isLocked ? 'disabled' : ''}>−</button>
-            <input class="score-input" type="number" min="0" inputmode="numeric" placeholder="0" data-team="away" ${isLocked ? 'disabled' : ''}>
+            <input class="score-input" type="number" min="0" inputmode="numeric" placeholder="—" data-team="away" ${isLocked ? 'disabled' : ''}>
             <button type="button" class="score-btn plus" ${isLocked ? 'disabled' : ''}>+</button>
           </div>
         </div>
@@ -319,19 +329,151 @@ function getGroupPoints(dayMatches, predictions) {
   return points;
 }
 
+function isGroupFinished(dayMatches) {
+  return dayMatches.every(match => match.status === "finished");
+}
+
+function splitGroupsByStatus(grouped) {
+  const active = [];
+  const finished = [];
+
+  Object.entries(grouped).forEach(([dayLabel, dayMatches]) => {
+    if (isGroupFinished(dayMatches)) {
+      finished.push([dayLabel, dayMatches]);
+    } else {
+      active.push([dayLabel, dayMatches]);
+    }
+  });
+
+  return { active, finished };
+}
+
+function renderTabs(activeCount, finishedCount) {
+  return `
+    <div class="predictions-tabs">
+      <button class="tab-btn active" data-tab="active">
+        Fechas Activas
+        ${activeCount > 0 ? `<span class="tab-count">${activeCount}</span>` : ""}
+      </button>
+      <button class="tab-btn" data-tab="finished">
+        Fechas Finalizadas
+        ${finishedCount > 0 ? `<span class="tab-count finished">${finishedCount}</span>` : ""}
+      </button>
+    </div>
+  `;
+}
+
 function renderMatches(matches, predictions = []) {
   const container = document.querySelector(".card-order");
+  const tabsContainer = document.getElementById("predictionsTabsContainer");
+  const phaseTabsContainer = document.getElementById("phaseTabsContainer");
   if (!container) return;
 
-  const grouped = groupMatchesByDay(matches);
+  matchesGlobal = matches;
 
-  container.innerHTML = Object.entries(grouped).map(([dayLabel, dayMatches], index) => {
+  const grouped = groupMatchesByDay(matches);
+  const { active, finished } = splitGroupsByStatus(grouped);
+
+  if (tabsContainer) {
+    tabsContainer.innerHTML = renderTabs(active.length, finished.length);
+    initTabs(active, finished, predictions, phaseTabsContainer);
+  }
+
+  renderGroupList(active, predictions, container);
+}
+
+function initTabs(active, finished, predictions, phaseTabsContainer) {
+  const tabsContainer = document.getElementById("predictionsTabsContainer");
+  if (!tabsContainer) return;
+
+  let currentActiveGroups = active;
+  let currentFinishedGroups = finished;
+
+  function updatePhaseTabs(groups) {
+    const uniquePhases = [...new Set(groups.map(([_, matches]) => matches[0]?.phase?.name).filter(Boolean))];
+
+    if (phaseTabsContainer && uniquePhases.length > 1) {
+      phaseTabsContainer.innerHTML = renderPhaseTabs(uniquePhases);
+      initPhaseTabs(uniquePhases, groups, predictions, phaseTabsContainer);
+      phaseTabsContainer.style.display = "block";
+    } else if (phaseTabsContainer) {
+      phaseTabsContainer.innerHTML = "";
+      phaseTabsContainer.style.display = "none";
+    }
+  }
+
+  updatePhaseTabs(active);
+
+  tabsContainer.addEventListener("click", (e) => {
+    const tabBtn = e.target.closest(".tab-btn");
+    if (!tabBtn) return;
+
+    const tab = tabBtn.dataset.tab;
+
+    tabsContainer.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    tabBtn.classList.add("active");
+
+    const container = document.querySelector(".card-order");
+    if (tab === "active") {
+      currentActiveGroups = active;
+      updatePhaseTabs(active);
+      renderGroupList(active, predictions, container);
+    } else {
+      currentActiveGroups = finished;
+      updatePhaseTabs(finished);
+      renderGroupList(finished, predictions, container);
+    }
+  });
+}
+
+function renderPhaseTabs(phases) {
+  return `
+    <div class="phase-tabs">
+      ${phases.map((phase, i) => `
+        <button class="phase-tab-btn ${i === 0 ? 'active' : ''}" data-phase="${phase}">
+          ${phase}
+        </button>
+      `).join("")}
+    </div>
+  `;
+}
+
+function initPhaseTabs(phases, groups, predictions, phaseTabsContainer) {
+  if (!phaseTabsContainer) return;
+
+  phaseTabsContainer.addEventListener("click", (e) => {
+    const tabBtn = e.target.closest(".phase-tab-btn");
+    if (!tabBtn) return;
+
+    const selectedPhase = tabBtn.dataset.phase;
+
+    phaseTabsContainer.querySelectorAll(".phase-tab-btn").forEach(b => b.classList.remove("active"));
+    tabBtn.classList.add("active");
+
+    const filtered = groups.filter(([_, matches]) => matches[0]?.phase?.name === selectedPhase);
+    const container = document.querySelector(".card-order");
+    renderGroupList(filtered, predictions, container);
+  });
+}
+
+function renderGroupList(groups, predictions, container) {
+  if (groups.length === 0) {
+    container.innerHTML = `<p class="no-matches">No hay fechas en esta sección.</p>`;
+    return;
+  }
+
+  const grouped = groupMatchesByDay(matchesGlobal);
+  const allKeys = Object.keys(grouped);
+
+  container.innerHTML = groups.map(([dayLabel, dayMatches]) => {
+    const originalIndex = allKeys.indexOf(dayLabel);
+    const phaseNumber = originalIndex + 1;
 
     const predictedCount = getPredictedCount(dayMatches);
     const totalMatches = dayMatches.length;
     const groupPoints = getGroupPoints(dayMatches, predictions);
     const phaseName = dayMatches[0]?.phase?.name || "";
-    const journeyLabel = phaseName ? `Fecha ${index + 1} - ${phaseName}` : `Fecha ${index + 1}`;
+    const journeyLabel = phaseName ? `Fecha ${phaseNumber} - ${phaseName}` : `Fecha ${phaseNumber}`;
 
     return `
       <div class="matches-group">
@@ -397,14 +539,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderSkeletons()
 
   const matches = await getMatches()
+  matchesGlobal = matches;
 
   if (matches && matches.length > 0) {
-
-    renderMatches(matches)
 
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
+      renderMatches(matches, []);
       return
     }
 
@@ -453,6 +595,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     updateStats(matches, savedPredictions, user.id)
+    updateProgress(matches, savedPredictions || [])
 
     document.querySelectorAll(".match-card").forEach(card => {
 
@@ -505,11 +648,8 @@ updateStats(matches, savedPredictions, user.id)
 
   }
 
-
-
   initScoreControls()
   initMatchCards()
-  updateProgress()
 
   if (!matches || matches.length === 0) return
 

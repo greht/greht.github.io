@@ -14,11 +14,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const profile = await getProfileData(user.id)
     const { rank } = await getUserRank(user.id)
     const predictions = await getPredictions(user.id)
+    const exactCount = predictions?.filter(p => p.is_exact === true).length || 0
 
     document.getElementById("userName").textContent = profile?.user_name || user.email
     document.getElementById("position").textContent = `#${rank || "--"}`
     document.getElementById("predictions").textContent = predictions?.length || 0
-    document.getElementById("correct").textContent = "--"
+    document.getElementById("correct").textContent = exactCount
     document.getElementById("points").textContent = profile?.points?.toLocaleString() || "0"
 })
 
