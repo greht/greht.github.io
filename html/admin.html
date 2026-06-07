@@ -252,14 +252,6 @@
 
       function isMatchLocked(match) {
         if (match.status === "finished") return true;
-
-        if (match.match_date) {
-          const matchTime = new Date(match.match_date).getTime();
-          const now = new Date().getTime();
-          const diffMinutes = (matchTime - now) / (1000 * 60);
-          if (diffMinutes <= 15) return true;
-        }
-
         return false;
       }
 
@@ -734,6 +726,24 @@
           loadMatches();
         }
       })();
+
+      setInterval(() => {
+        document.querySelectorAll(".match-card").forEach(card => {
+          const matchId = card.dataset.matchId;
+          const match = allMatches.find(m => m.id === matchId);
+          if (!match || !match.match_date || match.status === "finished") return;
+
+          const date = new Date(match.match_date);
+          const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+          const now = new Date();
+          const diff = argentinaDate.getTime() - now.getTime();
+
+          const statusEl = card.querySelector(".match-header-right span");
+          if (statusEl && diff <= 0) {
+            statusEl.textContent = "EN VIVO";
+          }
+        });
+      }, 60000);
     </script>
   </body>
 </html>

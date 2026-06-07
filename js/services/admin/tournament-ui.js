@@ -16,7 +16,6 @@ export async function loadQualifiedTeamsSection() {
         .order("display_order")
 
     const { data: leagues, error: leaguesError } = await supabase.from("leagues").select("id, name").order("name")
-    console.log("Leagues from DB:", leagues, leaguesError)
     const hardcodedLeague = { id: '1ebd76d7-5839-4c80-a41a-554de1bb22f5', name: 'FIFA World Cup 2026' }
     const leaguesList = (leagues && leagues.length) ? leagues : [hardcodedLeague]
     const leagueOptions = leaguesList.map(l => `<option value="${l.id}">${l.name}</option>`).join("")
@@ -24,7 +23,6 @@ export async function loadQualifiedTeamsSection() {
     const knockoutPhases = (phases || []).filter((p, i, arr) => arr.findIndex(x => x.name === p.name) === i)
     const stageOptions = knockoutPhases.map(p => `<option value="${p.name}">${p.name}</option>`).join("")
     const phaseIdOptions = knockoutPhases.map(p => `<option value="${p.id}">${p.name}</option>`).join("")
-    console.log("Phases from DB:", knockoutPhases)
 
     container.innerHTML = `
         <section class="tournament-admin">
@@ -127,7 +125,6 @@ function initQualifiedTeamsHandlers() {
     const select = document.getElementById("qualified-stage-select")
     if (select) {
         select.addEventListener("change", () => {
-            console.log("Dropdown changed to:", select.value)
             loadQualifiedTeams()
         })
     }
@@ -151,7 +148,7 @@ async function loadQualifiedTeams() {
     const stage = document.getElementById("qualified-stage-select")?.value
     const leagueId = document.getElementById("qualified-league-select")?.value
     const grid = document.getElementById("qualified-teams-grid")
-    if (!grid) { console.log("no grid"); return }
+    if (!grid) { return }
     if (!stage) { grid.innerHTML = "<p>Selecciona una etapa</p>"; return }
 
     let qualifiedQuery = supabase.from("qualified_teams").select("*").eq("stage", stage).order("slot_code")
@@ -162,10 +159,10 @@ async function loadQualifiedTeams() {
         loadAllGroups()
     ])
 
-    console.log("Qualified data:", qualified.data, "Stage used:", stage)
+    console.warn("Qualified data:", qualified.data, "Stage used:", stage)
 
     const slots = getSlotsForStage(stage, groups)
-    console.log("Stage:", stage, "Slots:", slots, "Qualified count:", qualified.data?.length || 0)
+    console.warn("Stage:", stage, "Slots:", slots, "Qualified count:", qualified.data?.length || 0)
 
     if (!slots.length) {
         grid.innerHTML = `<p>No hay slots para esta etapa. Stage: "${stage}"</p>`
@@ -299,15 +296,12 @@ async function loadTemplates() {
     const leagueId = document.getElementById("template-league-select")?.value
     if (!stage) return
 
-    console.log("Loading templates for stage:", stage, "leagueId:", leagueId)
-
     let query = supabase.from("knockout_templates").select("*").eq("stage", stage).order("match_order")
     if (leagueId) query = query.eq("league_id", leagueId)
 
     const { data, error } = await query
 
     if (error) { alert("Error cargando: " + error.message); return }
-    console.log("Templates data:", data)
 
     const grid = document.getElementById("templates-grid")
     if (!grid) return
@@ -499,7 +493,7 @@ async function handleGenerate() {
         alert("Completa todos los campos"); return
     }
 
-    console.log("Generating with stage:", stage, "phaseId:", phaseId, "leagueId:", leagueId)
+    console.warn("Generating with stage:", stage, "phaseId:", phaseId, "leagueId:", leagueId)
 
     const datetimeInputs = document.querySelectorAll(".match-datetime")
     const matchDateMap = new Map()
@@ -519,7 +513,7 @@ async function handleGenerate() {
     btn.disabled = true; btn.textContent = "Generando..."
 
     try {
-        console.log("Using leagueId:", leagueId)
+        console.warn("Using leagueId:", leagueId)
 
         let templatesQuery = supabase.from("knockout_templates").select("*").eq("stage", stage).order("match_order")
         if (leagueId) templatesQuery = templatesQuery.eq("league_id", leagueId)
@@ -597,7 +591,7 @@ async function getCurrentLeagueId() {
             .from("leagues")
             .select("id")
             .limit(1)
-        console.log("Leagues query result:", data, error)
+        console.warn("Leagues query result:", data, error)
         if (error || !data?.length) {
             throw new Error(error?.message || "No league found")
         }

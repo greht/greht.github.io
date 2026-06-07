@@ -128,7 +128,7 @@ async function processMatchPredictions(match) {
     if (updateError) {
         console.error("Error updating predictions for match", match.id, updateError);
     } else {
-        console.log(`Processed ${updates.length} predictions for match ${match.id}`);
+        console.warn(`Processed ${updates.length} predictions for match ${match.id}`);
     }
 }
 
@@ -163,7 +163,7 @@ export async function updateAllUserPoints() {
             .eq("user_id", update.user_id);
     }
 
-    console.log("Updated points for", profileUpdates.length, "users");
+    console.warn("Updated points for", profileUpdates.length, "users");
 }
 
 export async function updateUserPoints(userId) {

@@ -38,7 +38,6 @@ export async function insertConsents(userId) {
     }
 
     if (consents.length > 0) {
-        console.log("Inserting consents:", consents);
         return await supabase.from("user_consents").insert(consents);
     }
 }

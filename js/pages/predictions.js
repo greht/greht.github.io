@@ -6,8 +6,12 @@ import { initMatchCards } from "/js/components/matchCard.js";
 import { getMatches } from "/js/services/matches.js"
 import { supabase } from "/config/supabase.js"
 import { savePrediction, getPredictions } from "/js/services/predictions.js"
+import { checkAndCelebrateCompletion } from "/js/utils/celebration.js"
 
 let matchesGlobal = [];
+let currentPhaseName = "";
+let currentPhaseId = null;
+let savedPredictions = [];
 
 function renderSkeletons() {
   const container = document.querySelector(".card-order");
@@ -71,11 +75,11 @@ function groupMatchesByDay(matches) {
 
 function canPredict(matchDate) {
     if (!matchDate) return true;
-    const matchTime = new Date(matchDate).getTime();
+    const matchTime = new Date(matchDate).getTime() + 3 * 60 * 60 * 1000;
     const now = new Date().getTime();
     const diffMinutes = (matchTime - now) / (1000 * 60);
     return diffMinutes > 15;
-}
+  }
 
 function renderMatchCard(match) {
   const homeTeam = match.home_team?.name || "Equipo Local";
@@ -87,6 +91,8 @@ function renderMatchCard(match) {
   let matchDate = "Por confirmar";
   let countdown = "";
   let isLocked = false;
+  let isCloseToStart = false;
+  let diff = null;
 
   if (match.match_date) {
     try {
@@ -94,16 +100,17 @@ function renderMatchCard(match) {
       const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
 
       const now = new Date();
-      const diff = argentinaDate.getTime() - now.getTime();
+      diff = argentinaDate.getTime() - now.getTime();
+      const diffMinutes = diff / (1000 * 60);
 
       if (diff > 0) {
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
         countdown = `${days}d ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+        if (diffMinutes <= 15) isCloseToStart = true;
       } else {
-        countdown = "En vivo";
+        countdown = "0d 00:00";
       }
 
       matchDate = argentinaDate.toLocaleString("es-ES", {
@@ -114,14 +121,22 @@ function renderMatchCard(match) {
         minute: "2-digit"
       }).replace(".", "");
 
-      isLocked = !canPredict(match.match_date);
+      if (match.status !== "live" && match.status !== "finished") {
+        isLocked = !canPredict(match.match_date);
+      } else {
+        isLocked = true;
+      }
 
     } catch (e) {
       matchDate = "Por confirmar";
     }
   }
 
-  if (match.status === "finished") {
+  if (match.status === "finished" || match.status === "live") {
+    isLocked = true;
+  }
+
+  if (match._lockedByTime) {
     isLocked = true;
   }
 
@@ -131,14 +146,23 @@ function renderMatchCard(match) {
     finished: "Finalizado"
   };
 
-  const statusText = statusMap[match.status] || "Sin registrar";
+  let statusText;
+  if (match.status === "finished") {
+    statusText = "Finalizado";
+  } else if (match.status === "live") {
+    statusText = "EN VIVO";
+  } else if (isCloseToStart) {
+    statusText = "Por comenzar";
+  } else {
+    statusText = "Próximamente";
+  }
   const pointsEarned = match.points_earned;
   const hasPrediction = match.home_predictions !== null && match.home_predictions !== undefined;
-  const showPoints = match.status === "finished" && pointsEarned !== undefined && pointsEarned !== null;
+  const showPoints = match.status === "finished" && hasPrediction && pointsEarned !== null && pointsEarned !== undefined;
 
   let rightBadge = "";
   if (showPoints) {
-    rightBadge = `<span class="points-earned">+${pointsEarned} pt${pointsEarned !== 1 ? 'os' : ''}</span>`;
+    rightBadge = `<span class="points-earned ${pointsEarned === 0 ? 'zero' : ''}">+${pointsEarned} pt${pointsEarned !== 1 ? 'os' : ''}</span>`;
   } else if (match.status === "finished" && !hasPrediction) {
     rightBadge = `<span class="points-earned miss">Sin predecir</span>`;
   }
@@ -152,7 +176,10 @@ function renderMatchCard(match) {
         </div>
 
         <div class="match-header-right">
-          <span>${countdown}</span>
+          ${(match.status === "live" || match.status === "finished" || diff <= 0) && match.home_score !== null && match.away_score !== null
+            ? `<span class="live-score">${match.home_score} - ${match.away_score}</span>`
+            : `<span>${countdown}</span>`
+          }
         </div>
       </div>
 
@@ -386,15 +413,27 @@ function initTabs(active, finished, predictions, phaseTabsContainer) {
   const tabsContainer = document.getElementById("predictionsTabsContainer");
   if (!tabsContainer) return;
 
-  let currentActiveGroups = active;
-  let currentFinishedGroups = finished;
+  let phaseTabsInitialized = false;
 
   function updatePhaseTabs(groups) {
     const uniquePhases = [...new Set(groups.map(([_, matches]) => matches[0]?.phase?.name).filter(Boolean))];
 
+    const findPhaseId = (phaseName) => {
+      for (const [_, matches] of groups) {
+        const match = matches.find(m => m.phase?.name === phaseName)
+        if (match) return match.phase?.id || match.phase_id || null
+      }
+      return null
+    }
+
+    if (uniquePhases.length > 0) {
+      currentPhaseName = uniquePhases[0];
+      currentPhaseId = findPhaseId(uniquePhases[0]);
+    }
+
     if (phaseTabsContainer && uniquePhases.length > 1) {
       phaseTabsContainer.innerHTML = renderPhaseTabs(uniquePhases);
-      initPhaseTabs(uniquePhases, groups, predictions, phaseTabsContainer);
+      initPhaseTabs(uniquePhases, groups, predictions, phaseTabsContainer, findPhaseId);
       phaseTabsContainer.style.display = "block";
     } else if (phaseTabsContainer) {
       phaseTabsContainer.innerHTML = "";
@@ -413,17 +452,57 @@ function initTabs(active, finished, predictions, phaseTabsContainer) {
     tabsContainer.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     tabBtn.classList.add("active");
 
+    function restoreInputValues(predictions) {
+      predictions.forEach(p => {
+        const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
+        if (!card) return
+        const homeInput = card.querySelector('[data-team="home"]')
+        const awayInput = card.querySelector('[data-team="away"]')
+        if (homeInput) homeInput.value = p.home_predictions ?? ""
+        if (awayInput) awayInput.value = p.away_predictions ?? ""
+      });
+    }
+
     const container = document.querySelector(".card-order");
     if (tab === "active") {
-      currentActiveGroups = active;
       updatePhaseTabs(active);
       renderGroupList(active, predictions, container);
+      restoreInputValues(predictions);
     } else {
-      currentActiveGroups = finished;
       updatePhaseTabs(finished);
       renderGroupList(finished, predictions, container);
+      restoreInputValues(predictions);
     }
   });
+
+  function initPhaseTabs(phases, groups, predictions, phaseTabsContainer, findPhaseId) {
+    if (!phaseTabsContainer || phaseTabsInitialized) return;
+    phaseTabsInitialized = true;
+
+    const updateCurrentPhase = (phaseName) => {
+      currentPhaseName = phaseName
+      currentPhaseId = findPhaseId(phaseName)
+    }
+
+    if (phases.length > 0) {
+      updateCurrentPhase(phases[0])
+    }
+
+    phaseTabsContainer.addEventListener("click", (e) => {
+      const tabBtn = e.target.closest(".phase-tab-btn");
+      if (!tabBtn) return;
+
+      const selectedPhase = tabBtn.dataset.phase;
+      updateCurrentPhase(selectedPhase)
+
+      phaseTabsContainer.querySelectorAll(".phase-tab-btn").forEach(b => b.classList.remove("active"));
+      tabBtn.classList.add("active");
+
+      const filtered = groups.filter(([_, matches]) => matches[0]?.phase?.name === selectedPhase);
+      const container = document.querySelector(".card-order");
+      renderGroupList(filtered, predictions, container);
+    });
+  }
 }
 
 function renderPhaseTabs(phases) {
@@ -436,24 +515,6 @@ function renderPhaseTabs(phases) {
       `).join("")}
     </div>
   `;
-}
-
-function initPhaseTabs(phases, groups, predictions, phaseTabsContainer) {
-  if (!phaseTabsContainer) return;
-
-  phaseTabsContainer.addEventListener("click", (e) => {
-    const tabBtn = e.target.closest(".phase-tab-btn");
-    if (!tabBtn) return;
-
-    const selectedPhase = tabBtn.dataset.phase;
-
-    phaseTabsContainer.querySelectorAll(".phase-tab-btn").forEach(b => b.classList.remove("active"));
-    tabBtn.classList.add("active");
-
-    const filtered = groups.filter(([_, matches]) => matches[0]?.phase?.name === selectedPhase);
-    const container = document.querySelector(".card-order");
-    renderGroupList(filtered, predictions, container);
-  });
 }
 
 function renderGroupList(groups, predictions, container) {
@@ -499,7 +560,7 @@ function renderGroupList(groups, predictions, container) {
       </span>
 
       <span class="progress-label">
-        pronunciados
+        pronosticados
       </span>
 
     </div>
@@ -529,7 +590,7 @@ function renderGroupList(groups, predictions, container) {
     `;
   }).join("");
 
-  initAccordions();
+initAccordions();
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -550,7 +611,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return
     }
 
-    const savedPredictions = await getPredictions(user.id)
+    savedPredictions = await getPredictions(user.id)
 
     matches.forEach(match => {
 
@@ -597,86 +658,153 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateStats(matches, savedPredictions, user.id)
     updateProgress(matches, savedPredictions || [])
 
-    document.querySelectorAll(".match-card").forEach(card => {
+    function attachInputListeners() {
+      document.querySelectorAll(".match-card").forEach(card => {
+        const inputs = card.querySelectorAll(".score-input")
+        let timeout
 
-      const inputs = card.querySelectorAll(".score-input")
+        inputs.forEach(input => {
+          input.addEventListener("input", () => {
+            clearTimeout(timeout)
+            timeout = setTimeout(async () => {
+              const matchId = card.dataset.matchId
+              const homeScore = card.querySelector('[data-team="home"]').value || 0
+              const awayScore = card.querySelector('[data-team="away"]').value || 0
+              const homeScoreVal = parseInt(homeScore) || 0
+              const awayScoreVal = parseInt(awayScore) || 0
 
-      let timeout
+              await savePrediction(user.id, matchId, homeScoreVal, awayScoreVal)
 
-      inputs.forEach(input => {
+              const match = matches.find(m => m.id == matchId)
+              if (match) {
+                match.home_predictions = homeScoreVal
+                match.away_predictions = awayScoreVal
+              }
 
-        input.addEventListener("input", () => {
+              updateAccordionProgress(card, matches)
+              updateStats(matches, savedPredictions, user.id)
 
-          clearTimeout(timeout)
-
-          timeout = setTimeout(async () => {
-
-            const matchId = card.dataset.matchId
-
-            const homeScore =
-              card.querySelector('[data-team="home"]').value || 0
-
-            const awayScore =
-              card.querySelector('[data-team="away"]').value || 0
-
-            const homeScoreVal = parseInt(homeScore) || 0
-            const awayScoreVal = parseInt(awayScore) || 0
-
-            await savePrediction(
-              user.id,
-              matchId,
-              homeScoreVal,
-              awayScoreVal
-            )
-
-            const match = matches.find(m => m.id == matchId)
-            if (match) {
-              match.home_predictions = homeScoreVal
-              match.away_predictions = awayScoreVal
-            }
-
-            updateAccordionProgress(card, matches)
-updateStats(matches, savedPredictions, user.id)
-
-          }, 800)
-
+              const updatedPredictions = await getPredictions(user.id)
+              checkAndCelebrateCompletion(matches, updatedPredictions, currentPhaseName, currentPhaseId)
+            }, 800)
+          })
         })
-
       })
+    }
 
-    })
+    attachInputListeners()
 
+    initScoreControls()
+    initMatchCards()
+
+    updateStats(matches, savedPredictions, user.id)
+    updateProgress(matches, savedPredictions || [])
+
+    const channel = supabase
+      .channel('matches-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'matches'
+        },
+        async (payload) => {
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            const updatedMatch = payload.new;
+            const matchIndex = matches.findIndex(m => m.id === updatedMatch.id);
+            if (matchIndex !== -1) {
+              Object.assign(matches[matchIndex], updatedMatch);
+            } else {
+              matches.push(updatedMatch);
+            }
+            matchesGlobal = matches;
+            renderMatches(matches, savedPredictions);
+            savedPredictions.forEach(p => {
+              const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
+              if (!card) return
+              const homeInput = card.querySelector('[data-team="home"]')
+              const awayInput = card.querySelector('[data-team="away"]')
+              if (homeInput) homeInput.value = p.home_predictions ?? ""
+              if (awayInput) awayInput.value = p.away_predictions ?? ""
+            });
+            initScoreControls();
+            attachInputListeners();
+            updateStats(matches, savedPredictions, user.id);
+          }
+        }
+      )
+      .subscribe();
+
+    setInterval(() => {
+      let needsRerender = false;
+
+      document.querySelectorAll(".match-card").forEach(card => {
+        const matchId = card.dataset.matchId;
+        const match = matches.find(m => m.id === matchId);
+
+        if (!match || !match.match_date) return;
+
+        const date = new Date(match.match_date);
+        const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+        const now = new Date();
+        const diff = argentinaDate.getTime() - now.getTime();
+        const diffMinutes = diff / (1000 * 60);
+
+        const countdownEl = card.querySelector(".match-header-right span");
+        if (countdownEl) {
+          if (match.status === "live" || match.status === "finished" || diff <= 0) {
+            countdownEl.textContent = `${match.home_score ?? 0} - ${match.away_score ?? 0}`;
+            countdownEl.classList.add("live-score");
+          } else if (diff > 0) {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            countdownEl.textContent = `${days}d ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
+            countdownEl.classList.remove("live-score");
+          } else {
+            countdownEl.textContent = "0d 00:00";
+            countdownEl.classList.remove("live-score");
+          }
+        }
+
+        const statusEl = card.querySelector(".status-text");
+        if (statusEl) {
+          if (diff <= 0 && match.status !== "finished") {
+            statusEl.textContent = "En vivo";
+          } else if (diffMinutes <= 15 && match.status !== "finished") {
+            statusEl.textContent = "Por comenzar";
+          }
+        }
+
+        if (match.status !== "finished" && match.status !== "live" && diffMinutes <= 15 && diffMinutes > 0) {
+          if (!match._lockedByTime) {
+            match._lockedByTime = true;
+            needsRerender = true;
+          }
+          const inputs = card.querySelectorAll(".score-input");
+          const buttons = card.querySelectorAll(".score-btn");
+          inputs.forEach(input => input.disabled = true);
+          buttons.forEach(btn => btn.disabled = true);
+        }
+      });
+
+      if (needsRerender) {
+        renderMatches(matches, savedPredictions);
+        savedPredictions.forEach(p => {
+          const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
+          if (!card) return
+          const homeInput = card.querySelector('[data-team="home"]')
+          const awayInput = card.querySelector('[data-team="away"]')
+          if (homeInput) homeInput.value = p.home_predictions ?? ""
+          if (awayInput) awayInput.value = p.away_predictions ?? ""
+        });
+        initScoreControls();
+        attachInputListeners();
+      }
+    }, 60000);
   }
 
-  initScoreControls()
-  initMatchCards()
-
   if (!matches || matches.length === 0) return
-
-  setInterval(() => {
-    document.querySelectorAll(".match-card").forEach(card => {
-      const matchId = card.dataset.matchId;
-      const match = matches.find(m => m.id === matchId);
-
-      if (!match || !match.match_date) return;
-
-      const date = new Date(match.match_date);
-      const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
-      const now = new Date();
-      const diff = argentinaDate.getTime() - now.getTime();
-
-      const countdownEl = card.querySelector(".match-header-right span");
-      if (countdownEl) {
-        if (diff > 0) {
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          countdownEl.textContent = `${days}d ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
-        } else {
-          countdownEl.textContent = "En vivo";
-        }
-      }
-    });
-  }, 60000);
 
 })
