@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="CSS/styles.css">
+    <link rel="stylesheet" href="CSS/footer.css">
+    <link rel="stylesheet" href="CSS/contact.css">
+    <title>Contacto - PredictiLab</title>
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo">
+            <a href="index.html" class="logo">
+                <img class="logo-icon" src="assets/images/Fondo-blanco.svg" alt="Logo PredictiLab">
+                <span class="logo-text">PredictiLab</span>
+            </a>
+        </div>
+        <div class="nav-actions">
+            <a href="register.html" class="nav-link">Registro</a>
+            <button class="btn btn-primary" onclick="window.location.href='login.html'">Iniciar sesión</button>
+        </div>
+    </header>
+
+    <main class="contact-page">
+        <h1>Contáctanos</h1>
+        <p class="subtitle">¿Tienes alguna pregunta o sugerencia? Escríbenos y te responderemos lo antes posible.</p>
+
+        <form class="contact-form" id="contactForm">
+            <div class="form-group">
+                <label for="name">Nombre</label>
+                <input type="text" id="name" name="name" placeholder="Tu nombre" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" name="email" placeholder="tu@correo.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="subject">Asunto</label>
+                <input type="text" id="subject" name="subject" placeholder="Motivo de tu mensaje" required>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Mensaje</label>
+                <textarea id="message" name="message" placeholder="Escribe tu mensaje aquí..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                </svg>
+                Enviar mensaje
+            </button>
+        </form>
+
+        <div class="contact-info">
+            <p>También puedes escribirnos directamente a <a href="mailto:contacto.predictilab@gmail.com">contacto.predictilab@gmail.com</a></p>
+        </div>
+    </main>
+
+    <footer class="footer-system">
+        <div class="footer-container">
+            <div class="footer-left">
+                <span class="logo-text">PredictiLab.com</span>
+            </div>
+            <div class="footer-center">
+                <a href="politica.html">Políticas de privacidad</a>
+                <a href="tyc.html">Términos del servicio</a>
+                <a href="contacto.html">Contáctanos</a>
+            </div>
+            <div class="footer-right">
+                <span>© 2026 PredictiLab - Greht Fernández</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <script>
+        (function() {
+            emailjs.init("kDUVLeIy3OEaWx0r4");
+        })();
+    </script>
+    <script>
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
+            
+            const btn = document.querySelector('.btn-submit');
+            btn.textContent = 'Enviando...';
+            btn.disabled = true;
+            
+            emailjs.send('service_ysjiifb', 'template_4akv3k7', {
+                title: subject,
+                name: name,
+                email: email,
+                time: new Date().toLocaleString('es-ES'),
+                message: message
+            })
+            .then(function() {
+                alert('¡Mensaje enviado con éxito! Te responderemos pronto.');
+                document.getElementById('contactForm').reset();
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Enviar mensaje';
+                btn.disabled = false;
+            }, function(error) {
+                alert('Hubo un error al enviar el mensaje. Por favor intenta de nuevo.');
+                btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Enviar mensaje';
+                btn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>

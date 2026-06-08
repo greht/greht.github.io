@@ -13,8 +13,14 @@
 <body>
     <header class="navbar">
         <div class="logo">
-            <img class="logo-icon" src="assets/images//Fondo-blanco.svg" alt="Logo PredictiLab">
-            <span class="logo-text">PredictiLab</span>
+            <a href="index.html" class="logo">
+                <img
+                    class="logo-icon"
+                    src="assets/images/Fondo-blanco.svg"
+                    alt="Logo PredictiLab"
+                >
+                <span class="logo-text">PredictiLab</span>
+            </a>
         </div>
 
         <div class="nav-actions">
@@ -38,7 +44,7 @@
 
                             
                     <div class="hero-cta">
-                        <button class="hero-btn">Crear mi grupo gratis</button>
+                        <button class="hero-btn" onclick="window.location.href='register.html'">Crear mi cuenta gratis</button>
 
                         <ul class="hero-benefits">
                             <li>✔ Gratis</li>
@@ -140,7 +146,7 @@
 
                 <div class="desplegables">
 
-                    <div class="accordion-item">
+                    <div class="accordion-item disabled-feature">
                         <button class="accordion-header">
                             <span class="accordion-left">
                                 <div class="arrow">
@@ -278,17 +284,38 @@
             </p>
 
             <div class="social-icons">
-                <svg class="icon-rrss">
-                    <use href="assets/icons/icons.svg#icon-linkedin"></use>
-                </svg>
+                <a
+                    href="https://www.linkedin.com/in/grehtlingmar-fernandez"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="LinkedIn de Greht Fernández"
+                    >
+                    <svg class="icon-rrss">
+                        <use href="assets/icons/icons.svg#icon-linkedin"></use>
+                    </svg>
+                </a>
 
-                <svg class="icon-rrss">
-                    <use href="assets/icons/icons.svg#icon-web"></use>
-                </svg>
+                <a
+                    href="https://grehtcreativa.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="LinkedIn de Greht Fernández"
+                    >
+                    <svg class="icon-rrss">
+                        <use href="assets/icons/icons.svg#icon-web""></use>
+                    </svg>
+                </a>
 
-                <svg class="icon-rrss">
-                    <use href="assets/icons/icons.svg#icon-ig"></use>
-                </svg>
+                <a
+                    href="https://www.instagram.com/grehtfernandez/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="LinkedIn de Greht Fernández"
+                    >
+                    <svg class="icon-rrss">
+                        <use href="assets/icons/icons.svg#icon-ig"></use>
+                    </svg>
+                </a>
 
             </div>
         </section>
@@ -303,9 +330,9 @@
                 </div>
 
                 <div class="footer-center">
-                <a href="#">Políticas de privacidad</a>
-                <a href="#">Términos del servicio</a>
-                <a href="#">Contáctanos</a>
+                <a class="disabled-feature" href="#">Políticas de privacidad</a>
+                <a href="tyc.html">Términos del servicio</a>
+                <a href="contacto.html">Contáctanos</a>
                 </div>
 
                 <div class="footer-right">

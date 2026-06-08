@@ -1,49 +1,54 @@
-*{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 :root {
-    --color-primary: #5D1B6B;
-    --color-accent: #8FBA36;
-    --color-bg: #ffffff;
-    --color-text: #1D1B1D;
-    --color-text-secundary: #6B7280;
-    --color-bg-secundary: #F1F0F1;
+  --color-primary: #5d1b6b;
+  --color-accent: #8fba36;
+  --color-bg: #ffffff;
+  --color-text: #1d1b1d;
+  --color-text-secundary: #6b7280;
+  --color-bg-secundary: #f1f0f1;
 
-    --font-primary: 'Lexend', sans-serif;
+  --font-primary: "Lexend", sans-serif;
+}
+
+.logo-icon {
+  width: 32px;
+  height: 32px;
 }
 
 body {
-    font-family: 'Lexend', sans-serif;
-    font-family: var(--font-primary);
-    margin: 0;
-    display: flex;
-    min-height: 100vh;
-    flex-direction: column;
+  font-family: "Lexend", sans-serif;
+  font-family: var(--font-primary);
+  margin: 0;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
 }
 
-html, body {
+html,
+body {
   overflow-x: hidden;
   height: 100%;
 }
 
 .login-page .login-container {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 .login-left {
-    flex: 0 0 40%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
+  flex: 0 0 40%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 
-    border-top-right-radius: 00px;
-    border-bottom-right-radius: 250px;
+  border-top-right-radius: 00px;
+  border-bottom-right-radius: 250px;
 }
 
 .login-left img {
@@ -56,21 +61,27 @@ html, body {
 }
 
 @keyframes float {
-  0%   { transform: translateY(0px) scale(1.05); }
-  50%  { transform: translateY(-12px) scale(1.08); }
-  100% { transform: translateY(0px) scale(1.05); }
+  0% {
+    transform: translateY(0px) scale(1.05);
+  }
+  50% {
+    transform: translateY(-12px) scale(1.08);
+  }
+  100% {
+    transform: translateY(0px) scale(1.05);
+  }
 }
 
 .login-left::after {
-    content: "";
-    position: absolute;
-    inset: 0;
+  content: "";
+  position: absolute;
+  inset: 0;
 
-    background: linear-gradient(
-        to bottom,
-        rgba(93, 27, 107, 0) 50%,
-        rgba(93, 27, 107, 0.8) 100%
-    );
+  background: linear-gradient(
+    to bottom,
+    rgba(93, 27, 107, 0) 50%,
+    rgba(93, 27, 107, 0.8) 100%
+  );
 }
 
 .login-page {
@@ -87,7 +98,7 @@ html, body {
   flex: 1;
   display: flex;
   overflow: hidden;
-} 
+}
 
 .login-page .login-card {
   flex: 0 0 60%;
@@ -137,64 +148,68 @@ input:focus {
   transform: translateY(-2px);
 }
 
+.btn-sesion {
+  background: var(--color-accent);
+  font-weight: 600;
+  color: var(--color-primary);
+  border: none;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+
+  transition: all 0.3s ease;
+}
+
+.btn-sesion:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
 .secondary-footer {
   height: 60px;
   flex-shrink: 0;
 }
 
-.logo1 {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    font-weight: 600;
-}
-
-.logo1-text {
-    color: var(--color-primary);
-    font-weight: 700;
-    font-size: 18px;
-}
 
 .head-card {
-    padding: 20px 0;
-    align-self: center;
-
+  padding: 20px 0;
+  align-self: center;
 }
 
 .title-up {
-    display: flex;
-    justify-content: center;
-    padding-bottom: 5px;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 5px;
 }
 
 .title-down .color-highlight {
-    color: var(--color-accent);
-    font-weight: 500;
+  color: var(--color-accent);
+  font-weight: 500;
 }
 
 .info {
-    display: flex;
-    padding-bottom: 20px;
-    width: 100%;
+  display: flex;
+  padding-bottom: 20px;
+  width: 100%;
 }
 
 .login-page .info-left {
-    flex: 0 0 40%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
+  flex: 0 0 40%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
 }
 
 .info-right {
-    flex: 0 0 60%;
-    height: 100%;
-    display: flex;
-    justify-content: right;
+  flex: 0 0 60%;
+  height: 100%;
+  display: flex;
+  justify-content: right;
 }
 
 .checkbox {
@@ -331,11 +346,11 @@ input:focus {
 }
 
 .link-create-account {
-    font-size: 16px;
-    display: flex;
-    justify-content: center;
-    margin: 20px 0px;
-    gap: 14px;
+  font-size: 16px;
+  display: flex;
+  justify-content: center;
+  margin: 20px 0px;
+  gap: 14px;
 }
 
 .link-create-account a {
@@ -356,7 +371,6 @@ input:focus {
   gap: 12px;
   width: 100%;
 }
-
 
 .register-page .register-card {
   flex: 0 0 60%;
@@ -480,9 +494,7 @@ select option {
   border-radius: 10px;
 }
 
-
 @media (max-width: 768px) {
-
   .login-container {
     flex-direction: column;
   }
@@ -503,6 +515,4 @@ select option {
     flex: 1;
     padding: 30px 20px;
   }
-
 }
-
