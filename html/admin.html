@@ -93,6 +93,7 @@
 
     <script type="module">
       import { supabase } from "/config/supabase.js";
+      import { checkAdmin, ADMIN_USER_ID } from "/config/admin.js";
       import { processFinishedMatches } from "/js/services/scoring.js";
       import { loadNavbar, loadFooter } from "/js/components/navbar.js";
       import { loadQualifiedTeamsSection } from "/js/services/admin/tournament-ui.js";
@@ -101,25 +102,14 @@
       let allMatches = [];
 
       async function checkAdminAccess() {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
+        const { data: { user }, error } = await supabase.auth.getUser();
 
         if (error || !user) {
           window.location.href = "/login.html";
           return false;
         }
 
-        currentUser = user;
-
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("user_id", user.id)
-          .single();
-
-        if (profileError || !profile || profile.role !== "admin") {
+        if (user.id !== ADMIN_USER_ID) {
           document.querySelector(".header-section").innerHTML = `
                     <h1>Acceso Denegado</h1>
                     <p>No tienes permisos para acceder a esta sección.</p>
@@ -130,6 +120,7 @@
           return false;
         }
 
+        currentUser = user;
         return true;
       }
 
@@ -601,6 +592,12 @@
       }
 
       async function saveMatchResult(matchId) {
+        const adminUser = await checkAdmin();
+        if (!adminUser) {
+          alert("No tienes permisos para realizar esta acción");
+          return;
+        }
+
         const homeInput = document.getElementById(`home-${matchId}`);
         const awayInput = document.getElementById(`away-${matchId}`);
         const statusSelect = document.getElementById(`status-${matchId}`);
@@ -691,6 +688,12 @@
       }
 
       async function processPoints() {
+        const adminUser = await checkAdmin();
+        if (!adminUser) {
+          alert("No tienes permisos para realizar esta acción");
+          return;
+        }
+
         const btn = document.getElementById("processPointsBtn");
         btn.disabled = true;
         btn.textContent = "Procesando...";

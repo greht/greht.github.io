@@ -926,7 +926,6 @@ p {
   scrollbar-color: var(--color-accent) var(--color-bg-secundary);
 }
 
-
 .disabled-feature {
   display: none;
 }

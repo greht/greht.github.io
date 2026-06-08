@@ -1,8 +1,14 @@
 import { supabase } from "/config/supabase.js"
+import { checkAdmin } from "/config/admin.js"
 
 let tournamentInitialized = false
 
 export async function loadQualifiedTeamsSection() {
+    const user = await checkAdmin();
+    if (!user) {
+        alert('No tienes permisos para acceder a esta sección');
+        return;
+    }
     const container = document.getElementById("tournament-section")
     if (!container) return
 
@@ -247,6 +253,9 @@ async function loadQualifiedTeams() {
 }
 
 async function assignSlot(stage, slotCode, teamId) {
+    const user = await checkAdmin();
+    if (!user) return;
+
     const leagueId = document.getElementById("qualified-league-select")?.value
     if (!leagueId) { alert("Selecciona una liga"); return }
 
@@ -273,6 +282,9 @@ async function assignSlot(stage, slotCode, teamId) {
 }
 
 async function removeSlot(stage, slotCode) {
+    const user = await checkAdmin();
+    if (!user) return;
+
     const leagueId = document.getElementById("qualified-league-select")?.value
     if (!leagueId) { alert("Selecciona una liga"); return }
     let query = supabase.from("qualified_teams").delete()
@@ -343,6 +355,9 @@ const qualifiedData = qualified.data || []
 
     grid.querySelectorAll(".btn-delete-template").forEach(btn => {
         btn.addEventListener("click", async () => {
+            const adminUser = await checkAdmin();
+            if (!adminUser) return;
+
             if (!confirm("Eliminar esta plantilla?")) return
             const { error } = await supabase.from("knockout_templates").delete().eq("id", btn.dataset.id)
             if (error) alert("Error eliminando: " + error.message)
@@ -382,6 +397,9 @@ function showAddTemplateModal() {
     document.body.appendChild(modal)
     modal.querySelector("#cancel-template-btn").addEventListener("click", () => modal.remove())
     modal.querySelector("#save-template-btn").addEventListener("click", async () => {
+        const adminUser = await checkAdmin();
+        if (!adminUser) { modal.remove(); return; }
+
         const leagueId = document.getElementById("template-league-select")?.value
         const stage = document.getElementById("template-stage-select")?.value
         const { error } = await supabase.from("knockout_templates").insert({
@@ -485,6 +503,9 @@ async function loadGeneratePreview() {
 }
 
 async function handleGenerate() {
+    const user = await checkAdmin();
+    if (!user) return;
+
     const stage = document.getElementById("generate-stage")?.value
     const phaseId = document.getElementById("generate-phase")?.value
     const leagueId = document.getElementById("generate-league-select")?.value
