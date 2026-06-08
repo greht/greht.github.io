@@ -2,6 +2,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-accent) var(--color-bg-secundary);
 }
 
 :root {
@@ -48,6 +50,7 @@ h2 {
 
 p {
   font-weight: 400;
+  color: var(--color-text);
 }
 
 button {
@@ -69,6 +72,7 @@ button {
   display: flex;
   text-decoration: none;
   font-weight: 500;
+  color: var(--color-bg);
 }
 
 .nav-actions {
@@ -77,11 +81,6 @@ button {
   gap: 20px;
   justify-self: right;
   margin-left: auto;
-}
-
-.nav-link {
-  color: var(--color-bg);
-  text-decoration: none;
 }
 
 .logo {
@@ -188,6 +187,7 @@ button {
   height: 2px;
   background: var(--color-primary);
   border-radius: 2px;
+  transform: scaleX(1);
 }
 
 .navbar-center a::after {
@@ -206,10 +206,6 @@ button {
 }
 
 .navbar-center a:hover::after {
-  transform: scaleX(1);
-}
-
-.navbar-center a.active::after {
   transform: scaleX(1);
 }
 
@@ -384,10 +380,6 @@ button {
   margin: 16px 0;
   opacity: 0.9;
   color: var(--color-text-secundary);
-}
-
-p {
-  color: var(--color-text);
 }
 
 .hero-benefits {
@@ -618,7 +610,6 @@ p {
 }
 
 .accordion-item {
-  border-radius: 12px;
   overflow: hidden;
   color: var(--color-bg);
   margin-bottom: 16px;
@@ -628,6 +619,8 @@ p {
   border-radius: 12px;
 
   position: relative;
+
+  transition: all 0.3s ease;
 }
 
 .accordion-item::before {
@@ -700,10 +693,6 @@ p {
   will-change: height;
 }
 
-.accordion-item {
-  transition: all 0.3s ease;
-}
-
 .accordion-item.active .accordion-content {
   max-height: 200px;
   padding: 16px 20px;
@@ -767,6 +756,11 @@ p {
 .creator-section {
   text-align: center;
   padding: 80px 20px;
+  background: radial-gradient(
+    circle at top,
+    rgba(123, 44, 191, 0.08),
+    transparent 60%
+  );
 }
 
 .creator-title {
@@ -808,14 +802,6 @@ p {
 .social-icons a:hover {
   color: var(--color-primary);
   transform: translateY(-2px);
-}
-
-.creator-section {
-  background: radial-gradient(
-    circle at top,
-    rgba(123, 44, 191, 0.08),
-    transparent 60%
-  );
 }
 
 .footer {
@@ -919,11 +905,6 @@ p {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #7aa82e;
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-accent) var(--color-bg-secundary);
 }
 
 .disabled-feature {

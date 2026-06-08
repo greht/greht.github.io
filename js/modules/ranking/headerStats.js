@@ -11,10 +11,22 @@ export async function renderHeaderStats() {
 
     const profile = await getProfileData(user.id);
     const { rank } = await getUserRank(user.id);
+    const weeklyChange = await getWeeklyChange(user.id, rank);
 
     if (positionEl) positionEl.textContent = rank || "--";
     if (pointsEl) pointsEl.textContent = profile?.points?.toLocaleString() || "0";
-    if (weekEl) weekEl.textContent = "+0";
+    if (weekEl) {
+        if (weeklyChange > 0) {
+            weekEl.textContent = `+${weeklyChange}`;
+            weekEl.style.color = "var(--color-accent)";
+        } else if (weeklyChange < 0) {
+            weekEl.textContent = `${weeklyChange}`;
+            weekEl.style.color = "#e53e3e";
+        } else {
+            weekEl.textContent = "0";
+            weekEl.style.color = "var(--color-text-secundary)";
+        }
+    }
 }
 
 async function getProfileData(userId) {
@@ -24,4 +36,29 @@ async function getProfileData(userId) {
         .eq("user_id", userId)
         .single();
     return data;
+}
+
+async function getWeeklyChange(userId, currentRank) {
+    if (!currentRank) return 0;
+
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const weekAgoStr = oneWeekAgo.toISOString();
+
+    const { data: snapshots } = await supabase
+        .from("ranking_snapshots")
+        .select("rank_position, snapshot_date")
+        .eq("user_id", userId)
+        .lte("snapshot_date", weekAgoStr)
+        .order("snapshot_date", { ascending: false })
+        .limit(1);
+
+    if (!snapshots || snapshots.length === 0) {
+        return 0;
+    }
+
+    const pastRank = snapshots[0].rank_position;
+    const change = pastRank - currentRank;
+
+    return change;
 }

@@ -171,7 +171,6 @@ input:focus {
   flex-shrink: 0;
 }
 
-
 .head-card {
   padding: 20px 0;
   align-self: center;
@@ -471,10 +470,6 @@ select:focus {
 
 .ts-wrapper.single .ts-control {
   display: flex;
-}
-
-select:invalid {
-  color: var(--color-text-secundary);
 }
 
 select option {

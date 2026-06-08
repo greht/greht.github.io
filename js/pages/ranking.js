@@ -11,9 +11,55 @@ import { getAllUsers } from "/js/services/ranking.js";
 let currentFilter = "global";
 let countries = [];
 
+function initStatTooltips() {
+    document.querySelectorAll(".stat[data-tooltip]").forEach(stat => {
+        if (stat.querySelector(".stat-tooltip")) return;
+        const tooltip = document.createElement("div");
+        tooltip.className = "stat-tooltip";
+        tooltip.textContent = stat.dataset.tooltip;
+        tooltip.style.cssText = 'position: absolute; bottom: calc(100% + 10px); left: 50%; transform: translateX(-50%);';
+        stat.appendChild(tooltip);
+    });
+}
+
 async function loadCountries() {
   const res = await fetch("/data/countries.json");
   countries = await res.json();
+}
+
+async function saveDailySnapshotIfNeeded() {
+    const today = new Date().toISOString().split('T')[0];
+
+    const { data: existingSnapshots } = await supabase
+        .from("ranking_snapshots")
+        .select("id")
+        .gte("snapshot_date", today)
+        .limit(1);
+
+    if (existingSnapshots && existingSnapshots.length > 0) {
+        return;
+    }
+
+    const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("user_id, points")
+        .order("points", { ascending: false });
+
+    if (error || !profiles || profiles.length === 0) {
+        return;
+    }
+
+    const snapshotDate = new Date().toISOString();
+    const snapshots = profiles.map((profile, index) => ({
+        user_id: profile.user_id,
+        total_points: profile.points,
+        rank_position: index + 1,
+        snapshot_date: snapshotDate
+    }));
+
+    await supabase
+        .from("ranking_snapshots")
+        .insert(snapshots);
 }
 
 function populateCountryFilter() {
@@ -86,6 +132,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadNavbar();
   await loadCountries();
   loadCountryFilter();
+  initStatTooltips();
+
+  await saveDailySnapshotIfNeeded();
 
   initPagination((state) => {
     renderAll();

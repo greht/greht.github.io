@@ -1,3 +1,5 @@
+import { supabase } from "/config/supabase.js";
+
 export function renderPodium(filterCountry = "global", allUsers = []) {
 
     let users;
@@ -26,7 +28,7 @@ export function renderPodium(filterCountry = "global", allUsers = []) {
         document.querySelector(".third")
     ];
 
-    slots.forEach((el, i) => {
+    slots.forEach(async (el, i) => {
         if (!el) return;
 
         const user = users[i];
@@ -36,6 +38,22 @@ export function renderPodium(filterCountry = "global", allUsers = []) {
             el.querySelector(".name").textContent = user.user_name || "Usuario";
             el.querySelector(".stats-result").textContent = user.points || 0;
             el.querySelector(".stat-successes").textContent = user.exact_count || 0;
+
+            const weeklyChange = await getWeeklyChangeForUser(user.user_id);
+            const statPosEl = el.querySelector(".stat-pos");
+            if (statPosEl) {
+                if (weeklyChange > 0) {
+                    statPosEl.textContent = `+${weeklyChange}`;
+                    statPosEl.style.color = "var(--color-accent)";
+                } else if (weeklyChange < 0) {
+                    statPosEl.textContent = `${weeklyChange}`;
+                    statPosEl.style.color = "#e53e3e";
+                } else {
+                    statPosEl.textContent = "0";
+                    statPosEl.style.color = "var(--color-text-secundary)";
+                }
+            }
+
             const avatarSrc = user.avatar_url
                 ? user.avatar_url.startsWith('http')
                     ? user.avatar_url
@@ -59,4 +77,34 @@ export function renderPodium(filterCountry = "global", allUsers = []) {
             el.style.display = "none";
         }
     });
+}
+
+async function getWeeklyChangeForUser(userId) {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const weekAgoStr = oneWeekAgo.toISOString();
+
+    const { data: snapshots } = await supabase
+        .from("ranking_snapshots")
+        .select("rank_position, snapshot_date")
+        .eq("user_id", userId)
+        .lte("snapshot_date", weekAgoStr)
+        .order("snapshot_date", { ascending: false })
+        .limit(1);
+
+    if (!snapshots || snapshots.length === 0) {
+        return 0;
+    }
+
+    const { data: allUsers } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .order("points", { ascending: false });
+
+    if (!allUsers) return 0;
+
+    const currentRank = allUsers.findIndex(u => u.user_id === userId) + 1;
+    const pastRank = snapshots[0].rank_position;
+
+    return pastRank - currentRank;
 }

@@ -94,6 +94,7 @@ export async function processFinishedMatches() {
     }
 
     await updateAllUserPoints();
+    await saveRankingSnapshot();
 }
 
 async function processMatchPredictions(match) {
@@ -189,4 +190,34 @@ export async function updateUserPoints(userId) {
     }
 
     return totalPoints;
+}
+
+export async function saveRankingSnapshot() {
+    const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, points")
+        .order("points", { ascending: false });
+
+    if (profilesError) {
+        console.error("Error fetching profiles for snapshot:", profilesError);
+        return;
+    }
+
+    const snapshotDate = new Date().toISOString();
+    const snapshots = profiles.map((profile, index) => ({
+        user_id: profile.user_id,
+        total_points: profile.points,
+        rank_position: index + 1,
+        snapshot_date: snapshotDate
+    }));
+
+    const { error: insertError } = await supabase
+        .from("ranking_snapshots")
+        .insert(snapshots);
+
+    if (insertError) {
+        console.error("Error saving ranking snapshot:", insertError);
+    } else {
+        console.warn(`Saved ranking snapshot with ${snapshots.length} users`);
+    }
 }
