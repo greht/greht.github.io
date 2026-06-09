@@ -3,16 +3,15 @@ import { getProfile, updateUsername, uploadAvatar } from "/js/services/profile.j
 import { getUserRank } from "/js/services/ranking.js"
 import { getExactCount } from "/js/services/ranking.js"
 import { supabase } from "/config/supabase.js"
+import { requireAuth } from "/js/services/auth.js"
 
 let currentUser = null
 
 async function loadProfile() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-        window.location.href = "/login.html"
-        return
-    }
-    currentUser = user
+    const authResult = await requireAuth("/login.html")
+    if (!authResult) return
+
+    currentUser = authResult.user
 
     const { data: profile } = await getProfile(user.id)
     if (!profile) return

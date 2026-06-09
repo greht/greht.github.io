@@ -2,14 +2,17 @@ import { loadNavbar, renderNavbarUser } from "/js/components/navbar.js"
 import { supabase } from "/config/supabase.js"
 import { getUserRank } from "/js/services/ranking.js"
 import { getPredictions } from "/js/services/predictions.js"
+import { requireAuth } from "/js/services/auth.js"
 
 document.addEventListener("DOMContentLoaded", async () => {
+
+    const authResult = await requireAuth("/login.html")
+    if (!authResult) return
 
     await loadNavbar()
     await renderNavbarUser()
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    const { user } = authResult
 
     const profile = await getProfileData(user.id)
     const { rank } = await getUserRank(user.id)

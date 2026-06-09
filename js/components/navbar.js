@@ -62,6 +62,8 @@ export async function renderNavbarUser() {
     logoutBtn.addEventListener("click", async function(e) {
       e.preventDefault();
       e.stopPropagation();
+      localStorage.clear();
+      sessionStorage.clear();
       await signOut();
       window.location.href = "/login.html";
     });

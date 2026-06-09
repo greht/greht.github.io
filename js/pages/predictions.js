@@ -7,6 +7,7 @@ import { getMatches } from "/js/services/matches.js"
 import { supabase } from "/config/supabase.js"
 import { savePrediction, getPredictions } from "/js/services/predictions.js"
 import { checkAndCelebrateCompletion } from "/js/utils/celebration.js"
+import { requireAuth } from "/js/services/auth.js"
 
 let matchesGlobal = [];
 let currentPhaseName = "";
@@ -595,6 +596,8 @@ initAccordions();
 
 document.addEventListener("DOMContentLoaded", async () => {
 
+  const authResult = await requireAuth("/login.html")
+  
   await loadNavbar()
 
   renderSkeletons()
@@ -604,12 +607,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (matches && matches.length > 0) {
 
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
+    if (!authResult) {
       renderMatches(matches, []);
       return
     }
+
+    const { user } = authResult
 
     savedPredictions = await getPredictions(user.id)
 
