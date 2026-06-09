@@ -68,11 +68,18 @@ document.addEventListener("DOMContentLoaded", () => {
             const { data, error } = await signUp(email, password, username, country, age, terms)
 
             if (error) {
-                alert(error.message)
+                if (error.message.includes("User already registered")) {
+                    alert("Parece que este correo ya forma parte de PredictiLab ⚽\nInicia sesión para continuar o intenta con otro correo.")
+                } else {
+                    alert(error.message)
+                }
                 return
             }
 
-            alert("Usuario creado. Ya puedes iniciar sesión en tu cuenta cuenta. 🥳")
+            alert("Usuario creado. Ya puedes iniciar sesión en tu cuenta. 🥳")
+            
+            document.getElementById("registerForm").reset()
+            window.location.href = "login.html"
 
         } catch (err) {
 

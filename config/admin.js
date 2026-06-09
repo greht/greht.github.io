@@ -1,6 +1,6 @@
 import { supabase } from "/config/supabase.js";
 
-export const ADMIN_USER_ID = 'f3720dbc-0366-4ede-b6e8-ea8886d0e9d0';
+export const ADMIN_USER_ID = 'c1015121-586e-4e53-9061-a3545e3e43d9';
 
 export async function checkAdmin() {
     const { data: { user } } = await supabase.auth.getUser();
