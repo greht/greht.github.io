@@ -6,7 +6,7 @@ async function loadCountries() {
         const res = await fetch("/data/countries.json")
         const countries = await res.json()
         const select = document.getElementById("country")
-        
+
         countries.forEach(c => {
             const option = document.createElement("option")
             option.value = c.code
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return
             }
 
-            alert("Usuario creado. Revisa tu correo para confirmar la cuenta.")
+            alert("Usuario creado. Ya puedes iniciar sesión en tu cuenta cuenta. 🥳")
 
         } catch (err) {
 
