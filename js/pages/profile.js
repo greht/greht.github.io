@@ -13,7 +13,7 @@ async function loadProfile() {
 
     currentUser = authResult.user
 
-    const { data: profile } = await getProfile(user.id)
+    const { data: profile } = await getProfile(currentUser.id)
     if (!profile) return
 
     const avatarSrc = profile.avatar_url
@@ -24,7 +24,7 @@ async function loadProfile() {
     document.getElementById("avatarPreview").src = avatarSrc
 
     document.getElementById("displayUsername").textContent = profile.user_name || "Usuario"
-    document.getElementById("displayEmail").textContent = user.email || ""
+    document.getElementById("displayEmail").textContent = currentUser.email || ""
 
     if (profile.country_code) {
         const res = await fetch("/data/countries.json")
@@ -35,14 +35,14 @@ async function loadProfile() {
             : profile.country_code
     }
 
-    const { rank } = await getUserRank(user.id)
+    const { rank } = await getUserRank(currentUser.id)
     document.getElementById("statRank").textContent = `#${rank || '--'}`
 
     if (profile.points) {
         document.getElementById("statPoints").textContent = profile.points.toLocaleString()
     }
 
-    const exactCount = await getExactCount(user.id)
+    const exactCount = await getExactCount(currentUser.id)
     document.getElementById("statExact").textContent = exactCount || 0
 }
 
@@ -165,7 +165,5 @@ document.querySelectorAll(".toggle-password").forEach(btn => {
 })
 
 document.addEventListener("DOMContentLoaded", async () => {
-    await loadNavbar()
     await loadProfile()
-    await renderNavbarUser()
 })

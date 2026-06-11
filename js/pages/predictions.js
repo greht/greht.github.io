@@ -1,5 +1,4 @@
 import { getUserRank } from "/js/services/ranking.js";
-import { loadNavbar } from "/js/components/navbar.js";
 import { updateProgress } from "/js/utils/progress.js";
 import { initScoreControls } from "/js/components/scoreControl.js";
 import { initMatchCards } from "/js/components/matchCard.js";
@@ -659,8 +658,6 @@ function renderGroupList(groups, predictions, container) {
 document.addEventListener("DOMContentLoaded", async () => {
 
   const authResult = await requireAuth("/login.html")
-
-  await loadNavbar()
 
   renderSkeletons()
 

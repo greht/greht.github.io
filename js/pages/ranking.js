@@ -1,4 +1,4 @@
-import { loadNavbar, renderNavbarUser } from "/js/components/navbar.js";
+import { renderNavbarUser } from "/js/components/navbar.js";
 import { supabase } from "/config/supabase.js";
 import { renderTable } from "/js/modules/ranking/table.js";
 import { renderPodium } from "/js/modules/ranking/podium.js";
@@ -129,7 +129,6 @@ function loadCountryFilter() {
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-  await loadNavbar();
   await loadCountries();
   loadCountryFilter();
   initStatTooltips();
