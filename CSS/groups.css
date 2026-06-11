@@ -256,101 +256,122 @@ tr.position-4 .position-cell {
   text-align: center;
 }
 
-@media (max-width: 768px) {
-  .groups-container {
-    padding: 16px 12px 48px;
+@media (max-width: 480px) {
+  .navbar-center {
+    display: none !important;
   }
 
-  .groups-header h1 {
-    font-size: 1.5rem;
+  .navbar-secondary {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
   }
 
-  .classification-tabs {
+  .hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .hamburger-line {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+  }
+
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .logo1-text {
+    font-size: 16px;
+    white-space: nowrap;
+    color: var(--color-primary);
+  }
+
+  .navbar-right {
+    display: flex;
+    align-items: center;
     gap: 8px;
+    margin-left: auto;
+    flex-shrink: 0;
+    width: 0;
+  }
+
+  .user-dropdown .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .groups-header {
+    text-align: left;
     margin-bottom: 20px;
   }
 
-  .classification-tab {
-    padding: 8px 16px;
-    font-size: 13px;
+  .groups-header h1 {
+    color: var(--color-text);
+    font-size: 22px;
+    margin-bottom: 4px;
   }
 
-  .group-card {
-    padding: 16px;
-    border-radius: 12px;
+  .groups-header p {
+    color: var(--color-text-secundary);
+    font-size: 14px;
   }
 
   .group-card-header {
-    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+    border-bottom: 2px solid var(--color-grey-100);
   }
 
-  .group-table thead th {
-    font-size: 10px;
-    padding: 8px 4px;
-  }
-
-  .group-table tbody td {
-    padding: 10px 4px;
+  .group-badge {
+    background: var(--color-primary);
+    color: white;
+    padding: 6px 18px;
+    border-radius: 6px;
+    font-weight: 600;
     font-size: 12px;
-  }
-
-  .team-info {
-    gap: 8px;
-    min-width: 120px;
-  }
-
-  .team-flag {
-    width: 22px;
-    height: 15px;
-  }
-
-  .team-name {
-    font-size: 12px;
-  }
-
-  .stats-cell {
-    font-size: 12px;
-    min-width: 28px;
-  }
-
-  .pts-cell {
-    font-size: 14px;
-    min-width: 32px;
-  }
-
-  .knockout-bracket {
-    gap: 20px;
-  }
-
-  .knockout-round {
-    min-width: 180px;
-  }
-}
-
-@media (max-width: 480px) {
-  .team-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    min-width: 80px;
-  }
-
-  .team-flag {
-    width: 32px;
-    height: 22px;
-  }
-
-  .team-name {
-    font-size: 11px;
-  }
-
-  .group-table thead th:nth-child(n + 3) {
-    display: none;
-  }
-
-  .group-table
-    tbody
-    td:nth-child(n + 3):not(:last-child):not(:nth-last-child(2)) {
-    display: none;
+    letter-spacing: 0.3px;
   }
 }

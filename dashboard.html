@@ -1,104 +1,167 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard - PredictiLab</title>
-    <link rel="stylesheet" href="CSS/styles.css">
-    <link rel="stylesheet" href="CSS/dashboard.css">
-    <link rel="stylesheet" href="CSS/footer.css">
-</head>
-<body>
-
+    <link rel="stylesheet" href="CSS/styles.css" />
+    <link rel="stylesheet" href="CSS/dashboard.css" />
+    <link rel="stylesheet" href="CSS/footer.css" />
+  </head>
+  <body>
     <header class="navbar-secondary">
-        <div class="navbar-left">
-            <img class="logo-icon" src="assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab">
-            <span class="logo1-text">PredictiLab</span>
-        </div>
+      <button class="hamburger-menu" id="hamburgerMenu" aria-label="Menú">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
 
-        <nav class="navbar-center">
-            <a href="#" class="active">Inicio</a>
-            <a href="predictions.html">Torneos</a>
-            <a href="groups.html">Clasificación</a>
-            <a href="ranking.html">Ranking</a>
-        </nav>
+      <div class="navbar-left">
+        <img
+          class="logo-icon"
+          src="assets/images/Fondo-oscuro.svg"
+          alt="Logo PredictiLab"
+        />
+        <span class="logo1-text">PredictiLab</span>
+      </div>
 
-        <div id="navbarContainer" class="navbar-right"></div>
+      <nav class="navbar-center" aria-label="navbar-center">
+        <a href="#" class="active">Inicio</a>
+        <a href="predictions.html">Torneos</a>
+        <a href="groups.html">Clasificación</a>
+        <a href="ranking.html">Ranking</a>
+      </nav>
+
+      <div id="navbarContainer" class="navbar-right"></div>
     </header>
 
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+      <div class="mobile-menu-header">
+        <img
+          src="assets/images/Fondo-oscuro.svg"
+          alt="Logo PredictiLab"
+          style="height: 32px"
+        />
+        <span class="mobile-menu-title">PredictiLab</span>
+        <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
+      </div>
+      <nav class="mobile-menu-nav" aria-label="mobile-menu-nav">
+        <a href="#" class="active">Inicio</a>
+        <a href="predictions.html">Torneos</a>
+        <a href="groups.html">Clasificación</a>
+        <a href="ranking.html">Ranking</a>
+      </nav>
+    </div>
 
     <main class="dashboard-container">
+      <div class="welcome-section">
+        <h1>Estás de vuelta, <span id="userName"></span> 👋</h1>
+        <p>Aquí tienes tus estadísticas</p>
+      </div>
 
-        <div class="welcome-section">
-            <h1>Estás de vuelta, <span id="userName"></span> 👋</h1>
-            <p>Aquí tienes tus estadísticas</p>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-info">
+            <span class="stat-value" id="position">#--</span>
+            <span class="stat-label">Posición Global</span>
+          </div>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">🏆</div>
-                <div class="stat-info">
-                    <span class="stat-value" id="position">#--</span>
-                    <span class="stat-label">Posición Global</span>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">⚽</div>
-                <div class="stat-info">
-                    <span class="stat-value" id="predictions">0</span>
-                    <span class="stat-label">Predicciones</span>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-info">
-                    <span class="stat-value" id="correct">0</span>
-                    <span class="stat-label">Aciertos</span>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon">⭐</div>
-                <div class="stat-info">
-                    <span class="stat-value" id="points">0</span>
-                    <span class="stat-label">Puntos</span>
-                </div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚽</div>
+          <div class="stat-info">
+            <span class="stat-value" id="predictions">0</span>
+            <span class="stat-label">Predicciones</span>
+          </div>
         </div>
 
-        <div class="quick-actions">
-            <h2>Acciones Rápidas</h2>
-            <div class="actions-grid">
-                <a href="predictions.html" class="action-btn">
-                    <span>📊</span> Ver Predicciones
-                </a>
-                <a href="ranking.html" class="action-btn">
-                    <span>🏅</span> Ver Ranking
-                </a>
-            </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-info">
+            <span class="stat-value" id="correct">0</span>
+            <span class="stat-label">Aciertos</span>
+          </div>
         </div>
 
+        <div class="stat-card">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-info">
+            <span class="stat-value" id="points">0</span>
+            <span class="stat-label">Puntos</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <h2>Acciones Rápidas</h2>
+        <div class="actions-grid">
+          <a href="predictions.html" class="action-btn">
+            <span>📊</span> Ver Predicciones
+          </a>
+          <a href="ranking.html" class="action-btn">
+            <span>🏅</span> Ver Ranking
+          </a>
+        </div>
+      </div>
     </main>
 
     <footer id="footer" class="footer-system">
-        <div class="footer-container">
-            <div class="footer-left">
-                <span class="logo-text">PredictiLab.com</span>
-            </div>
-            <div class="footer-center">
-                <a href="#">Políticas de privacidad</a>
-                <a href="#">Términos del servicio</a>
-                <a href="#">Contáctanos</a>
-            </div>
-            <div class="footer-right">
-                <span>© 2026 PredictiLab - Greht Fernández</span>
-            </div>
+      <div class="footer-container">
+        <div class="footer-left">
+          <span class="logo-text">PredictiLab.com</span>
         </div>
+        <div class="footer-center">
+          <a href="#">Políticas de privacidad</a>
+          <a href="#">Términos del servicio</a>
+          <a href="#">Contáctanos</a>
+        </div>
+        <div class="footer-right">
+          <span>© 2026 PredictiLab - Greht Fernández</span>
+        </div>
+      </div>
     </footer>
 
     <script type="module" src="/js/app/init.js"></script>
     <script type="module" src="/js/pages/dashboard.js"></script>
-</body>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const hamburger = document.getElementById("hamburgerMenu");
+        const mobileMenu = document.getElementById("mobileMenu");
+        const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
+        const mobileMenuClose = document.getElementById("mobileMenuClose");
+        const mobileMenuLinks = mobileMenu.querySelectorAll("a");
+
+        function openMobileMenu() {
+          hamburger.classList.add("active");
+          mobileMenu.classList.add("active");
+          mobileMenuOverlay.classList.add("active");
+          document.body.style.overflow = "hidden";
+        }
+
+        function closeMobileMenu() {
+          hamburger.classList.remove("active");
+          mobileMenu.classList.remove("active");
+          mobileMenuOverlay.classList.remove("active");
+          document.body.style.overflow = "";
+        }
+
+        hamburger.addEventListener("click", () => {
+          if (mobileMenu.classList.contains("active")) {
+            closeMobileMenu();
+          } else {
+            openMobileMenu();
+          }
+        });
+
+        mobileMenuOverlay.addEventListener("click", closeMobileMenu);
+        mobileMenuClose.addEventListener("click", closeMobileMenu);
+
+        mobileMenuLinks.forEach((link) => {
+          link.addEventListener("click", closeMobileMenu);
+        });
+      });
+    </script>
+  </body>
 </html>

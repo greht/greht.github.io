@@ -10,7 +10,13 @@
 </head>
 <body class="profile-page">
 
-    <header class="navbar-secondary">
+<header class="navbar-secondary">
+        <button class="hamburger-menu" id="hamburgerMenu" aria-label="Menú">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+
         <div class="navbar-left">
             <img class="logo-icon" src="assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab">
             <span class="logo1-text">PredictiLab</span>
@@ -25,6 +31,21 @@
 
         <div id="navbarContainer" class="navbar-right"></div>
     </header>
+
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+    <div class="mobile-menu" id="mobileMenu">
+<div class="mobile-menu-header">
+            <img src="assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab" style="height: 32px;">
+            <span class="mobile-menu-title">PredictiLab</span>
+            <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
+            </div>
+        <nav class="mobile-menu-nav">
+            <a href="dashboard.html">Inicio</a>
+            <a href="predictions.html">Torneos</a>
+            <a href="groups.html">Clasificación</a>
+            <a href="ranking.html">Ranking</a>
+        </nav>
+    </div>
 
     <main class="profile-container">
         <div class="profile-header">
@@ -117,5 +138,43 @@
 
     <script type="module" src="/js/app/init.js"></script>
     <script type="module" src="/js/pages/profile.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hamburger = document.getElementById('hamburgerMenu');
+            const mobileMenu = document.getElementById('mobileMenu');
+            const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+            const mobileMenuClose = document.getElementById('mobileMenuClose');
+            const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+
+            function openMobileMenu() {
+                hamburger.classList.add('active');
+                mobileMenu.classList.add('active');
+                mobileMenuOverlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeMobileMenu() {
+                hamburger.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                mobileMenuOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            hamburger.addEventListener('click', () => {
+                if (mobileMenu.classList.contains('active')) {
+                    closeMobileMenu();
+                } else {
+                    openMobileMenu();
+                }
+            });
+
+            mobileMenuOverlay.addEventListener('click', closeMobileMenu);
+            mobileMenuClose.addEventListener('click', closeMobileMenu);
+
+            mobileMenuLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+        });
+    </script>
 </body>
 </html>

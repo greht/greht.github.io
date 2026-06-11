@@ -22,6 +22,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadCountries()
 
+    document.querySelectorAll(".toggle-password").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const targetId = btn.dataset.target
+            const input = document.getElementById(targetId)
+            if (input) {
+                if (input.type === "password") {
+                    input.type = "text"
+                    btn.classList.add("show-password")
+                } else {
+                    input.type = "password"
+                    btn.classList.remove("show-password")
+                }
+            }
+        })
+    })
+
     let isSubmitting = false
 
     const form = document.getElementById("registerForm")

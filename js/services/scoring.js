@@ -117,8 +117,7 @@ async function processMatchPredictions(match) {
         const result = calculatePoints(prediction, match);
         return {
             id: prediction.id,
-            points_earned: result.points,
-            is_exact: result.type === "exact"
+            points_earned: result.points
         };
     });
 
@@ -128,8 +127,6 @@ async function processMatchPredictions(match) {
 
     if (updateError) {
         console.error("Error updating predictions for match", match.id, updateError);
-    } else {
-        console.warn(`Processed ${updates.length} predictions for match ${match.id}`);
     }
 }
 
@@ -152,19 +149,29 @@ export async function updateAllUserPoints() {
         pointsByUser[pred.user_id] += pred.points_earned || 0;
     });
 
+    console.log("[DEBUG] Points breakdown:");
+    Object.entries(pointsByUser).forEach(([userId, totalPoints]) => {
+        const userPredictions = allPredictions.filter(p => p.user_id === userId);
+        console.log(`[DEBUG] User: ${userId} - Total: ${totalPoints} - Predictions:`, userPredictions.map(p => ({ id: p.id, points: p.points_earned })));
+    });
+
     const profileUpdates = Object.entries(pointsByUser).map(([userId, points]) => ({
         user_id: userId,
         points: points
     }));
 
     for (const update of profileUpdates) {
-        await supabase
+        console.log("[DEBUG] Executing UPDATE for:", update.user_id, "points:", update.points);
+        const { error } = await supabase
             .from("profiles")
             .update({ points: update.points })
             .eq("user_id", update.user_id);
+        if (error) {
+            console.error("[DEBUG] Error:", error);
+        } else {
+            console.log("[DEBUG] Success for:", update.user_id);
+        }
     }
-
-    console.warn("Updated points for", profileUpdates.length, "users");
 }
 
 export async function updateUserPoints(userId) {
@@ -217,7 +224,5 @@ export async function saveRankingSnapshot() {
 
     if (insertError) {
         console.error("Error saving ranking snapshot:", insertError);
-    } else {
-        console.warn(`Saved ranking snapshot with ${snapshots.length} users`);
     }
 }

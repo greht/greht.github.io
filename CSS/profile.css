@@ -354,6 +354,221 @@ body {
   margin-top: 8px;
 }
 
+@media (min-width: 481px) and (max-width: 768px) {
+  .navbar-secondary {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 12px 20px;
+  }
+
+  .hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .hamburger-line {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+  }
+
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    margin-left: 12px;
+  }
+
+  .navbar-right {
+    flex-shrink: 0;
+  }
+}
+
+@media (min-width: 769px) {
+  .navbar-secondary {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 16px 40px;
+  }
+
+  .hamburger-menu {
+    display: none;
+  }
+
+  .navbar-center {
+    display: flex;
+    position: static;
+    left: auto;
+    transform: none;
+    gap: 30px;
+    margin-left: 40px;
+  }
+
+  .navbar-center a {
+    color: var(--color-text-secundary);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 0;
+    position: relative;
+  }
+
+  .navbar-center a:hover {
+    color: var(--color-primary);
+  }
+
+  .navbar-center a.active {
+    color: var(--color-primary);
+    font-weight: 600;
+  }
+
+  .navbar-center a.active::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 2px;
+  }
+
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .logo1-text {
+    font-size: 18px;
+  }
+
+  .navbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-rank {
+    display: flex;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .navbar-center {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-center {
+    display: none;
+  }
+
+  .navbar-secondary {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .hamburger-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .hamburger-line {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+  }
+
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    flex: 1;
+    margin-left: 8px;
+  }
+
+  .logo1-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 16px;
+  }
+
+  .navbar-right {
+    flex-shrink: 0;
+  }
+
+  .user-rank {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .profile-content {
     grid-template-columns: 1fr;

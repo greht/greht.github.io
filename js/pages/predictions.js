@@ -8,11 +8,14 @@ import { supabase } from "/config/supabase.js"
 import { savePrediction, getPredictions } from "/js/services/predictions.js"
 import { checkAndCelebrateCompletion } from "/js/utils/celebration.js"
 import { requireAuth } from "/js/services/auth.js"
+import { getProfile } from "/js/services/profile.js"
+import { getTimezoneOffset, toLocalTime, toRealUtcDate, formatLocalDate } from "/js/utils/timezone.js"
 
 let matchesGlobal = [];
 let currentPhaseName = "";
 let currentPhaseId = null;
 let savedPredictions = [];
+let userTimezoneOffset = 0;
 
 function renderSkeletons() {
   const container = document.querySelector(".card-order");
@@ -59,9 +62,9 @@ function renderSkeletons() {
 
 function groupMatchesByDay(matches) {
   return matches.reduce((groups, match) => {
-    const date = new Date(match.match_date);
+    const localDate = toLocalTime(match.match_date, userTimezoneOffset);
 
-    const key = date.toLocaleDateString("es-ES", {
+    const key = formatLocalDate(localDate, "es-ES", {
       weekday: "long",
       day: "2-digit",
       month: "long"
@@ -75,12 +78,13 @@ function groupMatchesByDay(matches) {
 }
 
 function canPredict(matchDate) {
-    if (!matchDate) return true;
-    const matchTime = new Date(matchDate).getTime() + 3 * 60 * 60 * 1000;
-    const now = new Date().getTime();
-    const diffMinutes = (matchTime - now) / (1000 * 60);
-    return diffMinutes > 15;
-  }
+  if (!matchDate) return true;
+  const realDate = toRealUtcDate(matchDate);
+  const matchTime = realDate.getTime();
+  const now = new Date().getTime();
+  const diffMinutes = (matchTime - now) / (1000 * 60);
+  return diffMinutes > 15;
+}
 
 function renderMatchCard(match) {
   const homeTeam = match.home_team?.name || "Equipo Local";
@@ -88,6 +92,12 @@ function renderMatchCard(match) {
   const homeFlag = match.home_team?.flag_url || "/assets/images/flag-mexV2.svg";
   const awayFlag = match.away_team?.flag_url || "/assets/images/flag-mexV2.svg";
   const group = match.group?.name ? `Grupo ${match.group.name}` : "Grupo";
+  const viewportWidth = window.innerWidth;
+
+  const isMobile =
+    viewportWidth <= 480 ||
+    (viewportWidth >= 481 && viewportWidth <= 768);
+
 
   let matchDate = "Por confirmar";
   let countdown = "";
@@ -97,11 +107,11 @@ function renderMatchCard(match) {
 
   if (match.match_date) {
     try {
-      const date = new Date(match.match_date);
-      const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+      const localDate = toLocalTime(match.match_date, userTimezoneOffset);
+      const realDate = toRealUtcDate(match.match_date);
 
       const now = new Date();
-      diff = argentinaDate.getTime() - now.getTime();
+      diff = realDate.getTime() - now.getTime();
       const diffMinutes = diff / (1000 * 60);
 
       if (diff > 0) {
@@ -114,7 +124,7 @@ function renderMatchCard(match) {
         countdown = "0d 00:00";
       }
 
-      matchDate = argentinaDate.toLocaleString("es-ES", {
+      matchDate = formatLocalDate(localDate, "es-ES", {
         weekday: "long",
         day: "numeric",
         month: "short",
@@ -168,6 +178,73 @@ function renderMatchCard(match) {
     rightBadge = `<span class="points-earned miss">Sin predecir</span>`;
   }
 
+  if (isMobile) {
+
+    return `
+    <div class="match-card" data-match-id="${match.id}">
+
+      <div class="match-header">
+        <div class="match-header-left">
+          <span class="tag">${group}</span>
+          <span class="time">${matchDate}</span>
+        </div>
+
+        <div class="match-header-right">
+          ${(match.status === "live" || match.status === "finished" || diff <= 0) &&
+        match.home_score !== null &&
+        match.away_score !== null
+        ? `<span class="live-score">${match.home_score} - ${match.away_score}</span>`
+        : `<span>${countdown}</span>`
+      }
+        </div>
+      </div>
+
+      <div class="mobile-prediction-row">
+
+        <div class="mobile-team">
+          <div class="flag-rounded">
+            <img class="flag" src="${homeFlag}" alt="flag">
+          </div>
+          <span>${homeTeam}</span>
+        </div>
+
+        <div class="score-control">
+          <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>
+          <input class="score-input" type="number" min="0" data-team="home" ${isLocked ? "disabled" : ""}>
+          <button type="button" class="score-btn plus" ${isLocked ? "disabled" : ""}>+</button>
+        </div>
+
+      </div>
+
+      <div class="mobile-prediction-row">
+
+        <div class="mobile-team">
+          <div class="flag-rounded">
+            <img class="flag" src="${awayFlag}" alt="flag">
+          </div>
+          <span>${awayTeam}</span>
+        </div>
+
+        <div class="score-control">
+          <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>
+          <input class="score-input" type="number" min="0" data-team="away" ${isLocked ? "disabled" : ""}>
+          <button type="button" class="score-btn plus" ${isLocked ? "disabled" : ""}>+</button>
+        </div>
+
+      </div>
+
+      <div class="match-status">
+        <span class="status-left">
+          <span class="text">Estado:</span>
+          <span class="status-text">${statusText}</span>
+        </span>
+        ${rightBadge}
+      </div>
+
+    </div>
+  `;
+  }
+
   return `
     <div class="match-card" data-match-id="${match.id}">
       <div class="match-header">
@@ -178,9 +255,9 @@ function renderMatchCard(match) {
 
         <div class="match-header-right">
           ${(match.status === "live" || match.status === "finished" || diff <= 0) && match.home_score !== null && match.away_score !== null
-            ? `<span class="live-score">${match.home_score} - ${match.away_score}</span>`
-            : `<span>${countdown}</span>`
-          }
+      ? `<span class="live-score">${match.home_score} - ${match.away_score}</span>`
+      : `<span>${countdown}</span>`
+    }
         </div>
       </div>
 
@@ -228,21 +305,6 @@ function renderMatchCard(match) {
     </div>
   `;
 }
-
-// function initAccordions() {
-//   const headers = document.querySelectorAll(".matches-group-header");
-
-//   headers.forEach((btn, index) => {
-//     btn.addEventListener("click", () => {
-//       btn.parentElement.classList.toggle("open");
-//     });
-
-//     // abre el primero por defecto (o “hoy”)
-//     if (index === 0) {
-//       btn.parentElement.classList.add("open");
-//     }
-//   });
-// }
 
 function initAccordions() {
   document.querySelectorAll(".matches-group-header").forEach((btn) => {
@@ -591,13 +653,13 @@ function renderGroupList(groups, predictions, container) {
     `;
   }).join("");
 
-initAccordions();
+  initAccordions();
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
 
   const authResult = await requireAuth("/login.html")
-  
+
   await loadNavbar()
 
   renderSkeletons()
@@ -613,6 +675,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const { user } = authResult
+
+    const { data: profile } = await getProfile(user.id)
+    if (profile?.country_code) {
+      userTimezoneOffset = getTimezoneOffset(profile.country_code)
+    }
 
     savedPredictions = await getPredictions(user.id)
 
@@ -748,10 +815,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (!match || !match.match_date) return;
 
-        const date = new Date(match.match_date);
-        const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
+        const realDate = toRealUtcDate(match.match_date);
         const now = new Date();
-        const diff = argentinaDate.getTime() - now.getTime();
+        const diff = realDate.getTime() - now.getTime();
         const diffMinutes = diff / (1000 * 60);
 
         const countdownEl = card.querySelector(".match-header-right span");
