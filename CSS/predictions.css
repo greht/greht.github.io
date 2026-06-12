@@ -577,7 +577,7 @@ body {
 }
 
 .team {
-  width: 120px;
+  width: 140px;
   text-align: center;
   display: flex;
   justify-content: center;
@@ -819,11 +819,12 @@ body {
 }
 
 .flag-rounded {
-  width: 64px;
-  height: 44px;
-  border-radius: 12px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
   overflow: hidden;
   background: #fff;
+  flex-shrink: 0;
 }
 
 .flag {
@@ -1103,8 +1104,8 @@ body {
 
   .flag-rounded {
     width: 54px;
-    height: 34px;
-    border-radius: 6px;
+    height: 54px;
+    border-radius: 50%;
     overflow: hidden;
     background: #fff;
     flex-shrink: 0;
@@ -1393,8 +1394,8 @@ body {
 
   .flag-rounded {
     width: 54px;
-    height: 34px;
-    border-radius: 6px;
+    height: 54px;
+    border-radius: 50%;
     overflow: hidden;
     background: #fff;
     flex-shrink: 0;

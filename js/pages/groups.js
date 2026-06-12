@@ -1,5 +1,20 @@
 import { getMatches } from "/js/services/matches.js";
 
+function resolveFlagUrl(flagUrl) {
+    if (!flagUrl) return "/assets/images/flag-mexV2.svg";
+    if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
+    if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
+      return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
+    }
+    const fixes = { "sp.svg": "es.svg" };
+    let path = flagUrl;
+    for (const [bad, good] of Object.entries(fixes)) {
+      path = path.replace(bad, good);
+    }
+    if (path.startsWith("/")) return path;
+    return "/" + path;
+}
+
 export async function renderGroups() {
     const container = document.getElementById("groupsList");
     if (!container) return;
@@ -153,7 +168,7 @@ function renderGroupCard(group) {
                                 <td class="position-cell">${i + 1}</td>
                                 <td>
                                     <div class="team-info">
-                                        <img class="team-flag" src="${t.team.flag_url || '/assets/images/flag-mexV2.svg'}" alt="${t.team.name}">
+                                        <img class="team-flag" src="${resolveFlagUrl(t.team.flag_url)}" alt="${t.team.name}">
                                         <span class="team-name">${t.team.name}</span>
                                     </div>
                                 </td>
@@ -176,7 +191,7 @@ function renderGroupCard(group) {
                         <div class="team-card-main">
                             <div class="team-card-left">
                                 <span class="team-card-position">${i + 1}</span>
-                                <img class="team-card-flag" src="${t.team.flag_url || '/assets/images/flag-mexV2.svg'}" alt="${t.team.name}">
+                                <img class="team-card-flag" src="${resolveFlagUrl(t.team.flag_url)}" alt="${t.team.name}">
                                 <span class="team-card-name">${t.team.name}</span>
                             </div>
                             <span class="team-card-pts">${t.points} <span class="team-card-pts-label">pts</span></span>

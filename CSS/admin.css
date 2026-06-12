@@ -1000,9 +1000,9 @@
   }
 
   .flag-rounded {
-    width: 54px;
-    height: 34px;
-    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     overflow: hidden;
     background: #fff;
     flex-shrink: 0;
@@ -1056,9 +1056,9 @@
   }
 
   .flag-rounded {
-    width: 54px;
-    height: 34px;
-    border-radius: 6px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
     overflow: hidden;
     background: #fff;
     flex-shrink: 0;

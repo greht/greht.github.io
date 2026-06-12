@@ -10,6 +10,21 @@ import { requireAuth } from "/js/services/auth.js"
 import { getProfile } from "/js/services/profile.js"
 import { getTimezoneOffset, toLocalTime, toRealUtcDate, formatLocalDate } from "/js/utils/timezone.js"
 
+function resolveFlagUrl(flagUrl) {
+  if (!flagUrl) return "/assets/images/flag-mexV2.svg";
+  if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
+  if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
+  }
+  const fixes = { "sp.svg": "es.svg" };
+  let path = flagUrl;
+  for (const [bad, good] of Object.entries(fixes)) {
+    path = path.replace(bad, good);
+  }
+  if (path.startsWith("/")) return path;
+  return "/" + path;
+}
+
 let matchesGlobal = [];
 let currentPhaseName = "";
 let currentPhaseId = null;
@@ -88,8 +103,8 @@ function canPredict(matchDate) {
 function renderMatchCard(match) {
   const homeTeam = match.home_team?.name || "Equipo Local";
   const awayTeam = match.away_team?.name || "Equipo Visitante";
-  const homeFlag = match.home_team?.flag_url || "/assets/images/flag-mexV2.svg";
-  const awayFlag = match.away_team?.flag_url || "/assets/images/flag-mexV2.svg";
+  const homeFlag = resolveFlagUrl(match.home_team?.flag_url);
+  const awayFlag = resolveFlagUrl(match.away_team?.flag_url);
   const group = match.group?.name ? `Grupo ${match.group.name}` : "Grupo";
   const viewportWidth = window.innerWidth;
 

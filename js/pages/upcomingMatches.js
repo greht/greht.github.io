@@ -1,5 +1,20 @@
 import { supabase } from "/config/supabase.js"
 
+function resolveFlagUrl(flagUrl) {
+    if (!flagUrl) return "/assets/images/flag-mexV2.svg";
+    if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
+    if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
+      return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
+    }
+    const fixes = { "sp.svg": "es.svg" };
+    let path = flagUrl;
+    for (const [bad, good] of Object.entries(fixes)) {
+      path = path.replace(bad, good);
+    }
+    if (path.startsWith("/")) return path;
+    return "/" + path;
+}
+
 const track = document.getElementById("carouselTrack")
 const dotsContainer = document.getElementById("carouselDots")
 
@@ -23,8 +38,8 @@ function formatDate(dateStr) {
 function buildSlide(match) {
     const homeName = match.home_team?.name || "TBD"
     const awayName = match.away_team?.name || "TBD"
-    const homeFlag = match.home_team?.flag_url || ""
-    const awayFlag = match.away_team?.flag_url || ""
+    const homeFlag = resolveFlagUrl(match.home_team?.flag_url)
+    const awayFlag = resolveFlagUrl(match.away_team?.flag_url)
     const dateStr = formatDate(match.match_date)
     const phaseName = match.phase?.name || ""
     const groupName = match.group?.name || ""

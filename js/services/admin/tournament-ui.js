@@ -1,6 +1,21 @@
 import { supabase } from "/config/supabase.js"
 import { checkAdmin } from "/config/admin.js"
 
+function resolveFlagUrl(flagUrl) {
+    if (!flagUrl) return "/assets/images/flag-mexV2.svg";
+    if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
+    if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
+      return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
+    }
+    const fixes = { "sp.svg": "es.svg" };
+    let path = flagUrl;
+    for (const [bad, good] of Object.entries(fixes)) {
+      path = path.replace(bad, good);
+    }
+    if (path.startsWith("/")) return path;
+    return "/" + path;
+}
+
 let tournamentInitialized = false
 
 export async function loadQualifiedTeamsSection() {
@@ -221,7 +236,7 @@ async function loadQualifiedTeams() {
                 <div class="slot-code">${formatSlotLabel(slot)}</div>
                 <div class="slot-team">
                     ${team ? `
-                        <img src="${team.flag_url}" class="team-flag">
+                        <img src="${resolveFlagUrl(team.flag_url)}" class="team-flag">
                         <span>${team.name}</span>
                         <button class="btn-remove-slot" data-slot="${slot}">×</button>
                     ` : `
