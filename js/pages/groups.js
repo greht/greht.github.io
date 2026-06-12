@@ -131,43 +131,67 @@ function renderGroupCard(group) {
             <div class="group-card-header">
                 <span class="group-badge">GRUPO ${group.name}</span>
             </div>
-            <table class="group-table">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th></th>
-                        <th>PJ</th>
-                        <th>G</th>
-                        <th>E</th>
-                        <th>P</th>
-                        <th>GF</th>
-                        <th>GC</th>
-                        <th>DG</th>
-                        <th>Pts</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${group.teams.map((t, i) => `
-                        <tr class="position-${i + 1}">
-                            <td class="position-cell">${i + 1}</td>
-                            <td>
-                                <div class="team-info">
-                                    <img class="team-flag" src="${t.team.flag_url || '/assets/images/flag-mexV2.svg'}" alt="${t.team.name}">
-                                    <span class="team-name">${t.team.name}</span>
-                                </div>
-                            </td>
-                            <td class="stats-cell">${t.played}</td>
-                            <td class="stats-cell">${t.won}</td>
-                            <td class="stats-cell">${t.drawn}</td>
-                            <td class="stats-cell">${t.lost}</td>
-                            <td class="stats-cell">${t.goalsFor}</td>
-                            <td class="stats-cell">${t.goalsAgainst}</td>
-                            <td class="stats-cell">${t.goalDiff > 0 ? '+' : ''}${t.goalDiff}</td>
-                            <td class="pts-cell">${t.points}</td>
+            <div class="group-table-view">
+                <table class="group-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th>PJ</th>
+                            <th>G</th>
+                            <th>E</th>
+                            <th>P</th>
+                            <th>GF</th>
+                            <th>GC</th>
+                            <th>DG</th>
+                            <th>Pts</th>
                         </tr>
-                    `).join("")}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        ${group.teams.map((t, i) => `
+                            <tr class="position-${i + 1}">
+                                <td class="position-cell">${i + 1}</td>
+                                <td>
+                                    <div class="team-info">
+                                        <img class="team-flag" src="${t.team.flag_url || '/assets/images/flag-mexV2.svg'}" alt="${t.team.name}">
+                                        <span class="team-name">${t.team.name}</span>
+                                    </div>
+                                </td>
+                                <td class="stats-cell">${t.played}</td>
+                                <td class="stats-cell">${t.won}</td>
+                                <td class="stats-cell">${t.drawn}</td>
+                                <td class="stats-cell">${t.lost}</td>
+                                <td class="stats-cell">${t.goalsFor}</td>
+                                <td class="stats-cell">${t.goalsAgainst}</td>
+                                <td class="stats-cell">${t.goalDiff > 0 ? '+' : ''}${t.goalDiff}</td>
+                                <td class="pts-cell">${t.points}</td>
+                            </tr>
+                        `).join("")}
+                    </tbody>
+                </table>
+            </div>
+            <div class="group-cards-view">
+                ${group.teams.map((t, i) => `
+                    <div class="team-card position-${i + 1}">
+                        <div class="team-card-main">
+                            <div class="team-card-left">
+                                <span class="team-card-position">${i + 1}</span>
+                                <img class="team-card-flag" src="${t.team.flag_url || '/assets/images/flag-mexV2.svg'}" alt="${t.team.name}">
+                                <span class="team-card-name">${t.team.name}</span>
+                            </div>
+                            <span class="team-card-pts">${t.points} <span class="team-card-pts-label">pts</span></span>
+                        </div>
+                        <div class="team-card-stats">
+                            <span><b>${t.played}</b> PJ</span>
+                            <span><b>${t.won}</b> G</span>
+                            <span><b>${t.drawn}</b> E</span>
+                            <span><b>${t.lost}</b> P</span>
+                            <span><b>${t.goalsFor}:${t.goalsAgainst}</b> GF:GC</span>
+                            <span><b>${t.goalDiff > 0 ? '+' : ''}${t.goalDiff}</b> DG</span>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
         </div>
     `;
 }
