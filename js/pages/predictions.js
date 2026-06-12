@@ -615,19 +615,23 @@ function renderGroupList(groups, predictions, container) {
 
   <div class="accordion-right">
 
-    <div class="accordion-progress">
+    <div class="accordion-right-content">
 
-      <span class="count">
-        ${predictedCount}/${totalMatches}
-      </span>
+      ${groupPoints > 0 ? `<span class="group-points">+${groupPoints} pts</span>` : ""}
 
-      <span class="progress-label">
-        pronosticados
-      </span>
+      <div class="accordion-progress">
+
+        <span class="count">
+          ${predictedCount}/${totalMatches}
+        </span>
+
+        <span class="progress-label">
+          pronosticados
+        </span>
+
+      </div>
 
     </div>
-
-    ${groupPoints > 0 ? `<span class="group-points">+${groupPoints} pts</span>` : ""}
 
     <svg class="accordion-arrow" viewBox="0 0 24 24">
       <path
