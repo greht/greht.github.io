@@ -565,12 +565,17 @@ td:nth-child(5) {
 }
 
 .country-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 100px;
+  text-align: center;
   white-space: nowrap;
+}
+
+.country-cell img,
+.country-cell span {
+  vertical-align: middle;
+}
+
+.country-cell img {
+  margin-left: 8px;
 }
 
 .country-label {
@@ -602,11 +607,13 @@ tbody tr:not(.is-you):nth-child(even) {
 }
 
 .user-cell {
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
   text-align: left;
   white-space: nowrap;
+}
+
+.user-cell img,
+.user-cell span {
+  vertical-align: middle;
 }
 
 .user-cell > * {
@@ -618,12 +625,17 @@ tbody tr:not(.is-you):nth-child(even) {
   height: 24px;
   border-radius: 50%;
   object-fit: cover;
+  vertical-align: middle;
+  margin-right: 10px;
 }
 
 .user-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: inline;
+  line-height: 1;
+}
+
+.user-cell span {
+  line-height: 1;
 }
 
 .points {
@@ -1300,5 +1312,388 @@ tbody tr.is-you {
 
   .user-rank {
     display: flex;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .ranking-container {
+    padding: 20px;
+  }
+
+  .ranking-header {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .ranking-header-left h1 {
+    font-size: 24px;
+  }
+
+  .ranking-header-right {
+    align-self: flex-end;
+  }
+
+  .user-position {
+    align-items: flex-end;
+  }
+
+  .user-stats {
+    width: fit-content;
+    justify-content: flex-end;
+  }
+
+  .user-stats .stat {
+    padding: 0 10px;
+  }
+
+  .user-stats .stat strong {
+    font-size: 15px;
+  }
+
+  .user-stats .stat span {
+    font-size: 11px;
+  }
+
+  .ranking-podium {
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+  }
+
+  .rank-card {
+    width: calc(50% - 8px);
+    min-width: 180px;
+    padding: 20px 16px;
+  }
+
+  .rank-card.first {
+    order: -1;
+    width: 50%;
+    min-width: unset;
+  }
+
+  .rank-card-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .rank-card.first .rank-card-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .stats-card-ranking {
+    gap: 10px;
+    padding-top: 16px;
+  }
+
+  .stats-title .stat-successes,
+  .stats-title .stats-result,
+  .stats-title .stat-pos {
+    font-size: 14px;
+  }
+
+  .stat-cards-title {
+    font-size: 9px;
+  }
+
+  .ranking-table {
+    padding: 20px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .pagination-wrapper {
+    gap: 40px;
+  }
+
+  .user-sticky-card {
+    width: 95%;
+    padding: 12px 16px;
+  }
+
+  .sticky-row-top {
+    gap: 10px;
+  }
+
+  .user-sticky-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .user-sticky-message {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ranking-container {
+    padding: 20px;
+  }
+
+  .ranking-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .ranking-header-left h1 {
+    font-size: 20px;
+  }
+
+  .ranking-header-left p {
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .ranking-header-right {
+    align-self: flex-end;
+  }
+
+  .user-position {
+    align-items: flex-end;
+  }
+
+  .user-position span {
+    font-size: 14px;
+  }
+
+  .subtitle-text {
+    margin-bottom: 10px;
+  }
+
+  .user-stats {
+    width: fit-content;
+    gap: 0;
+  }
+
+  .user-stats .stat {
+    padding: 10px 20px;
+  }
+
+  .user-stats .stat strong {
+    font-size: 13px;
+  }
+
+  .user-stats .stat span {
+    font-size: 9px;
+  }
+
+  .user-stats .stat:not(:last-child)::after {
+    height: 50%;
+  }
+
+  .ranking-podium {
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+
+  .rank-card {
+    width: 100%;
+    max-width: 320px;
+    padding: 18px 16px;
+  }
+
+  .rank-card.first {
+    order: -1;
+  }
+
+  .rank-card-avatar {
+    width: 60px;
+    height: 60px;
+    margin: 8px auto;
+  }
+
+  .rank-card.first .rank-card-avatar {
+    width: 70px;
+    height: 70px;
+  }
+
+  .rank-badge {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  .flag {
+    width: 24px;
+    height: 24px;
+  }
+
+  .name {
+    font-size: 14px;
+  }
+
+  .stats-card-ranking {
+    gap: 12px;
+    padding-top: 14px;
+  }
+
+  .stats-title .stat-successes,
+  .stats-title .stats-result,
+  .stats-title .stat-pos {
+    font-size: 13px;
+  }
+
+  .stat-cards-title {
+    font-size: 8px;
+    padding-top: 4px;
+  }
+
+  .ranking-table {
+    padding: 16px 12px;
+    margin-bottom: 20px;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .table-header h3 {
+    font-size: 14px;
+  }
+
+  .table-header select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+
+  table {
+    min-width: 500px;
+  }
+
+  th {
+    font-size: 10px;
+    padding: 10px 12px;
+  }
+
+  td {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+
+  th:first-child,
+  td:first-child {
+    width: 60px;
+  }
+
+  .avatar-table {
+    width: 20px;
+    height: 20px;
+  }
+
+  .country-label {
+    font-size: 11px;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 14px;
+    align-items: stretch;
+  }
+
+  #rowsPerPageSelect {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .pagination-wrapper {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .pages {
+    gap: 4px;
+  }
+
+  .page {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .btn-page {
+    width: 32px;
+    height: 32px;
+  }
+
+  .icon-pag {
+    width: 14px;
+    height: 14px;
+  }
+
+  .pagination-info {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .user-sticky-card {
+    width: 100%;
+    padding: 12px 14px;
+    gap: 8px;
+  }
+
+  .user-sticky-card.floating {
+    max-width: calc(100% - 32px);
+    bottom: 20px;
+  }
+
+  .sticky-row-top {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .user-sticky-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .user-sticky-flag {
+    width: 24px;
+    height: 16px;
+  }
+
+  .user-sticky-rank-main,
+  .user-sticky-points-main {
+    font-size: 14px;
+    padding-bottom: 4px;
+  }
+
+  .user-sticky-rank-sub,
+  .user-sticky-points-sub {
+    font-size: 10px;
+  }
+
+  .user-sticky-message {
+    font-size: 13px;
+    margin-top: 6px;
   }
 }

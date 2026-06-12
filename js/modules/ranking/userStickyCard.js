@@ -27,7 +27,17 @@ export async function renderUserStickyCard(state) {
 
     const users = state?.usersPage || [];
 
-    const profile = users.find(u => u.user_id === user.id);
+    let profile = users.find(u => u.user_id === user.id);
+
+    if (!profile) {
+        const { data: profileData } = await supabase
+            .from("profiles")
+            .select("user_id, user_name, country_code, points, avatar_url")
+            .eq("user_id", user.id)
+            .single();
+        profile = profileData;
+    }
+
     const points = profile?.points || 0;
     const userName = profile?.user_name || user.email;
     const avatarUrl = profile?.avatar_url
@@ -37,12 +47,17 @@ export async function renderUserStickyCard(state) {
         : "/assets/images/avatar.png";
     const countryCode = profile?.country_code || "";
 
-    const rankIndex = users.findIndex(u => u.user_id === user.id);
+    const { data: globalUsers } = await supabase
+        .from("profiles")
+        .select("user_id, user_name, points")
+        .order("points", { ascending: false });
+
+    const rankIndex = globalUsers ? globalUsers.findIndex(u => u.user_id === user.id) : -1;
     const rank = rankIndex >= 0 ? rankIndex + 1 : null;
 
-    const top1 = users[0];
-    const top3 = users[2];
-    const nextUser = rank > 1 ? users[rank - 2] : null;
+    const top1 = globalUsers?.[0];
+    const top3 = globalUsers?.[2];
+    const nextUser = rank > 1 ? globalUsers[rank - 2] : null;
 
     const rankMainEl = document.getElementById("stickyRankMain");
     const rankSubEl = document.getElementById("stickyRankSub");
@@ -52,7 +67,7 @@ export async function renderUserStickyCard(state) {
     const avatarEl = document.getElementById("stickyAvatar");
     const flagEl = document.getElementById("stickyFlag");
 
-    const top10 = users.slice(0, 10);
+    const top10 = globalUsers ? globalUsers.slice(0, 10) : [];
     const top10MinPoints = top10?.[top10.length - 1]?.points || 1;
 
     let progress = top10MinPoints > 0 ? Math.min((points / top10MinPoints) * 100, 100) : 0;
