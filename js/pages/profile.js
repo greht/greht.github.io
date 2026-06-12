@@ -22,6 +22,7 @@ async function loadProfile() {
             : `/assets/images/${profile.avatar_url}`
         : "/assets/images/avatar.png"
     document.getElementById("avatarPreview").src = avatarSrc
+    document.getElementById("usernameModalAvatar").src = avatarSrc
 
     document.getElementById("displayUsername").textContent = profile.user_name || "Usuario"
     document.getElementById("displayEmail").textContent = currentUser.email || ""
@@ -46,18 +47,58 @@ async function loadProfile() {
     document.getElementById("statExact").textContent = exactCount || 0
 }
 
-document.getElementById("editAvatarBtn")?.addEventListener("click", () => {
-    document.getElementById("avatarForm").classList.toggle("active")
+function openAvatarModal() {
+    const modal = document.getElementById("avatarModalOverlay")
+    const currentSrc = document.getElementById("avatarPreview").src
+    document.getElementById("avatarModalPreview").src = currentSrc
+    document.getElementById("avatarInput").value = ""
+    modal.classList.add("active")
+    document.getElementById("avatarForm").classList.add("active")
+    document.body.style.overflow = "hidden"
+}
+
+function closeAvatarModal() {
+    const modal = document.getElementById("avatarModalOverlay")
+    modal.classList.remove("active")
+    document.getElementById("avatarForm").classList.remove("active")
+    document.body.style.overflow = ""
+}
+
+document.getElementById("editAvatarBtn")?.addEventListener("click", openAvatarModal)
+
+document.getElementById("avatarModalClose")?.addEventListener("click", closeAvatarModal)
+
+document.getElementById("cancelAvatarBtn")?.addEventListener("click", closeAvatarModal)
+
+document.getElementById("avatarModalOverlay")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeAvatarModal()
 })
 
-document.getElementById("editUsernameBtn")?.addEventListener("click", () => {
-    const form = document.getElementById("usernameForm")
+function openUsernameModal() {
+    const modal = document.getElementById("usernameModalOverlay")
     const input = document.getElementById("usernameInput")
-    form.classList.toggle("active")
-    if (form.classList.contains("active")) {
-        input.value = document.getElementById("displayUsername").textContent
-        input.focus()
-    }
+    const avatarSrc = document.getElementById("avatarPreview").src
+    document.getElementById("usernameModalAvatar").src = avatarSrc
+    input.value = document.getElementById("displayUsername").textContent
+    modal.classList.add("active")
+    document.getElementById("usernameForm").classList.add("active")
+    document.body.style.overflow = "hidden"
+    setTimeout(() => input.focus(), 100)
+}
+
+function closeUsernameModal() {
+    const modal = document.getElementById("usernameModalOverlay")
+    modal.classList.remove("active")
+    document.getElementById("usernameForm").classList.remove("active")
+    document.body.style.overflow = ""
+}
+
+document.getElementById("editUsernameBtn")?.addEventListener("click", openUsernameModal)
+
+document.getElementById("usernameModalClose")?.addEventListener("click", closeUsernameModal)
+
+document.getElementById("usernameModalOverlay")?.addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) closeUsernameModal()
 })
 
 document.getElementById("usernameForm")?.addEventListener("submit", async (e) => {
@@ -70,16 +111,14 @@ document.getElementById("usernameForm")?.addEventListener("submit", async (e) =>
         if (error) throw error
 
         document.getElementById("displayUsername").textContent = newUsername
-        document.getElementById("usernameForm").classList.remove("active")
+        closeUsernameModal()
         await renderNavbarUser()
     } catch (err) {
         alert("Error al actualizar: " + err.message)
     }
 })
 
-document.getElementById("cancelUsernameBtn")?.addEventListener("click", () => {
-    document.getElementById("usernameForm").classList.remove("active")
-})
+document.getElementById("cancelUsernameBtn")?.addEventListener("click", closeUsernameModal)
 
 document.getElementById("avatarInput")?.addEventListener("change", (e) => {
     const file = e.target.files[0]
@@ -88,6 +127,7 @@ document.getElementById("avatarInput")?.addEventListener("change", (e) => {
     const reader = new FileReader()
     reader.onload = (ev) => {
         document.getElementById("avatarPreview").src = ev.target.result
+        document.getElementById("avatarModalPreview").src = ev.target.result
     }
     reader.readAsDataURL(file)
 })
@@ -102,7 +142,7 @@ document.getElementById("avatarForm")?.addEventListener("submit", async (e) => {
         await loadProfile()
         await renderNavbarUser()
         alert("Foto actualizada con éxito")
-        document.getElementById("avatarForm").classList.remove("active")
+        closeAvatarModal()
     } catch (err) {
         alert("Error al subir la foto: " + err.message)
     }
