@@ -55,39 +55,11 @@
                 </div>
 
                 <div class="hero-card">
-
-                    <div class="match-card">
-
-                        <div class="card-title">
-                            <span class="title-left">Próximos partidos</span>
-                            <span class="title-right">Predicciones</span>
+                    <div class="match-carousel">
+                        <div class="carousel-viewport">
+                            <div class="carousel-track" id="carouselTrack"></div>
                         </div>
-
-                        <div class="card-body">
-
-                            <div class="team">
-                                <img src="assets/images/flag-mexV2.svg" alt="Mexico">
-                                <span>MEX</span>
-                            </div>
-
-                            <div class="vs">VS</div>
-
-                            <div class="team">
-                                <img src="assets/images/flag-sudV2.svg" alt="Sudafrica">
-                                <span>SUD</span>
-                            </div>
-                        
-                        </div>
-
-                        <div class="progress-container">
-                            <div class="progress-bar left">
-                                <div class="progress-fill"></div>
-                            </div>
-
-                            <div class="progress-bar right">
-                                <div class="progress-fill"></div>
-                            </div>
-                        </div>
+                        <div class="carousel-dots" id="carouselDots"></div>
                     </div>
                 </div>
 
@@ -342,5 +314,6 @@
         </footer>
     
     <script src="js/main.js"></script>
+    <script type="module" src="js/pages/upcomingMatches.js"></script>
 </body>
 </html>
