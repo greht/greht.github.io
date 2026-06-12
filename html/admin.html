@@ -303,15 +303,15 @@
                     </div>
 
                     <div class="match-body">
-                        <div class="team">
-                            <span>${homeTeam}</span>
-                            <div class="flag-rounded">
-                                <img class="flag" src="${homeFlag}" alt="flag">
+                        <div class="mobile-prediction-row">
+                            <div class="mobile-team">
+                                <div class="flag-rounded">
+                                    <img class="flag" src="${homeFlag}" alt="flag">
+                                </div>
+                                <span>${homeTeam}</span>
                             </div>
-                        </div>
-
-                        <div class="score admin-score">
                             <div class="score-control">
+                                <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>
                                 <input type="number"
                                        class="score-input admin-input"
                                        id="home-${match.id}"
@@ -320,9 +320,19 @@
                                        min="0"
                                        max="15"
                                        ${isLocked ? "disabled" : ""}>
+                                <button type="button" class="score-btn plus" ${isLocked ? "disabled" : ""}>+</button>
                             </div>
-                            <span>vs</span>
+                        </div>
+
+                        <div class="mobile-prediction-row">
+                            <div class="mobile-team">
+                                <div class="flag-rounded">
+                                    <img class="flag" src="${awayFlag}" alt="flag">
+                                </div>
+                                <span>${awayTeam}</span>
+                            </div>
                             <div class="score-control">
+                                <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>
                                 <input type="number"
                                        class="score-input admin-input"
                                        id="away-${match.id}"
@@ -331,13 +341,7 @@
                                        min="0"
                                        max="15"
                                        ${isLocked ? "disabled" : ""}>
-                            </div>
-                        </div>
-
-                        <div class="team">
-                            <span>${awayTeam}</span>
-                            <div class="flag-rounded">
-                                <img class="flag" src="${awayFlag}" alt="flag">
+                                <button type="button" class="score-btn plus" ${isLocked ? "disabled" : ""}>+</button>
                             </div>
                         </div>
                     </div>
@@ -431,6 +435,7 @@
 
         setTimeout(() => {
           initAccordions();
+          initScoreControls();
           document.querySelectorAll(".btn-save-match").forEach((btn) => {
             btn.addEventListener("click", () =>
               saveMatchResult(btn.dataset.matchId),
@@ -558,6 +563,7 @@
 
         setTimeout(() => {
           initAccordions();
+          initScoreControls();
           document.querySelectorAll(".btn-save-match").forEach((btn) => {
             btn.addEventListener("click", () =>
               saveMatchResult(btn.dataset.matchId),
@@ -608,6 +614,7 @@
           .join("");
 
         setTimeout(() => {
+          initScoreControls();
           document.querySelectorAll(".btn-save-match").forEach((btn) => {
             btn.addEventListener("click", () =>
               saveMatchResult(btn.dataset.matchId),
@@ -710,6 +717,40 @@
             `;
         document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 2000);
+      }
+
+      function initScoreControls() {
+        document.querySelectorAll(".score-control").forEach(control => {
+          const input = control.querySelector(".score-input");
+          const plus = control.querySelector(".plus");
+          const minus = control.querySelector(".minus");
+
+          if (!input || !plus || !minus) return;
+
+          plus.addEventListener("click", () => {
+            const isEmpty = !input.value || input.value === "";
+            if (isEmpty) {
+              input.value = 0;
+            } else {
+              let value = parseInt(input.value) || 0;
+              if (value < 15) {
+                input.value = value + 1;
+              }
+            }
+          });
+
+          minus.addEventListener("click", () => {
+            let value = parseInt(input.value) || 0;
+            if (value > 0) {
+              input.value = value - 1;
+            }
+          });
+
+          input.addEventListener("input", () => {
+            input.value = input.value.replace(/[^0-9]/g, '');
+            if (parseInt(input.value) > 15) input.value = 15;
+          });
+        });
       }
 
       async function processPoints() {
