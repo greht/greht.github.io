@@ -485,6 +485,76 @@ main {
   font-size: 16px;
 }
 
+.stats-title .stat-goals {
+  color: var(--color-primary);
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.th-tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+  font-size: 11px;
+  color: var(--color-text-secundary);
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.th-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  background: var(--color-primary);
+  color: var(--color-bg);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: normal;
+  width: max-content;
+  max-width: 250px;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease,
+    transform 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(93, 27, 107, 0.3);
+  pointer-events: none;
+  line-height: 1.4;
+}
+
+.th-tooltip::before {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--color-primary);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.th-tooltip:hover::after,
+.th-tooltip:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.th-tooltip:hover::before {
+  transform: translateX(-50%);
+}
+
 .ranking-table {
   position: relative;
   background: var(--color-bg);
@@ -514,7 +584,7 @@ main {
 
 table {
   width: 100%;
-  min-width: 800px;
+  min-width: 900px;
   border-collapse: collapse;
   table-layout: auto;
 }
@@ -547,7 +617,9 @@ td:nth-child(4) {
 
 th:nth-child(3),
 th:nth-child(4),
-th:nth-child(5) {
+th:nth-child(5),
+th:nth-child(6),
+th:nth-child(7) {
   text-align: center;
 }
 
@@ -560,7 +632,9 @@ td {
 
 td:nth-child(3),
 td:nth-child(4),
-td:nth-child(5) {
+td:nth-child(5),
+td:nth-child(6),
+td:nth-child(7) {
   text-align: center;
 }
 
@@ -1021,7 +1095,7 @@ tbody tr.is-you {
 
 .sticky-row-top {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
   align-items: center;
   justify-items: center;
   gap: 16px;
@@ -1073,6 +1147,30 @@ tbody tr.is-you {
   line-height: 1.1;
 }
 
+.user-sticky-exact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.user-sticky-goals {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.user-sticky-week {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  line-height: 1.1;
+}
+
 .user-sticky-message {
   text-align: center;
   align-self: center;
@@ -1097,14 +1195,20 @@ tbody tr.is-you {
 }
 
 .user-sticky-rank-main,
-.user-sticky-points-main {
+.user-sticky-points-main,
+.user-sticky-exact-main,
+.user-sticky-goals-main,
+.user-sticky-week-main {
   width: 100%;
   text-align: center;
   display: block;
 }
 
 .user-sticky-rank,
-.user-sticky-points {
+.user-sticky-points,
+.user-sticky-exact,
+.user-sticky-goals,
+.user-sticky-week {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1132,6 +1236,42 @@ tbody tr.is-you {
 }
 
 .user-sticky-points-sub {
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.user-sticky-exact-main {
+  font-weight: 600;
+  color: var(--color-bg);
+  padding-bottom: 8px;
+}
+
+.user-sticky-exact-sub {
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.user-sticky-goals-main {
+  font-weight: 600;
+  color: var(--color-bg);
+  padding-bottom: 8px;
+}
+
+.user-sticky-goals-sub {
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.user-sticky-week-main {
+  font-weight: 600;
+  color: var(--color-bg);
+  padding-bottom: 8px;
+}
+
+.user-sticky-week-sub {
   font-size: 12px;
   opacity: 0.7;
   font-weight: 600;
@@ -1390,7 +1530,8 @@ tbody tr.is-you {
 
   .stats-title .stat-successes,
   .stats-title .stats-result,
-  .stats-title .stat-pos {
+  .stats-title .stat-pos,
+  .stats-title .stat-goals {
     font-size: 14px;
   }
 
@@ -1408,7 +1549,7 @@ tbody tr.is-you {
   }
 
   table {
-    min-width: 600px;
+    min-width: 700px;
   }
 
   .pagination {
@@ -1427,6 +1568,7 @@ tbody tr.is-you {
   }
 
   .sticky-row-top {
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
     gap: 10px;
   }
 
@@ -1547,7 +1689,8 @@ tbody tr.is-you {
 
   .stats-title .stat-successes,
   .stats-title .stats-result,
-  .stats-title .stat-pos {
+  .stats-title .stat-pos,
+  .stats-title .stat-goals {
     font-size: 13px;
   }
 
@@ -1585,7 +1728,7 @@ tbody tr.is-you {
   }
 
   table {
-    min-width: 500px;
+    min-width: 600px;
   }
 
   th {
@@ -1667,7 +1810,7 @@ tbody tr.is-you {
   }
 
   .sticky-row-top {
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
     gap: 8px;
   }
 
@@ -1682,13 +1825,19 @@ tbody tr.is-you {
   }
 
   .user-sticky-rank-main,
-  .user-sticky-points-main {
+  .user-sticky-points-main,
+  .user-sticky-exact-main,
+  .user-sticky-goals-main,
+  .user-sticky-week-main {
     font-size: 14px;
     padding-bottom: 4px;
   }
 
   .user-sticky-rank-sub,
-  .user-sticky-points-sub {
+  .user-sticky-points-sub,
+  .user-sticky-exact-sub,
+  .user-sticky-goals-sub,
+  .user-sticky-week-sub {
     font-size: 10px;
   }
 

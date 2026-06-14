@@ -39,6 +39,7 @@ export function renderPodium(filterCountry = "global", allUsers = []) {
             el.querySelector(".name").textContent = user.user_name || "Usuario";
             el.querySelector(".stats-result").textContent = user.points || 0;
             el.querySelector(".stat-successes").textContent = user.exact_count || 0;
+            el.querySelector(".stat-goals").textContent = user.goals_hit || 0;
 
             const weeklyChange = await getWeeklyChangeForUser(user.user_id);
             const statPosEl = el.querySelector(".stat-pos");

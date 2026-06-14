@@ -114,13 +114,18 @@
 
           <div class="stats-card-ranking">
             <div class="stats-title">
-              <span class="stat-successes">-</span>
-              <span class="stat-cards-title">Aciertos</span>
+              <span class="stats-result">-</span>
+              <span class="stat-cards-title">Puntos</span>
             </div>
 
             <div class="stats-title">
-              <span class="stats-result">-</span>
-              <span class="stat-cards-title">Puntos</span>
+              <span class="stat-successes">-</span>
+              <span class="stat-cards-title">Exactos</span>
+            </div>
+
+            <div class="stats-title">
+              <span class="stat-goals">-</span>
+              <span class="stat-cards-title">Parciales</span>
             </div>
 
             <div class="stats-title">
@@ -153,13 +158,18 @@
 
           <div class="stats-card-ranking">
             <div class="stats-title">
-              <span class="stat-successes">-</span>
-              <span class="stat-cards-title">Aciertos</span>
+              <span class="stats-result">-</span>
+              <span class="stat-cards-title">Puntos</span>
             </div>
 
             <div class="stats-title">
-              <span class="stats-result">-</span>
-              <span class="stat-cards-title">Puntos</span>
+              <span class="stat-successes">-</span>
+              <span class="stat-cards-title">Exactos</span>
+            </div>
+
+            <div class="stats-title">
+              <span class="stat-goals">-</span>
+              <span class="stat-cards-title">Parciales</span>
             </div>
 
             <div class="stats-title">
@@ -192,13 +202,18 @@
 
           <div class="stats-card-ranking">
             <div class="stats-title">
-              <span class="stat-successes">-</span>
-              <span class="stat-cards-title">Aciertos</span>
+              <span class="stats-result">-</span>
+              <span class="stat-cards-title">Puntos</span>
             </div>
 
             <div class="stats-title">
-              <span class="stats-result">-</span>
-              <span class="stat-cards-title">Puntos</span>
+              <span class="stat-successes">-</span>
+              <span class="stat-cards-title">Exactos</span>
+            </div>
+
+            <div class="stats-title">
+              <span class="stat-goals">-</span>
+              <span class="stat-cards-title">Parciales</span>
             </div>
 
             <div class="stats-title">
@@ -224,8 +239,16 @@
                 <th>Rank</th>
                 <th>Usuario</th>
                 <th>País</th>
-                <th>Predicciones correctas</th>
                 <th>Puntos</th>
+                <th>
+                  Exactos
+                  <span class="th-tooltip" data-tooltip="Cantidad de partidos donde acertaste el resultado completo.">ⓘ</span>
+                </th>
+                <th>
+                  Parciales
+                  <span class="th-tooltip" data-tooltip="Cantidad de marcadores individuales acertados.">ⓘ</span>
+                </th>
+                <th>Semana</th>
               </tr>
             </thead>
 
@@ -251,6 +274,21 @@
             <div class="user-sticky-points">
               <div id="stickyPointsMain" class="user-sticky-points-main"></div>
               <div id="stickyPointsSub" class="user-sticky-points-sub"></div>
+            </div>
+
+            <div class="user-sticky-exact">
+              <div id="stickyExactMain" class="user-sticky-exact-main"></div>
+              <div id="stickyExactSub" class="user-sticky-exact-sub"></div>
+            </div>
+
+            <div class="user-sticky-goals">
+              <div id="stickyGoalsMain" class="user-sticky-goals-main"></div>
+              <div id="stickyGoalsSub" class="user-sticky-goals-sub"></div>
+            </div>
+
+            <div class="user-sticky-week">
+              <div id="stickyWeekMain" class="user-sticky-week-main"></div>
+              <div id="stickyWeekSub" class="user-sticky-week-sub"></div>
             </div>
           </div>
 

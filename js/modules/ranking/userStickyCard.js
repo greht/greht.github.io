@@ -15,6 +15,29 @@ function syncStickyCardWidth() {
     sticky.style.width = `${tableWidth}px`;
 }
 
+async function getWeeklyChangeForUser(userId, globalUsers) {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const weekAgoStr = oneWeekAgo.toISOString();
+
+    const { data: snapshots } = await supabase
+        .from("ranking_snapshots")
+        .select("rank_position, snapshot_date")
+        .eq("user_id", userId)
+        .lte("snapshot_date", weekAgoStr)
+        .order("snapshot_date", { ascending: false })
+        .limit(1);
+
+    if (!snapshots || snapshots.length === 0) {
+        return 0;
+    }
+
+    const currentRank = globalUsers.findIndex(u => u.user_id === userId) + 1;
+    const pastRank = snapshots[0].rank_position;
+
+    return pastRank - currentRank;
+}
+
 export async function renderUserStickyCard(state) {
     const container = document.getElementById("userStickyCard");
     if (!container) return;
@@ -53,6 +76,12 @@ export async function renderUserStickyCard(state) {
     const rankIndex = globalUsers ? globalUsers.findIndex(u => u.user_id === user.id) : -1;
     const rank = rankIndex >= 0 ? rankIndex + 1 : null;
 
+    const userProfile = globalUsers.find(u => u.user_id === user.id);
+    const goalsHit = userProfile?.goals_hit || 0;
+    const exactCount = userProfile?.exact_count || 0;
+
+    const weeklyChange = await getWeeklyChangeForUser(user.id, globalUsers);
+
     const top1 = globalUsers?.[0];
     const top3 = globalUsers?.[2];
     const nextUser = rank > 1 ? globalUsers[rank - 2] : null;
@@ -61,6 +90,12 @@ export async function renderUserStickyCard(state) {
     const rankSubEl = document.getElementById("stickyRankSub");
     const pointsMainEl = document.getElementById("stickyPointsMain");
     const pointsSubEl = document.getElementById("stickyPointsSub");
+    const exactMainEl = document.getElementById("stickyExactMain");
+    const exactSubEl = document.getElementById("stickyExactSub");
+    const goalsMainEl = document.getElementById("stickyGoalsMain");
+    const goalsSubEl = document.getElementById("stickyGoalsSub");
+    const weekMainEl = document.getElementById("stickyWeekMain");
+    const weekSubEl = document.getElementById("stickyWeekSub");
     const messageEl = document.getElementById("stickyMessage");
     const avatarEl = document.getElementById("stickyAvatar");
     const flagEl = document.getElementById("stickyFlag");
@@ -160,10 +195,30 @@ export async function renderUserStickyCard(state) {
     }
 
     if (rankMainEl) rankMainEl.textContent = `#${rank || '--'}`;
-    if (rankSubEl) rankSubEl.textContent = `Tu posición actual`;
+    if (rankSubEl) rankSubEl.textContent = `Posicion`;
 
-    if (pointsMainEl) pointsMainEl.textContent = `${points.toLocaleString()} pts`;
-    if (pointsSubEl) pointsSubEl.textContent = `Puntos acumulados`;
+    if (pointsMainEl) pointsMainEl.textContent = `${points.toLocaleString()}`;
+    if (pointsSubEl) pointsSubEl.textContent = `Puntos`;
+
+    if (exactMainEl) exactMainEl.textContent = `${exactCount}`;
+    if (exactSubEl) exactSubEl.textContent = `Exactos`;
+
+    if (goalsMainEl) goalsMainEl.textContent = `${goalsHit}`;
+    if (goalsSubEl) goalsSubEl.textContent = `Parciales`;
+
+    if (weekMainEl) {
+        if (weeklyChange > 0) {
+            weekMainEl.textContent = `+${weeklyChange}`;
+            weekMainEl.style.color = "var(--color-accent)";
+        } else if (weeklyChange < 0) {
+            weekMainEl.textContent = `${weeklyChange}`;
+            weekMainEl.style.color = "#e53e3e";
+        } else {
+            weekMainEl.textContent = "0";
+            weekMainEl.style.color = "var(--color-text-secundary)";
+        }
+    }
+    if (weekSubEl) weekSubEl.textContent = `Semana`;
 
     if (messageEl) messageEl.textContent = baseMessage;
 
