@@ -1095,7 +1095,7 @@ tbody tr.is-you {
 
 .sticky-row-top {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+  grid-template-columns: auto repeat(5, 1fr);
   align-items: center;
   justify-items: center;
   gap: 16px;
@@ -1117,18 +1117,23 @@ tbody tr.is-you {
   gap: 4px;
 }
 
+.sticky-identity {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
 .user-sticky-avatar {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  justify-self: end;
 }
 
 .user-sticky-flag {
   width: 28px;
   height: 20px;
   border-radius: 3px;
-  justify-self: start;
 }
 
 .user-sticky-rank {
@@ -1568,13 +1573,25 @@ tbody tr.is-you {
   }
 
   .sticky-row-top {
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: auto repeat(5, 1fr);
+    gap: 8px;
+  }
+
+  .sticky-identity {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
   }
 
   .user-sticky-avatar {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .user-sticky-flag {
+    width: 22px;
+    height: 16px;
   }
 
   .user-sticky-message {
@@ -1810,18 +1827,25 @@ tbody tr.is-you {
   }
 
   .sticky-row-top {
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
 
+  .sticky-identity {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+
   .user-sticky-avatar {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
 
   .user-sticky-flag {
-    width: 24px;
-    height: 16px;
+    width: 20px;
+    height: 14px;
   }
 
   .user-sticky-rank-main,
