@@ -1,4 +1,5 @@
 import { supabase } from "/config/supabase.js";
+import { getAllUsers } from "/js/services/ranking.js";
 
 export function renderPodium(filterCountry = "global", allUsers = []) {
 
@@ -96,10 +97,7 @@ async function getWeeklyChangeForUser(userId) {
         return 0;
     }
 
-    const { data: allUsers } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .order("points", { ascending: false });
+    const allUsers = await getAllUsers();
 
     if (!allUsers) return 0;
 

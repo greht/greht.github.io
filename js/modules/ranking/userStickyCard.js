@@ -1,4 +1,5 @@
 import { supabase } from "/config/supabase.js";
+import { getAllUsers } from "/js/services/ranking.js";
 
 function randomMessage(messages) {
     return messages[Math.floor(Math.random() * messages.length)];
@@ -47,10 +48,7 @@ export async function renderUserStickyCard(state) {
         : "/assets/images/avatar.png";
     const countryCode = profile?.country_code || "";
 
-    const { data: globalUsers } = await supabase
-        .from("profiles")
-        .select("user_id, user_name, points")
-        .order("points", { ascending: false });
+    const globalUsers = await getAllUsers();
 
     const rankIndex = globalUsers ? globalUsers.findIndex(u => u.user_id === user.id) : -1;
     const rank = rankIndex >= 0 ? rankIndex + 1 : null;

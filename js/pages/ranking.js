@@ -40,19 +40,16 @@ async function saveDailySnapshotIfNeeded() {
         return;
     }
 
-    const { data: profiles, error } = await supabase
-        .from("profiles")
-        .select("user_id, points")
-        .order("points", { ascending: false });
+    const allUsers = await getAllUsers();
 
-    if (error || !profiles || profiles.length === 0) {
+    if (!allUsers || allUsers.length === 0) {
         return;
     }
 
     const snapshotDate = new Date().toISOString();
-    const snapshots = profiles.map((profile, index) => ({
-        user_id: profile.user_id,
-        total_points: profile.points,
+    const snapshots = allUsers.map((user, index) => ({
+        user_id: user.user_id,
+        total_points: user.points,
         rank_position: index + 1,
         snapshot_date: snapshotDate
     }));

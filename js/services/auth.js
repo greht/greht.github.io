@@ -22,12 +22,17 @@ export async function signIn(email, password) {
   })
 }
 
+export function clearAllStorage() {
+  localStorage.clear()
+  sessionStorage.clear()
+  document.cookie.split(";").forEach(c => {
+    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+  })
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut()
-  if (!error) {
-    localStorage.clear()
-    sessionStorage.clear()
-  }
+  clearAllStorage()
   return { error }
 }
 

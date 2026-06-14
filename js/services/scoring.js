@@ -1,4 +1,5 @@
 import { supabase } from "/config/supabase.js";
+import { getAllUsers } from "/js/services/ranking.js";
 
 export const POINTS = {
     EXACT_SCORE: 3,
@@ -117,7 +118,8 @@ async function processMatchPredictions(match) {
         const result = calculatePoints(prediction, match);
         return {
             id: prediction.id,
-            points_earned: result.points
+            points_earned: result.points,
+            is_exact: result.type === "exact"
         };
     });
 
@@ -200,20 +202,16 @@ export async function updateUserPoints(userId) {
 }
 
 export async function saveRankingSnapshot() {
-    const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("user_id, points")
-        .order("points", { ascending: false });
+    const allUsers = await getAllUsers();
 
-    if (profilesError) {
-        console.error("Error fetching profiles for snapshot:", profilesError);
+    if (!allUsers || allUsers.length === 0) {
         return;
     }
 
     const snapshotDate = new Date().toISOString();
-    const snapshots = profiles.map((profile, index) => ({
-        user_id: profile.user_id,
-        total_points: profile.points,
+    const snapshots = allUsers.map((user, index) => ({
+        user_id: user.user_id,
+        total_points: user.points,
         rank_position: index + 1,
         snapshot_date: snapshotDate
     }));

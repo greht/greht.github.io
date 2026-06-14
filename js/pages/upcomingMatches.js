@@ -101,7 +101,7 @@ function renderDots(count) {
 
 function resetAuto() {
     clearInterval(autoTimer)
-    autoTimer = setInterval(() => goTo(currentIndex + 1), 5000)
+    autoTimer = setInterval(() => goTo(currentIndex + 1), 10000)
 }
 
 function renderEmpty() {
