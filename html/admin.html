@@ -252,6 +252,7 @@
             weekday: "long",
             day: "2-digit",
             month: "long",
+            timeZone: 'UTC',
           });
           if (!groups[key]) groups[key] = [];
           groups[key].push(match);
@@ -265,14 +266,14 @@
 
       function formatMatchDate(dateStr) {
         const date = new Date(dateStr);
-        const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
-        return argentinaDate
+        return date
           .toLocaleString("es-ES", {
             weekday: "long",
             day: "numeric",
             month: "short",
             hour: "2-digit",
             minute: "2-digit",
+            timeZone: 'UTC',
           })
           .replace(".", "");
       }
@@ -474,7 +475,7 @@
           }
         });
 
-        return { active: activeGroups, finished: finishedGroups };
+        return { active: activeGroups, finished: finishedGroups.reverse() };
       }
 
       function updateTabCounts() {
@@ -816,9 +817,8 @@
           if (!match || !match.match_date || match.status === "finished") return;
 
           const date = new Date(match.match_date);
-          const argentinaDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);
           const now = new Date();
-          const diff = argentinaDate.getTime() - now.getTime();
+          const diff = date.getTime() - now.getTime();
 
           const statusEl = card.querySelector(".match-header-right span");
           if (statusEl && diff <= 0) {
