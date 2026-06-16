@@ -2,12 +2,14 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard - PredictiLab</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eliminatorias - PredictiLab</title>
+
     <link rel="stylesheet" href="CSS/styles.css" />
-    <link rel="stylesheet" href="CSS/dashboard.css" />
     <link rel="stylesheet" href="CSS/footer.css" />
+    <link rel="stylesheet" href="CSS/bracket.css" />
   </head>
+
   <body>
     <header class="navbar-secondary">
       <button class="hamburger-menu" id="hamburgerMenu" aria-label="Menú">
@@ -25,10 +27,10 @@
         <span class="logo1-text">PredictiLab</span>
       </div>
 
-      <nav class="navbar-center" aria-label="navbar-center">
-        <a href="#" class="active">Inicio</a>
+      <nav class="navbar-center">
+        <a href="dashboard.html">Inicio</a>
         <a href="predictions.html">Predicciones</a>
-        <a href="bracket.html">Eliminatorias</a>
+        <a href="bracket.html" class="active">Eliminatorias</a>
         <a href="ranking.html">Ranking</a>
         <a href="groups.html">Tabla de equipos</a>
       </nav>
@@ -47,89 +49,58 @@
         <span class="mobile-menu-title">PredictiLab</span>
         <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
       </div>
-      <nav class="mobile-menu-nav" aria-label="mobile-menu-nav">
-        <a href="#" class="active">Inicio</a>
+      <nav class="mobile-menu-nav">
+        <a href="dashboard.html">Inicio</a>
         <a href="predictions.html">Predicciones</a>
-        <a href="bracket.html">Eliminatorias</a>
+        <a href="bracket.html" class="active">Eliminatorias</a>
         <a href="ranking.html">Ranking</a>
         <a href="groups.html">Tabla de equipos</a>
       </nav>
     </div>
 
-    <main class="dashboard-container">
-      <div class="welcome-section">
-        <h1>Estás de vuelta, <span id="userName"></span> 👋</h1>
-        <p>Aquí tienes tus estadísticas</p>
+    <main class="bracket-container">
+      <div id="bracketContent">
+        <section class="bracket-header">
+          <h1>Bracket de Eliminatorias</h1>
+          <p>
+            Sigue el avance de los equipos a través de las fases eliminatorias del torneo
+          </p>
+        </section>
+
+        <section class="bracket-scroll">
+          <div id="bracketContainer"></div>
+        </section>
       </div>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">🏆</div>
-          <div class="stat-info">
-            <span class="stat-value" id="position">#--</span>
-            <span class="stat-label">Posición Global</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">⚽</div>
-          <div class="stat-info">
-            <span class="stat-value" id="predictions">0</span>
-            <span class="stat-label">Predicciones</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">🎯</div>
-          <div class="stat-info">
-            <span class="stat-value" id="correct">0</span>
-            <span class="stat-label">Aciertos</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-info">
-            <span class="stat-value" id="points">0</span>
-            <span class="stat-label">Puntos</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="quick-actions">
-        <h2>Acciones Rápidas</h2>
-        <div class="actions-grid">
-          <a href="predictions.html" class="action-btn">
-            <span>📊</span> Ver Predicciones
-          </a>
-          <a href="bracket.html" class="action-btn">
-            <span>🏆</span> Ver Eliminatorias
-          </a>
-          <a href="ranking.html" class="action-btn">
-            <span>🏅</span> Ver Ranking
-          </a>
+      <div id="bracketUnderConstruction" style="display: none;">
+        <div class="bracket-construction-message">
+          <div class="construction-icon">🔒</div>
+          <h1>En construcción</h1>
+          <p>La vista de eliminatorias estará disponible próximamente.</p>
+          <p class="construction-subtitle">Estamos preparando el bracket para que puedas seguir todos los cruces del torneo.</p>
         </div>
       </div>
     </main>
 
-    <footer id="footer" class="footer-system">
-      <div class="footer-container">
-        <div class="footer-left">
-          <span class="logo-text">PredictiLab.com</span>
-        </div>
-        <div class="footer-center">
-          <a href="#">Políticas de privacidad</a>
-          <a href="#">Términos del servicio</a>
-          <a href="#">Contáctanos</a>
-        </div>
-        <div class="footer-right">
-          <span>© 2026 PredictiLab - Greht Fernández</span>
-        </div>
-      </div>
-    </footer>
+    <footer id="footer" class="footer-system"></footer>
 
     <script type="module" src="/js/app/init.js"></script>
-    <script type="module" src="/js/pages/dashboard.js"></script>
+    <script type="module" src="/js/pages/bracket.js"></script>
+    <script type="module">
+      import { getSetting } from "/js/services/settings.js";
+      
+      // Check bracket visibility
+      document.addEventListener("DOMContentLoaded", async () => {
+        const isVisible = await getSetting("bracket_visible");
+        const content = document.getElementById("bracketContent");
+        const construction = document.getElementById("bracketUnderConstruction");
+        
+        if (isVisible !== "true") {
+          content.style.display = "none";
+          construction.style.display = "block";
+        }
+      });
+    </script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const hamburger = document.getElementById("hamburgerMenu");

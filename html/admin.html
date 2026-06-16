@@ -29,6 +29,7 @@
       <nav class="navbar-center">
         <a href="/dashboard.html">Inicio</a>
         <a href="/predictions.html">Predicciones</a>
+        <a href="/bracket.html">Eliminatorias</a>
         <a href="/ranking.html">Ranking</a>
         <a href="/groups.html">Tabla de equipos</a>
       </nav>
@@ -50,12 +51,30 @@
       <nav class="mobile-menu-nav">
         <a href="/dashboard.html">Inicio</a>
         <a href="/predictions.html">Predicciones</a>
+        <a href="/bracket.html">Eliminatorias</a>
         <a href="/ranking.html">Ranking</a>
         <a href="/groups.html">Tabla de equipos</a>
       </nav>
     </div>
 
     <main class="predictions-container">
+      <section class="bracket-visibility-banner">
+        <div class="bracket-visibility-content">
+          <div class="bracket-visibility-info">
+            <span class="bracket-visibility-icon" id="bracketVisibilityIcon">🔒</span>
+            <div>
+              <strong>Bracket público:</strong>
+              <span id="bracketVisibilityStatus">Oculto</span>
+            </div>
+          </div>
+          <label class="bracket-visibility-switch">
+            <input type="checkbox" id="bracketVisibilityToggle">
+            <span class="bracket-visibility-slider"></span>
+          </label>
+        </div>
+        <p class="bracket-visibility-hint">Cuando está oculto, la vista de eliminatorias no es visible para los usuarios.</p>
+      </section>
+
       <section class="header-section">
         <div class="header-title-row">
           <div>
@@ -74,6 +93,10 @@
           <button class="main-tab-btn" data-tab="tournament">
             <span class="tab-icon">🏆</span>
             <span class="tab-text">Crear Reglas</span>
+          </button>
+          <button class="main-tab-btn" data-tab="bracket-config">
+            <span class="tab-icon">🔀</span>
+            <span class="tab-text">Configurar Bracket</span>
           </button>
         </div>
 
@@ -111,6 +134,8 @@
         </div>
 
         <div id="tournament-section" class="tab-content-section"></div>
+
+        <div id="bracket-config-section" class="tab-content-section"></div>
       </section>
     </main>
 
@@ -122,6 +147,8 @@
       import { processFinishedMatches } from "/js/services/scoring.js";
       import { loadNavbar, loadFooter } from "/js/components/navbar.js";
       import { loadQualifiedTeamsSection } from "/js/services/admin/tournament-ui.js";
+      import { loadBracketConfigSection } from "/js/services/admin/bracket-admin-ui.js";
+      import { getSetting, updateSetting } from "/js/services/settings.js";
 
       let currentUser = null;
       let allMatches = [];
@@ -488,19 +515,25 @@
         const mainTabs = document.querySelectorAll(".main-tab-btn");
         const datesSection = document.getElementById("dates-section");
         const tournamentSection = document.getElementById("tournament-section");
+        const bracketConfigSection = document.getElementById("bracket-config-section");
 
         mainTabs.forEach((btn) => {
           btn.addEventListener("click", () => {
             mainTabs.forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
 
+            datesSection.classList.remove("active");
+            tournamentSection.classList.remove("active");
+            bracketConfigSection.classList.remove("active");
+
             if (btn.dataset.tab === "tournament") {
-              datesSection.classList.remove("active");
               tournamentSection.classList.add("active");
               loadQualifiedTeamsSection();
+            } else if (btn.dataset.tab === "bracket-config") {
+              bracketConfigSection.classList.add("active");
+              loadBracketConfigSection();
             } else {
               datesSection.classList.add("active");
-              tournamentSection.classList.remove("active");
               initDateSubTabs();
             }
           });
@@ -717,6 +750,99 @@
           }
 
           showSaveNotification();
+
+          if (status === "finished") {
+            await resolveWinnerToNextPhase(matchId, parseInt(homeScore), parseInt(awayScore));
+          }
+        }
+      }
+
+      async function resolveWinnerToNextPhase(matchId, homeScore, awayScore) {
+        const { data: matchData } = await supabase
+          .from("matches")
+          .select("*, phases(name)")
+          .eq("id", matchId)
+          .single();
+
+        if (!matchData) return;
+
+        const currentPhaseName = matchData.phases?.name;
+        const bracketPosition = matchData.bracket_position;
+
+        if (!currentPhaseName || !bracketPosition) return;
+
+        let winnerTeamId = null;
+        let loserTeamId = null;
+
+        if (homeScore > awayScore) {
+          winnerTeamId = matchData.home_team_id;
+          loserTeamId = matchData.away_team_id;
+        } else if (awayScore > homeScore) {
+          winnerTeamId = matchData.away_team_id;
+          loserTeamId = matchData.home_team_id;
+        } else {
+          return;
+        }
+
+        let winnerSlot = null;
+        let loserSlot = null;
+
+        if (currentPhaseName.includes("32")) {
+          winnerSlot = `R32_${bracketPosition}`;
+        } else if (currentPhaseName.includes("Octavos")) {
+          winnerSlot = `R16_${bracketPosition}`;
+        } else if (currentPhaseName.includes("Cuartos")) {
+          winnerSlot = `QF_${bracketPosition}`;
+        } else if (currentPhaseName.includes("Semifinal")) {
+          winnerSlot = `SF_${bracketPosition}`;
+          loserSlot = `L_SF_${bracketPosition}`;
+        }
+
+        if (currentPhaseName.includes("32")) {
+          await updateMatchesWithSlot("Octavos de final", winnerSlot, winnerTeamId);
+        } else if (currentPhaseName.includes("Octavos")) {
+          await updateMatchesWithSlot("Cuartos de final", winnerSlot, winnerTeamId);
+        } else if (currentPhaseName.includes("Cuartos")) {
+          await updateMatchesWithSlot("Semifinal", winnerSlot, winnerTeamId);
+        } else if (currentPhaseName.includes("Semifinal")) {
+          await updateMatchesWithSlot("Final", winnerSlot, winnerTeamId);
+          if (loserSlot) {
+            await updateMatchesWithSlot("Eliminatoria por el 3er lugar", loserSlot, loserTeamId);
+          }
+        }
+      }
+
+      async function updateMatchesWithSlot(phaseName, slotCode, teamId) {
+        const { data: phase } = await supabase
+          .from("phases")
+          .select("id")
+          .eq("name", phaseName)
+          .single();
+
+        if (!phase) return;
+
+        const { data: matchesToUpdate } = await supabase
+          .from("matches")
+          .select("id, home_slot, away_slot")
+          .eq("phase_id", phase.id);
+
+        for (const match of matchesToUpdate || []) {
+          const updates = {};
+
+          if (match.home_slot === slotCode) {
+            updates.home_team_id = teamId;
+          }
+
+          if (match.away_slot === slotCode) {
+            updates.away_team_id = teamId;
+          }
+
+          if (Object.keys(updates).length > 0) {
+            await supabase
+              .from("matches")
+              .update(updates)
+              .eq("id", match.id);
+          }
         }
       }
 
@@ -826,6 +952,45 @@
           }
         });
       }, 60000);
+
+      // Bracket visibility toggle
+      async function initBracketVisibility() {
+        const toggle = document.getElementById("bracketVisibilityToggle");
+        const icon = document.getElementById("bracketVisibilityIcon");
+        const status = document.getElementById("bracketVisibilityStatus");
+        
+        const isVisible = await getSetting("bracket_visible");
+        const visible = isVisible === "true";
+        
+        toggle.checked = visible;
+        updateVisibilityUI(visible);
+        
+        toggle.addEventListener("change", async () => {
+          const newValue = toggle.checked.toString();
+          const success = await updateSetting("bracket_visible", newValue);
+          
+          if (success) {
+            updateVisibilityUI(toggle.checked);
+          } else {
+            alert("Error al actualizar la configuración");
+            toggle.checked = !toggle.checked;
+          }
+        });
+        
+        function updateVisibilityUI(visible) {
+          if (visible) {
+            icon.textContent = "🔓";
+            status.textContent = "Visible";
+            status.style.color = "var(--color-accent)";
+          } else {
+            icon.textContent = "🔒";
+            status.textContent = "Oculto";
+            status.style.color = "var(--color-text-secundary)";
+          }
+        }
+      }
+      
+      initBracketVisibility();
     </script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {

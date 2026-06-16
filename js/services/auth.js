@@ -66,3 +66,12 @@ export async function requireAuth(redirectUrl = "/login.html") {
   }
   return result
 }
+
+export async function resetPasswordForEmail(email) {
+  const redirectTo = `${window.location.origin}/reset-password.html`
+  return await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+}
+
+export async function updatePassword(password) {
+  return await supabase.auth.updateUser({ password })
+}

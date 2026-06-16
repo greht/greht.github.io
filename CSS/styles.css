@@ -1706,3 +1706,20 @@ button {
     display: flex;
   }
 }
+
+/* Ocultar links de Eliminatorias por defecto */
+a[href="bracket.html"],
+a[href="/bracket.html"] {
+  display: none !important;
+}
+
+/* Mostrar links de Eliminatorias solo cuando el bracket es visible */
+body.bracket-visible .navbar-center a[href="bracket.html"],
+body.bracket-visible .navbar-center a[href="/bracket.html"] {
+  display: inline-flex !important;
+}
+
+body.bracket-visible .mobile-menu-nav a[href="bracket.html"],
+body.bracket-visible .mobile-menu-nav a[href="/bracket.html"] {
+  display: block !important;
+}

@@ -9,6 +9,7 @@ import { checkAndCelebrateCompletion } from "/js/utils/celebration.js"
 import { requireAuth } from "/js/services/auth.js"
 import { getProfile } from "/js/services/profile.js"
 import { getTimezoneOffset, toLocalTime, toRealUtcDate, formatLocalDate } from "/js/utils/timezone.js"
+import { getSetting } from "/js/services/settings.js"
 
 function resolveFlagUrl(flagUrl) {
   if (!flagUrl) return "/assets/images/flag-mexV2.svg";
@@ -680,7 +681,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderSkeletons()
 
-  const matches = await getMatches()
+  // Verificar si el bracket es visible
+  const isBracketVisible = await getSetting("bracket_visible")
+  const bracketVisible = isBracketVisible === "true"
+
+  let matches = await getMatches()
+  
+  // Si el bracket no es visible, filtrar partidos de fases eliminatorias
+  if (!bracketVisible) {
+    matches = matches.filter(match => !match.phase_id)
+  }
+  
   matchesGlobal = matches;
 
   if (matches && matches.length > 0) {

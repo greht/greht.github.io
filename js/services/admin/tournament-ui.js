@@ -172,6 +172,22 @@ async function loadQualifiedTeams() {
     if (!grid) { return }
     if (!stage) { grid.innerHTML = "<p>Selecciona una etapa</p>"; return }
 
+    const stageName = stage.toUpperCase()
+    const requiresManualAssignment = stageName.includes("32")
+
+    if (!requiresManualAssignment) {
+        grid.innerHTML = `
+            <div class="qualified-auto-notice">
+                <p><strong>Esta fase no requiere asignación manual de equipos.</strong></p>
+                <p>Los equipos se asignan automáticamente cuando se finalizan los partidos de la fase anterior.</p>
+                <p>Puedes crear las plantillas directamente en la pestaña "Plantillas KO".</p>
+            </div>
+        `
+        return
+    }
+
+    const hasMatches = await checkIfMatchesExist(leagueId, stage)
+
     let qualifiedQuery = supabase.from("qualified_teams").select("*").eq("stage", stage).order("slot_code")
     if (leagueId) qualifiedQuery = qualifiedQuery.eq("league_id", leagueId)
     const [qualified, teams, groups] = await Promise.all([
@@ -210,7 +226,17 @@ async function loadQualifiedTeams() {
 
     const allTeamsOptions = teams.map(t => `<option value="${t.id}">${t.name}</option>`).join("")
 
-    grid.innerHTML = slots.map(slot => {
+    let noticeHtml = ""
+    if (hasMatches) {
+        noticeHtml = `
+            <div class="qualified-auto-notice info">
+                <p><strong>Ya hay partidos generados para esta etapa.</strong></p>
+                <p>Al asignar equipos a los slots, los partidos se actualizarán automáticamente.</p>
+            </div>
+        `
+    }
+
+    grid.innerHTML = noticeHtml + slots.map(slot => {
         const assigned = qualified.data?.find(q => q.slot_code === slot)
         const team = assigned?.team_id ? teamsMap.get(assigned.team_id) : null
         const slotMatch = slot.match(/^([A-L])([12])$/)
@@ -267,6 +293,18 @@ async function loadQualifiedTeams() {
     })
 }
 
+async function checkIfMatchesExist(leagueId, stage) {
+    const { data, error } = await supabase
+        .from("matches")
+        .select("id")
+        .eq("league_id", leagueId)
+        .eq("stage", stage)
+        .limit(1)
+    
+    if (error) return false
+    return data && data.length > 0
+}
+
 async function assignSlot(stage, slotCode, teamId) {
     const user = await checkAdmin();
     if (!user) return;
@@ -294,6 +332,37 @@ async function assignSlot(stage, slotCode, teamId) {
             .insert({ league_id: leagueId, stage, slot_code: slotCode, team_id: teamId })
         if (error) alert("Error insertando: " + error.message)
     }
+
+    await refreshMatchesUsingSlot(leagueId, stage, slotCode, teamId)
+}
+
+async function refreshMatchesUsingSlot(leagueId, stage, slotCode, teamId) {
+    const { data: matches } = await supabase
+        .from("matches")
+        .select("id, home_slot, away_slot")
+        .eq("league_id", leagueId)
+        .eq("stage", stage)
+    
+    if (!matches) return
+
+    for (const match of matches) {
+        const updates = {}
+        
+        if (match.home_slot === slotCode) {
+            updates.home_team_id = teamId
+        }
+        
+        if (match.away_slot === slotCode) {
+            updates.away_team_id = teamId
+        }
+        
+        if (Object.keys(updates).length > 0) {
+            await supabase
+                .from("matches")
+                .update(updates)
+                .eq("id", match.id)
+        }
+    }
 }
 
 async function removeSlot(stage, slotCode) {
@@ -307,6 +376,8 @@ async function removeSlot(stage, slotCode) {
     if (leagueId) query = query.eq("league_id", leagueId)
     const { error } = await query
     if (error) alert("Error eliminando: " + error.message)
+
+    await refreshMatchesUsingSlot(leagueId, stage, slotCode, null)
 }
 
 function initTemplatesHandlers() {
@@ -340,28 +411,38 @@ async function loadTemplates() {
 
     const teams = await loadAllTeams()
     const teamsMap = new Map(teams.map(t => [t.id, t]))
-    const qualified = await supabase.from("qualified_teams").select("slot_code, team_id").eq("stage", stage)
-        if (qualified.error) console.warn("Qualified query error:", qualified.error)
-const qualifiedData = qualified.data || []
-    const slotToTeam = new Map(qualifiedData.map(q => [q.slot_code, q.team_id]))
+
+    const resolvedSlots = new Map()
+    for (const t of data) {
+        if (!resolvedSlots.has(t.home_slot)) {
+            const teamId = await resolveSlotToTeamId(leagueId, stage, t.home_slot)
+            resolvedSlots.set(t.home_slot, teamId)
+        }
+        if (!resolvedSlots.has(t.away_slot)) {
+            const teamId = await resolveSlotToTeamId(leagueId, stage, t.away_slot)
+            resolvedSlots.set(t.away_slot, teamId)
+        }
+    }
 
     grid.innerHTML = data.map(t => {
-        const homeSlotTeam = slotToTeam.get(t.home_slot)
-        const awaySlotTeam = slotToTeam.get(t.away_slot)
+        const homeSlotTeam = resolvedSlots.get(t.home_slot)
+        const awaySlotTeam = resolvedSlots.get(t.away_slot)
         const homeTeam = homeSlotTeam ? teamsMap.get(homeSlotTeam) : null
         const awayTeam = awaySlotTeam ? teamsMap.get(awaySlotTeam) : null
+        const homeLabel = homeTeam?.name || `TBD (${t.home_slot})`
+        const awayLabel = awayTeam?.name || `TBD (${t.away_slot})`
         return `
             <div class="template-card">
                 <span class="match-order">#${t.match_order}</span>
                 <div class="match-info">
                     <div class="match-team">
                         <span class="slot-badge">${t.home_slot}</span>
-                        <span class="team-name">${homeTeam?.name || "Sin asignar"}</span>
+                        <span class="team-name">${homeLabel}</span>
                     </div>
                     <span class="vs-label">vs</span>
                     <div class="match-team">
                         <span class="slot-badge">${t.away_slot}</span>
-                        <span class="team-name">${awayTeam?.name || "Sin asignar"}</span>
+                        <span class="team-name">${awayLabel}</span>
                     </div>
                 </div>
                 <button class="btn-delete-template" data-id="${t.id}">×</button>
@@ -467,19 +548,27 @@ async function loadGeneratePreview() {
         })
     }
 
-    let qualifiedQuery = supabase.from("qualified_teams").select("slot_code, team_id").eq("stage", stage)
-    if (leagueId) qualifiedQuery = qualifiedQuery.eq("league_id", leagueId)
-    const qualified = await qualifiedQuery
     const teams = await loadAllTeams()
     const teamsMap = new Map(teams.map(t => [t.id, t]))
-    const slotToTeam = new Map((qualified.data || []).map(q => [q.slot_code, q.team_id]))
+
+    const resolvedSlots = new Map()
+    for (const t of templates) {
+        if (!resolvedSlots.has(t.home_slot)) {
+            const teamId = await resolveSlotToTeamId(leagueId, stage, t.home_slot)
+            resolvedSlots.set(t.home_slot, teamId)
+        }
+        if (!resolvedSlots.has(t.away_slot)) {
+            const teamId = await resolveSlotToTeamId(leagueId, stage, t.away_slot)
+            resolvedSlots.set(t.away_slot, teamId)
+        }
+    }
 
     preview.innerHTML = `
         <h4>Partidos (${templates.length}):</h4>
         <div class="preview-matches">
             ${templates.map(t => {
-                const homeTeamId = slotToTeam.get(t.home_slot)
-                const awayTeamId = slotToTeam.get(t.away_slot)
+                const homeTeamId = resolvedSlots.get(t.home_slot)
+                const awayTeamId = resolvedSlots.get(t.away_slot)
                 const homeTeam = homeTeamId ? teamsMap.get(homeTeamId) : null
                 const awayTeam = awayTeamId ? teamsMap.get(awayTeamId) : null
                 const existingDate = (() => {
@@ -490,18 +579,20 @@ async function loadGeneratePreview() {
                         return date.toISOString().slice(0, 16)
                     } catch { return "" }
                 })()
+                const homeLabel = homeTeam?.name || `TBD (${t.home_slot})`
+                const awayLabel = awayTeam?.name || `TBD (${t.away_slot})`
                 return `
                     <div class="preview-match">
                         <span class="preview-order">#${t.match_order}</span>
                         <div class="preview-teams">
                             <div class="preview-team">
                                 <span class="slot-badge-sm">${t.home_slot}</span>
-                                <span>${homeTeam?.name || "Sin asignar"}</span>
+                                <span>${homeLabel}</span>
                             </div>
                             <span class="preview-vs">vs</span>
                             <div class="preview-team">
                                 <span class="slot-badge-sm">${t.away_slot}</span>
-                                <span>${awayTeam?.name || "Sin asignar"}</span>
+                                <span>${awayLabel}</span>
                             </div>
                         </div>
                         <input type="datetime-local" class="match-datetime" 
@@ -555,38 +646,33 @@ async function handleGenerate() {
         if (leagueId) templatesQuery = templatesQuery.eq("league_id", leagueId)
         const { data: templates } = await templatesQuery
 
-        let qualifiedQuery = supabase.from("qualified_teams").select("*").eq("stage", stage)
-        if (leagueId) qualifiedQuery = qualifiedQuery.eq("league_id", leagueId)
-        const { data: qualifiedTeams } = await qualifiedQuery
+        const matches = []
+        for (const t of templates) {
+            const homeSlot = t.home_slot
+            const awaySlot = t.away_slot
+            const matchDate = matchDateMap.get(`${homeSlot}-${awaySlot}`)
 
-        const slotMap = new Map((qualifiedTeams || []).map(q => [q.slot_code, q.team_id]))
-        const matches = templates
-            .map(t => {
-                const homeSlot = t.home_slot
-                const awaySlot = t.away_slot
-                const homeTeamId = slotMap.get(homeSlot)
-                const awayTeamId = slotMap.get(awaySlot)
-                const matchDate = matchDateMap.get(`${homeSlot}-${awaySlot}`)
+            if (!matchDate) continue
 
-                if (!homeTeamId || !awayTeamId || !matchDate) return null
+            const homeTeamId = await resolveSlotToTeamId(leagueId, stage, homeSlot)
+            const awayTeamId = await resolveSlotToTeamId(leagueId, stage, awaySlot)
 
-                const match = {
-                    league_id: leagueId,
-                    phase_id: phaseId,
-                    stage,
-                    home_team_id: homeTeamId,
-                    away_team_id: awayTeamId,
-                    home_slot: homeSlot,
-                    away_slot: awaySlot,
-                    status: "scheduled",
-                    match_date: matchDate,
-                    group_id: null
-                }
-                return match
+            matches.push({
+                league_id: leagueId,
+                phase_id: phaseId,
+                stage,
+                home_team_id: homeTeamId,
+                away_team_id: awayTeamId,
+                home_slot: homeSlot,
+                away_slot: awaySlot,
+                status: "scheduled",
+                match_date: matchDate,
+                group_id: null,
+                bracket_position: t.match_order
             })
-            .filter(m => m !== null)
+        }
 
-        if (!matches.length) throw new Error("Faltan equipos o fechas")
+        if (!matches.length) throw new Error("No hay partidos para generar. Verifica las plantillas y fechas.")
 
         const existingMatches = await supabase
             .from("matches")
@@ -605,7 +691,12 @@ async function handleGenerate() {
         for (const match of matches) {
             const key = `${match.home_slot}-${match.away_slot}`
             if (existingMap.has(key)) {
-                await supabase.from("matches").update({ match_date: match.match_date }).eq("id", existingMap.get(key))
+                await supabase.from("matches").update({
+                    match_date: match.match_date,
+                    home_team_id: match.home_team_id,
+                    away_team_id: match.away_team_id,
+                    bracket_position: match.bracket_position
+                }).eq("id", existingMap.get(key))
                 updated++
             } else {
                 await supabase.from("matches").insert(match)
@@ -642,21 +733,97 @@ function getSlotsForStage(stageName, groupsInDb = []) {
     const name = stageName.toUpperCase()
     const groups = groupsInDb.length ? groupsInDb.map(g => g.name.toUpperCase()) : ["A","B","C","D","E","F","G","H","I","J","K","L"]
 
-    if (name.includes("32") || name.includes("OCTAVOS") || name.includes("ROUND_OF_16")) {
+    if (name.includes("32")) {
         return [
             ...groups.flatMap(g => [`${g}1`, `${g}2`]),
             "THIRD_1","THIRD_2","THIRD_3","THIRD_4",
             "THIRD_5","THIRD_6","THIRD_7","THIRD_8"
         ]
     }
+    if (name.includes("OCTAVOS") || name.includes("ROUND_OF_16")) {
+        return ["R32_1","R32_2","R32_3","R32_4","R32_5","R32_6","R32_7","R32_8",
+                "R32_9","R32_10","R32_11","R32_12","R32_13","R32_14","R32_15","R32_16"]
+    }
     if (name.includes("CUARTOS") || name.includes("QUARTER")) {
         return ["R16_1","R16_2","R16_3","R16_4","R16_5","R16_6","R16_7","R16_8"]
     }
-    if (name.includes("SEMI") || name.includes("SEMIFINAL")) {
+    if (name.includes("SEMI") && !name.includes("3ER") && !name.includes("TERCER")) {
         return ["QF_1","QF_2","QF_3","QF_4"]
+    }
+    if (name.includes("3ER") || name.includes("TERCER")) {
+        return ["L_SF_1","L_SF_2"]
     }
     if (name.includes("FINAL") && !name.includes("SEMI")) {
         return ["SF_1","SF_2"]
     }
     return []
+}
+
+async function getPhaseByName(name) {
+    const { data } = await supabase
+        .from("phases")
+        .select("id, name")
+        .eq("name", name)
+        .single()
+    return data
+}
+
+async function resolveSlotToTeamId(leagueId, stage, slotCode) {
+    if (slotCode.match(/^[A-L][12]$/) || slotCode.startsWith("THIRD_")) {
+        const { data } = await supabase
+            .from("qualified_teams")
+            .select("team_id")
+            .eq("league_id", leagueId)
+            .eq("stage", stage)
+            .eq("slot_code", slotCode)
+            .single()
+        return data?.team_id || null
+    }
+
+    let phaseName = null
+
+    if (slotCode.startsWith("R32_")) {
+        phaseName = "Eliminatoria de 32"
+    } else if (slotCode.startsWith("R16_")) {
+        phaseName = "Octavos de final"
+    } else if (slotCode.startsWith("QF_")) {
+        phaseName = "Cuartos de final"
+    } else if (slotCode.startsWith("SF_")) {
+        phaseName = "Semifinal"
+    } else if (slotCode.startsWith("L_SF_")) {
+        phaseName = "Semifinal"
+    }
+
+    if (!phaseName) return null
+
+    const phase = await getPhaseByName(phaseName)
+    if (!phase) return null
+
+    let position
+    if (slotCode.startsWith("L_SF_")) {
+        position = parseInt(slotCode.split("_")[2])
+    } else {
+        position = parseInt(slotCode.split("_")[1])
+    }
+
+    const { data: match } = await supabase
+        .from("matches")
+        .select("id, home_team_id, away_team_id, home_score, away_score, status")
+        .eq("phase_id", phase.id)
+        .eq("bracket_position", position)
+        .single()
+
+    if (!match || match.status !== "finished") return null
+
+    const isLoser = slotCode.startsWith("L_SF_")
+
+    if (isLoser) {
+        if (match.home_score < match.away_score) return match.home_team_id
+        if (match.away_score < match.home_score) return match.away_team_id
+        return null
+    }
+
+    if (match.home_score > match.away_score) return match.home_team_id
+    if (match.away_score > match.home_score) return match.away_team_id
+    return null
 }

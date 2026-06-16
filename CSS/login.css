@@ -1021,3 +1021,25 @@ select option {
 .toggle-password.show-password .icon-hide {
   display: block;
 }
+
+.error-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.success-message {
+  color: var(--color-accent);
+  font-size: 14px;
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+
+.forgot-link {
+  font-size: 14px;
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
