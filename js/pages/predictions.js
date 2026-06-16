@@ -682,14 +682,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderSkeletons()
 
   // Verificar si el bracket es visible
-  const isBracketVisible = await getSetting("bracket_visible")
+  let isBracketVisible = null
+  try {
+    isBracketVisible = await getSetting("bracket_visible")
+  } catch (error) {
+    console.error("Error fetching bracket_visible setting:", error)
+  }
   const bracketVisible = isBracketVisible === "true"
 
   let matches = await getMatches()
   
-  // Si el bracket no es visible, filtrar partidos de fases eliminatorias
+  // Si el bracket no es visible, filtrar partidos de fases eliminatorias (display_order >= 2)
   if (!bracketVisible) {
-    matches = matches.filter(match => !match.phase_id)
+    matches = matches.filter(match => !match.phase || match.phase.display_order < 2)
   }
   
   matchesGlobal = matches;

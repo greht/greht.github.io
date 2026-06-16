@@ -1,5 +1,4 @@
 import { supabase } from "/config/supabase.js"
-import { getSetting } from "/js/services/settings.js"
 
 function resolveFlagUrl(flagUrl) {
     if (!flagUrl) return "/assets/images/flag-mexV2.svg";
@@ -120,8 +119,6 @@ function renderEmpty() {
         </div>
     `
     dotsContainer.innerHTML = ""
-    prevBtn.style.opacity = "0.3"
-    nextBtn.style.opacity = "0.3"
 }
 
 document.addEventListener("keydown", (e) => {
@@ -140,37 +137,21 @@ track.addEventListener("touchend", (e) => {
 })
 
 async function init() {
-    // Verificar si el bracket es visible
-    const isBracketVisible = await getSetting("bracket_visible")
-    const bracketVisible = isBracketVisible === "true"
-
-    let query = supabase
+    const { data: matches, error } = await supabase
         .from("matches")
         .select("*")
         .eq("status", "scheduled")
         .order("match_date", { ascending: true })
         .limit(5)
 
-    const { data: matches, error } = await query
-
     if (error || !matches || matches.length === 0) {
         renderEmpty()
         return
     }
 
-    // Filtrar partidos de fases eliminatorias si el bracket no es visible
-    let filteredMatches = matches
-    if (!bracketVisible) {
-        filteredMatches = matches.filter(m => !m.phase_id)
-        if (filteredMatches.length === 0) {
-            renderEmpty()
-            return
-        }
-    }
-
-    const teamIds = [...new Set(filteredMatches.flatMap(m => [m.home_team_id, m.away_team_id]))]
-    const phaseIds = [...new Set(filteredMatches.map(m => m.phase_id).filter(Boolean))]
-    const groupIds = [...new Set(filteredMatches.map(m => m.group_id).filter(Boolean))]
+    const teamIds = [...new Set(matches.flatMap(m => [m.home_team_id, m.away_team_id]))]
+    const phaseIds = [...new Set(matches.map(m => m.phase_id).filter(Boolean))]
+    const groupIds = [...new Set(matches.map(m => m.group_id).filter(Boolean))]
 
     const { data: teams } = await supabase
         .from("teams")
@@ -191,7 +172,7 @@ async function init() {
     const phasesMap = new Map(phases?.map(p => [p.id, p]) || [])
     const groupsMap = new Map(groups?.map(g => [g.id, g]) || [])
 
-    const enriched = filteredMatches.map(m => ({
+    const enriched = matches.map(m => ({
         ...m,
         home_team: teamsMap.get(m.home_team_id) || null,
         away_team: teamsMap.get(m.away_team_id) || null,
