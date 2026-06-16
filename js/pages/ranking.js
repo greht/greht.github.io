@@ -7,6 +7,7 @@ import { initPagination, getState, setPage, updatePaginationButtons, resetPagina
 import { renderUserStickyCard } from "/js/modules/ranking/userStickyCard.js";
 import { renderPaginationUI } from "/js/modules/ranking/paginationUI.js";
 import { getAllUsers } from "/js/services/ranking.js";
+import { forceSaveSnapshot } from "/js/services/snapshot.js";
 
 let currentFilter = "global";
 let countries = [];
@@ -30,11 +31,16 @@ async function loadCountries() {
 async function saveDailySnapshotIfNeeded() {
     const today = new Date().toISOString().split('T')[0];
 
-    const { data: existingSnapshots } = await supabase
+    const { data: existingSnapshots, error: checkError } = await supabase
         .from("ranking_snapshots")
-        .select("id")
+        .select("user_id")
         .gte("snapshot_date", today)
         .limit(1);
+
+    if (checkError) {
+        console.error("Error checking snapshots:", checkError);
+        return;
+    }
 
     if (existingSnapshots && existingSnapshots.length > 0) {
         return;
@@ -43,6 +49,7 @@ async function saveDailySnapshotIfNeeded() {
     const allUsers = await getAllUsers();
 
     if (!allUsers || allUsers.length === 0) {
+        console.warn("No users found for snapshot");
         return;
     }
 
@@ -54,9 +61,15 @@ async function saveDailySnapshotIfNeeded() {
         snapshot_date: snapshotDate
     }));
 
-    await supabase
+    const { error: insertError } = await supabase
         .from("ranking_snapshots")
         .insert(snapshots);
+
+    if (insertError) {
+        console.error("Error saving daily snapshot:", insertError);
+    } else {
+        console.log(`Snapshot saved for ${snapshots.length} users on ${today}`);
+    }
 }
 
 function populateCountryFilter() {
@@ -124,11 +137,32 @@ function loadCountryFilter() {
   populateCountryFilter();
 }
 
+function initForceSnapshotButton() {
+    const btn = document.getElementById("forceSnapshotBtn");
+    if (!btn) return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('debug') === 'true') {
+        btn.style.display = "block";
+        btn.addEventListener("click", async () => {
+            btn.disabled = true;
+            btn.textContent = "Guardando...";
+            const result = await forceSaveSnapshot();
+            btn.disabled = false;
+            btn.textContent = result.success ? `✓ ${result.count} usuarios` : "Error";
+            setTimeout(() => {
+                btn.textContent = "Guardar Snapshot";
+            }, 3000);
+        });
+    }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
 
   await loadCountries();
   loadCountryFilter();
   initStatTooltips();
+  initForceSnapshotButton();
 
   await saveDailySnapshotIfNeeded();
 

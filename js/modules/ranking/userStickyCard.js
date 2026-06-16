@@ -18,14 +18,14 @@ function syncStickyCardWidth() {
 async function getWeeklyChangeForUser(userId, globalUsers) {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const weekAgoStr = oneWeekAgo.toISOString();
+    const weekAgoDate = oneWeekAgo.toISOString().split('T')[0];
 
     const { data: snapshots } = await supabase
         .from("ranking_snapshots")
         .select("rank_position, snapshot_date")
         .eq("user_id", userId)
-        .lte("snapshot_date", weekAgoStr)
-        .order("snapshot_date", { ascending: false })
+        .gte("snapshot_date", weekAgoDate)
+        .order("snapshot_date", { ascending: true })
         .limit(1);
 
     if (!snapshots || snapshots.length === 0) {

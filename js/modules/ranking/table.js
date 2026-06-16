@@ -74,22 +74,22 @@ export async function renderTable(state, filter = "global") {
 async function getWeeklyChangesForUsers(users) {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const weekAgoStr = oneWeekAgo.toISOString();
+  const weekAgoDate = oneWeekAgo.toISOString().split('T')[0];
 
   const { data: snapshots } = await supabase
     .from("ranking_snapshots")
     .select("user_id, rank_position, snapshot_date")
-    .lte("snapshot_date", weekAgoStr)
-    .order("snapshot_date", { ascending: false });
+    .gte("snapshot_date", weekAgoDate)
+    .order("snapshot_date", { ascending: true });
 
   if (!snapshots || snapshots.length === 0) {
     return {};
   }
 
-  const latestSnapshotByUser = {};
+  const earliestSnapshotByUser = {};
   snapshots.forEach(snap => {
-    if (!latestSnapshotByUser[snap.user_id]) {
-      latestSnapshotByUser[snap.user_id] = snap.rank_position;
+    if (!earliestSnapshotByUser[snap.user_id]) {
+      earliestSnapshotByUser[snap.user_id] = snap.rank_position;
     }
   });
 
@@ -107,7 +107,7 @@ async function getWeeklyChangesForUsers(users) {
 
   const changes = {};
   users.forEach(user => {
-    const pastRank = latestSnapshotByUser[user.user_id];
+    const pastRank = earliestSnapshotByUser[user.user_id];
     const currentRank = currentRankByUser[user.user_id];
     if (pastRank && currentRank) {
       changes[user.user_id] = pastRank - currentRank;
