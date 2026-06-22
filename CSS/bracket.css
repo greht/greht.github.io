@@ -33,15 +33,6 @@
     font-size: 14px;
 }
 
-/* .bracket-scroll {
-    overflow-x: auto;
-    overflow-y: visible;
-    padding-bottom: 20px;
-    -webkit-overflow-scrolling: touch;
-    display: flex;
-    justify-content: center;
-} */
-
 .bracket-scroll::-webkit-scrollbar {
     height: 8px;
 }

@@ -30,12 +30,9 @@ const phaseToMatchNumberRange = {
 }
 
 export async function formatSlotLabel(slotCode, leagueId) {
-    console.log(`formatSlotLabel called with: slotCode=${slotCode}, leagueId=${leagueId}`)
-    
     // Si ya está en caché, devolverlo
     const cacheKey = `${slotCode}_${leagueId}`
     if (slotLabelCache.has(cacheKey)) {
-        console.log(`  → Cached: ${slotLabelCache.get(cacheKey)}`)
         return slotLabelCache.get(cacheKey)
     }
     
@@ -52,13 +49,10 @@ export async function formatSlotLabel(slotCode, leagueId) {
     for (const [prefix, phaseName] of Object.entries(phaseMap)) {
         if (slotCode.startsWith(prefix)) {
             const position = parseInt(slotCode.split('_').pop())
-            console.log(`  → Matched prefix: ${prefix}, phaseName: ${phaseName}, position: ${position}`)
             
             // Primero intentar buscar el partido en la BD
             const phase = await getPhaseByName(phaseName)
             if (phase) {
-                console.log(`  → Phase found: ${phase.id}`)
-                
                 const { data: matchData, error } = await supabase
                     .from('matches')
                     .select('id, match_number')
@@ -66,8 +60,6 @@ export async function formatSlotLabel(slotCode, leagueId) {
                     .eq('bracket_position', position)
                     .eq('league_id', leagueId)
                     .limit(1)
-                
-                console.log(`  → Query result:`, matchData, error)
                 
                 if (!error && matchData && matchData.length > 0) {
                     const matchNumber = matchData[0].match_number
@@ -77,7 +69,6 @@ export async function formatSlotLabel(slotCode, leagueId) {
                         ? `Perdedor P${matchNumber}` 
                         : `Ganador P${matchNumber}`
                     
-                    console.log(`  → Label from DB: ${label}`)
                     slotLabelCache.set(cacheKey, label)
                     return label
                 }
@@ -93,19 +84,16 @@ export async function formatSlotLabel(slotCode, leagueId) {
                     ? `Perdedor P${expectedMatchNumber}` 
                     : `Ganador P${expectedMatchNumber}`
                 
-                console.log(`  → Label calculated: ${label}`)
                 slotLabelCache.set(cacheKey, label)
                 return label
             }
             
-            console.log(`  → No match found and cannot calculate`)
             slotLabelCache.set(cacheKey, slotCode)
             return slotCode
         }
     }
     
     // Si no es un slot de fase eliminatoria, devolver tal cual
-    console.log(`  → No prefix matched, returning: ${slotCode}`)
     slotLabelCache.set(cacheKey, slotCode)
     return slotCode
 }

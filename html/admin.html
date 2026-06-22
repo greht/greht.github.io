@@ -152,6 +152,8 @@
 
       let currentUser = null;
       let allMatches = [];
+      let currentStatus = "active";
+      const currentPhaseByStatus = { active: null, finished: null };
 
       function resolveFlagUrl(flagUrl) {
         if (!flagUrl) return "/assets/images/predictilab-gray.svg";
@@ -272,19 +274,53 @@
         initAdminTabs();
       }
 
-      function groupMatchesByDay(matches) {
-        return matches.reduce((groups, match) => {
-          const date = new Date(match.match_date);
-          const key = date.toLocaleDateString("es-ES", {
-            weekday: "long",
-            day: "2-digit",
-            month: "long",
-            timeZone: 'UTC',
+      function getDayLabel(match) {
+        const date = new Date(match.match_date);
+        return date.toLocaleDateString("es-ES", {
+          weekday: "long",
+          day: "2-digit",
+          month: "long",
+          timeZone: "UTC",
+        });
+      }
+
+      function groupMatchesByPhaseAndDay(matches) {
+        const phasesOrder = new Map();
+        const phasesMap = new Map();
+        const fallbackPhase = {
+          id: null,
+          name: "Sin fase",
+          display_order: 9999,
+        };
+
+        for (const match of matches) {
+          const phase = match.phase || fallbackPhase;
+          const phaseKey = phase.id ?? "__no_phase__";
+          if (!phasesMap.has(phaseKey)) {
+            phasesMap.set(phaseKey, {
+              phase,
+              matches: [],
+            });
+            phasesOrder.set(
+              phaseKey,
+              (phase.display_order ?? 9999) * 100000 + phasesOrder.size,
+            );
+          }
+          phasesMap.get(phaseKey).matches.push(match);
+        }
+
+        return [...phasesOrder.entries()]
+          .sort((a, b) => a[1] - b[1])
+          .map(([phaseKey, _]) => {
+            const entry = phasesMap.get(phaseKey);
+            const days = entry.matches.reduce((acc, match) => {
+              const key = getDayLabel(match);
+              if (!acc[key]) acc[key] = [];
+              acc[key].push(match);
+              return acc;
+            }, {});
+            return { phase: entry.phase, days };
           });
-          if (!groups[key]) groups[key] = [];
-          groups[key].push(match);
-          return groups;
-        }, {});
       }
 
       function capitalize(text) {
@@ -314,24 +350,28 @@
         return false;
       }
 
-      async function renderMatchCard(match) {
-        // Obtener el leagueId del match
-        const leagueId = match.league_id || '1ebd76d7-5839-4c80-a41a-554de1bb22f5'
-        
-        // Formatear los slots para mostrar etiquetas más intuitivas
-        const homeSlotLabel = match.home_slot ? await formatSlotLabel(match.home_slot, leagueId) : "Equipo Local"
-        const awaySlotLabel = match.away_slot ? await formatSlotLabel(match.away_slot, leagueId) : "Equipo Visitante"
-        
+      function resolveSlotLabel(slotCode, slotLabelMap) {
+        if (!slotCode) return null;
+        if (slotLabelMap && slotLabelMap.has(slotCode)) {
+          return slotLabelMap.get(slotCode).label;
+        }
+        return slotCode;
+      }
+
+      function renderMatchCard(match, slotLabelMap) {
+        const homeSlotLabel = resolveSlotLabel(match.home_slot, slotLabelMap) || "Equipo Local";
+        const awaySlotLabel = resolveSlotLabel(match.away_slot, slotLabelMap) || "Equipo Visitante";
+
         const homeTeam = match.home_team?.name || homeSlotLabel;
         const awayTeam = match.away_team?.name || awaySlotLabel;
         const homeFlag = resolveFlagUrl(match.home_team?.flag_url);
         const awayFlag = resolveFlagUrl(match.away_team?.flag_url);
-        
+
         const isKnockout = match.phase && match.phase.display_order >= 2;
-        const matchLabel = isKnockout && match.match_number 
-          ? `P${match.match_number}` 
+        const matchLabel = isKnockout && match.match_number
+          ? `P${match.match_number}`
           : (match.group?.name || "Grupo");
-        
+
         const matchDate = formatMatchDate(match.match_date);
 
         const statusMap = {
@@ -342,6 +382,13 @@
         };
         const statusText = statusMap[match.status] || "Sin registrar";
         const isLocked = isMatchLocked(match);
+
+        const homeSlotAttr = match.home_slot
+          ? ` data-slot-code="${match.home_slot}"`
+          : "";
+        const awaySlotAttr = match.away_slot
+          ? ` data-slot-code="${match.away_slot}"`
+          : "";
 
         return `
                 <div class="match-card admin-match-card" data-match-id="${match.id}">
@@ -361,7 +408,7 @@
                                 <div class="flag-rounded">
                                     <img class="flag" src="${homeFlag}" alt="flag">
                                 </div>
-                                <span>${homeTeam}</span>
+                                <span${homeSlotAttr}>${homeTeam}</span>
                             </div>
                             <div class="score-control">
                                 <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>
@@ -382,7 +429,7 @@
                                 <div class="flag-rounded">
                                     <img class="flag" src="${awayFlag}" alt="flag">
                                 </div>
-                                <span>${awayTeam}</span>
+                                <span${awaySlotAttr}>${awayTeam}</span>
                             </div>
                             <div class="score-control">
                                 <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>
@@ -449,82 +496,54 @@
         });
       }
 
-      async function renderMatches(matches) {
-        const container = document.getElementById("matches-container");
-        if (!container) return;
-
-        const grouped = groupMatchesByDay(matches);
-
-        const groupsHtml = await Promise.all(Object.entries(grouped).map(async ([dayLabel, dayMatches], index) => {
-          const phaseName = dayMatches[0]?.phase?.name || "";
-          const journeyLabel = phaseName
-            ? `Fecha ${index + 1} - ${phaseName}`
-            : `Fecha ${index + 1}`;
-
-          const matchesHtml = await Promise.all(
-            dayMatches.map((match) => renderMatchCard(match))
-          );
-
-          return `
-                  <div class="matches-group" data-group-index="${index}">
-                      <button type="button" class="matches-group-header">
-                          <div class="accordion-info">
-                              <span class="journey">${journeyLabel}</span>
-                              <span class="date-label">${capitalize(dayLabel)}</span>
-                          </div>
-                          <div class="accordion-right">
-                              <div class="accordion-progress">
-                                  <span class="count">${dayMatches.length} partidos</span>
-                              </div>
-                              <svg class="accordion-arrow" viewBox="0 0 24 24">
-                                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg>
-                          </div>
-                      </button>
-                      <div class="matches-group-content" style="max-height: 0; overflow: hidden;">
-                          ${matchesHtml.join("")}
-                      </div>
-                  </div>
-              `;
-        }));
-
-        container.innerHTML = groupsHtml.join("");
-
-        setTimeout(() => {
-          initAccordions();
-          initScoreControls();
-          document.querySelectorAll(".btn-save-match").forEach((btn) => {
-            btn.addEventListener("click", () =>
-              saveMatchResult(btn.dataset.matchId),
-            );
-          });
-        }, 100);
-      }
-
       function isGroupFinished(dayMatches) {
         return dayMatches.every((m) => m.status === "finished");
       }
 
       function splitMatchesByStatus(matches) {
-        const grouped = groupMatchesByDay(matches);
-        const activeGroups = [];
-        const finishedGroups = [];
+        const phases = groupMatchesByPhaseAndDay(matches);
+        const active = [];
+        const finished = [];
 
-        Object.entries(grouped).forEach(([dayLabel, dayMatches]) => {
-          if (isGroupFinished(dayMatches)) {
-            finishedGroups.push([dayLabel, dayMatches]);
-          } else {
-            activeGroups.push([dayLabel, dayMatches]);
+        phases.forEach(({ phase, days }) => {
+          const dayEntries = Object.entries(days);
+          const activeDays = [];
+          const finishedDays = [];
+
+          dayEntries.forEach(([dayLabel, dayMatches]) => {
+            if (isGroupFinished(dayMatches)) {
+              finishedDays.push([dayLabel, dayMatches]);
+            } else {
+              activeDays.push([dayLabel, dayMatches]);
+            }
+          });
+
+          if (activeDays.length > 0) {
+            active.push({ phase, days: activeDays });
+          }
+          if (finishedDays.length > 0) {
+            finished.push({
+              phase,
+              days: finishedDays.reverse(),
+            });
           }
         });
 
-        return { active: activeGroups, finished: finishedGroups.reverse() };
+        return { active, finished };
       }
 
       function updateTabCounts() {
         const { active, finished } = splitMatchesByStatus(allMatches);
-        document.getElementById("activeCount").textContent = active.length;
-        document.getElementById("finishedCount").textContent = finished.length;
+        const activeCount = active.reduce(
+          (sum, p) => sum + p.days.length,
+          0,
+        );
+        const finishedCount = finished.reduce(
+          (sum, p) => sum + p.days.length,
+          0,
+        );
+        document.getElementById("activeCount").textContent = activeCount;
+        document.getElementById("finishedCount").textContent = finishedCount;
       }
 
       function initAdminTabs() {
@@ -569,10 +588,11 @@
 
             const { active, finished } = splitMatchesByStatus(allMatches);
             const container = document.getElementById("matches-container");
+            currentStatus = subtab;
             if (subtab === "active") {
-              await renderGroupList(active, container);
+              renderGroupList(active, container, "active");
             } else {
-              await renderGroupList(finished, container);
+              renderGroupList(finished, container, "finished");
             }
           });
         }
@@ -581,118 +601,312 @@
       async function initDateSubTabs() {
         const container = document.getElementById("matches-container");
         const { active, finished } = splitMatchesByStatus(allMatches);
-        await renderGroupList(active, container);
+        currentStatus = "active";
+        renderGroupList(active, container, "active");
       }
 
-      async function renderGroupList(groups, container) {
-        if (groups.length === 0) {
+      function buildGlobalDayIndexMap(matches) {
+        const sorted = [...matches].sort(
+          (a, b) => new Date(a.match_date) - new Date(b.match_date),
+        );
+        const seen = new Set();
+        const map = new Map();
+        let counter = 0;
+        for (const match of sorted) {
+          const key = getDayLabel(match);
+          if (!seen.has(key)) {
+            seen.add(key);
+            counter += 1;
+            map.set(key, counter);
+          }
+        }
+        return map;
+      }
+
+      const SLOT_PREFIX_TO_PHASE = {
+        R32_: "Eliminatoria de 32",
+        R16_: "Octavos de final",
+        QF_: "Cuartos de final",
+        SF_: "Semifinal",
+        L_SF_: "Semifinal",
+      };
+
+      const PHASE_TO_MATCH_NUMBER_RANGE = {
+        "Eliminatoria de 32": { start: 73, count: 16 },
+        "Octavos de final": { start: 89, count: 8 },
+        "Cuartos de final": { start: 97, count: 4 },
+        Semifinal: { start: 101, count: 2 },
+        "Eliminatoria por el 3er lugar": { start: 103, count: 1 },
+        Final: { start: 104, count: 1 },
+      };
+
+      const slotLabelCache = new Map();
+
+      function getPhaseNameForSlot(slotCode) {
+        for (const [prefix, phaseName] of Object.entries(SLOT_PREFIX_TO_PHASE)) {
+          if (slotCode.startsWith(prefix)) return phaseName;
+        }
+        return null;
+      }
+
+      function computeFallbackLabel(slotCode, phaseName) {
+        const range = PHASE_TO_MATCH_NUMBER_RANGE[phaseName];
+        if (!range) return slotCode;
+        const position = parseInt(slotCode.split("_").pop());
+        if (!position || position < 1 || position > range.count) return slotCode;
+        const expectedMatchNumber = range.start + position - 1;
+        const isLoser = slotCode.startsWith("L_SF_");
+        return isLoser
+          ? `Perdedor P${expectedMatchNumber}`
+          : `Ganador P${expectedMatchNumber}`;
+      }
+
+      async function preResolveSlotLabels(phaseGroups) {
+        const slotCodeSet = new Set();
+        const leagueIdSet = new Set();
+
+        for (const { days } of phaseGroups) {
+          for (const [, dayMatches] of days) {
+            for (const m of dayMatches) {
+              if (m.home_slot) slotCodeSet.add(m.home_slot);
+              if (m.away_slot) slotCodeSet.add(m.away_slot);
+              if (m.league_id) leagueIdSet.add(m.league_id);
+            }
+          }
+        }
+
+        if (leagueIdSet.size === 0) {
+          leagueIdSet.add("1ebd76d7-5839-4c80-a41a-554de1bb22f5");
+        }
+
+        const uncachedSlots = [...slotCodeSet].filter(
+          (code) => !slotLabelCache.has(code),
+        );
+
+        if (uncachedSlots.length === 0) {
+          return new Map(slotLabelCache);
+        }
+
+        const phaseNameSet = new Set();
+        for (const code of uncachedSlots) {
+          const name = getPhaseNameForSlot(code);
+          if (name) phaseNameSet.add(name);
+        }
+
+        if (phaseNameSet.size === 0) {
+          for (const code of uncachedSlots) {
+            slotLabelCache.set(code, { label: code, status: "fallback" });
+          }
+          return new Map(slotLabelCache);
+        }
+
+        const { data: phases } = await supabase
+          .from("phases")
+          .select("id, name")
+          .in("name", [...phaseNameSet]);
+
+        const phasesByName = new Map();
+        for (const p of phases || []) phasesByName.set(p.name, p);
+
+        const phaseToPositions = new Map();
+        for (const code of uncachedSlots) {
+          const phaseName = getPhaseNameForSlot(code);
+          if (!phaseName) continue;
+          const phase = phasesByName.get(phaseName);
+          if (!phase) continue;
+          const position = parseInt(code.split("_").pop());
+          if (!position) continue;
+          if (!phaseToPositions.has(phase.id)) {
+            phaseToPositions.set(phase.id, new Set());
+          }
+          phaseToPositions.get(phase.id).add(position);
+        }
+
+        const phaseIds = [...phaseToPositions.keys()];
+        const allPositions = [
+          ...new Set(
+            [...phaseToPositions.values()].flatMap((s) => [...s]),
+          ),
+        ];
+
+        let matchData = [];
+        if (phaseIds.length > 0 && allPositions.length > 0) {
+          const { data } = await supabase
+            .from("matches")
+            .select("phase_id, bracket_position, match_number, league_id")
+            .in("phase_id", phaseIds)
+            .in("bracket_position", allPositions)
+            .in("league_id", [...leagueIdSet]);
+          matchData = data || [];
+        }
+
+        const matchLookup = new Map();
+        for (const m of matchData) {
+          const key = `${m.phase_id}_${m.bracket_position}_${m.league_id}`;
+          matchLookup.set(key, m.match_number);
+        }
+
+        const leagueIdList = [...leagueIdSet];
+
+        for (const code of uncachedSlots) {
+          const phaseName = getPhaseNameForSlot(code);
+          if (!phaseName) {
+            slotLabelCache.set(code, { label: code, status: "fallback" });
+            continue;
+          }
+          const phase = phasesByName.get(phaseName);
+          if (!phase) {
+            slotLabelCache.set(code, {
+              label: computeFallbackLabel(code, phaseName),
+              status: "fallback",
+            });
+            continue;
+          }
+          const position = parseInt(code.split("_").pop());
+          let matchNumber = null;
+          for (const leagueId of leagueIdList) {
+            const num = matchLookup.get(`${phase.id}_${position}_${leagueId}`);
+            if (num) {
+              matchNumber = num;
+              break;
+            }
+          }
+          if (matchNumber) {
+            const isLoser = code.startsWith("L_SF_");
+            const label = isLoser
+              ? `Perdedor P${matchNumber}`
+              : `Ganador P${matchNumber}`;
+            slotLabelCache.set(code, { label, status: "resolved" });
+          } else {
+            slotLabelCache.set(code, {
+              label: computeFallbackLabel(code, phaseName),
+              status: "fallback",
+            });
+          }
+        }
+
+        return new Map(slotLabelCache);
+      }
+
+      function applySlotLabels(container) {
+        const slotElements = container.querySelectorAll("[data-slot-code]");
+        if (slotElements.length === 0) return;
+        for (const el of slotElements) {
+          const code = el.dataset.slotCode;
+          const entry = slotLabelCache.get(code);
+          if (entry && entry.label) {
+            el.textContent = entry.label;
+          }
+        }
+      }
+
+      function buildDayAccordionsHtml(days) {
+        const dayIndexMap = buildGlobalDayIndexMap(allMatches);
+        return days
+          .map(([dayLabel, dayMatches]) => {
+            const globalIndex = dayIndexMap.get(dayLabel) || 1;
+            const journeyLabel = `Fecha ${globalIndex}`;
+
+            const matchesHtml = dayMatches
+              .map((match) => renderMatchCard(match, slotLabelCache))
+              .join("");
+
+            return `
+                <div class="matches-group">
+                    <button type="button" class="matches-group-header">
+                        <div class="accordion-info">
+                            <span class="journey">${journeyLabel}</span>
+                            <span class="date-label">${capitalize(dayLabel)}</span>
+                        </div>
+                        <div class="accordion-right">
+                            <div class="accordion-progress">
+                                <span class="count">${dayMatches.length} partidos</span>
+                            </div>
+                            <svg class="accordion-arrow" viewBox="0 0 24 24">
+                                <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </button>
+                    <div class="matches-group-content">
+                        ${matchesHtml}
+                    </div>
+                </div>
+              `;
+          })
+          .join("");
+      }
+
+      function renderGroupList(phaseGroups, container, status) {
+        if (phaseGroups.length === 0) {
           container.innerHTML = `<p class="error">No hay fechas en esta sección.</p>`;
           return;
         }
 
-        const allGrouped = groupMatchesByDay(allMatches);
-        const allKeys = Object.keys(allGrouped);
+        const rememberedPhaseId = currentPhaseByStatus[status];
+        const initialPhase =
+          phaseGroups.find(
+            (p) => String(p.phase.id) === String(rememberedPhaseId),
+          ) || phaseGroups[0];
+        currentPhaseByStatus[status] = initialPhase.phase.id;
 
-        const groupsHtml = await Promise.all(groups.map(async ([dayLabel, dayMatches]) => {
-          const originalIndex = allKeys.indexOf(dayLabel);
-          const phaseName = dayMatches[0]?.phase?.name || "";
-          const journeyLabel = phaseName
-            ? `Fecha ${originalIndex + 1} - ${phaseName}`
-            : `Fecha ${originalIndex + 1}`;
-          
-          const matchesHtml = await Promise.all(
-            dayMatches.map((match) => renderMatchCard(match))
-          );
-          
-          return `
-                  <div class="matches-group">
-                      <button type="button" class="matches-group-header">
-                          <div class="accordion-info">
-                              <span class="journey">${journeyLabel}</span>
-                              <span class="date-label">${capitalize(dayLabel)}</span>
-                          </div>
-                          <div class="accordion-right">
-                              <div class="accordion-progress">
-                                  <span class="count">${dayMatches.length} partidos</span>
-                              </div>
-                              <svg class="accordion-arrow" viewBox="0 0 24 24">
-                                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg>
-                          </div>
-                      </button>
-                      <div class="matches-group-content">
-                          ${matchesHtml.join("")}
-                      </div>
-                  </div>
+        const tabsHtml = phaseGroups
+          .map(({ phase, days }) => {
+            const isActive = String(phase.id) === String(initialPhase.phase.id);
+            return `
+                <button type="button" class="phase-tab-btn${isActive ? " active" : ""}" data-phase-id="${phase.id ?? ""}">
+                    <span class="phase-tab-name">${phase.name || "Sin fase"}</span>
+                    <span class="phase-tab-count">${days.length}</span>
+                </button>
               `;
-        }));
+          })
+          .join("");
 
-        container.innerHTML = groupsHtml.join("");
-
-        setTimeout(() => {
-          initAccordions();
-          initScoreControls();
-          document.querySelectorAll(".btn-save-match").forEach((btn) => {
-            btn.addEventListener("click", () =>
-              saveMatchResult(btn.dataset.matchId),
-            );
-          });
-        }, 100);
-      }
-
-      async function renderMatchesList(matches, container) {
-        if (matches.length === 0) {
-          container.innerHTML = `<p class="error">No hay partidos en esta sección.</p>`;
-          return;
-        }
-
-        const grouped = groupMatchesByDay(matches);
-        const allKeys = Object.keys(grouped);
-
-        const groupsHtml = await Promise.all(Object.entries(grouped).map(async ([dayLabel, dayMatches]) => {
-          const originalIndex = allKeys.indexOf(dayLabel);
-          const phaseName = dayMatches[0]?.phase?.name || "";
-          const journeyLabel = phaseName
-            ? `Fecha ${originalIndex + 1} - ${phaseName}`
-            : `Fecha ${originalIndex + 1}`;
-
-          const matchesHtml = await Promise.all(
-            dayMatches.map((match) => renderMatchCard(match))
-          );
-
-          return `
-                  <div class="matches-group">
-                      <button type="button" class="matches-group-header">
-                          <div class="accordion-info">
-                              <span class="journey">${journeyLabel}</span>
-                              <span class="date-label">${capitalize(dayLabel)}</span>
-                          </div>
-                          <div class="accordion-right">
-                              <div class="accordion-progress">
-                                  <span class="count">${dayMatches.length} partidos</span>
-                              </div>
-                              <svg class="accordion-arrow" viewBox="0 0 24 24">
-                                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg>
-                          </div>
-                      </button>
-                      <div class="matches-group-content">
-                          ${matchesHtml.join("")}
-                      </div>
-                  </div>
+        const sectionsHtml = phaseGroups
+          .map(({ phase, days }) => {
+            const isActive = String(phase.id) === String(initialPhase.phase.id);
+            const display = isActive ? "" : "display:none;";
+            return `
+                <div class="phase-section" data-phase-id="${phase.id ?? ""}" style="${display}">
+                    ${buildDayAccordionsHtml(days)}
+                </div>
               `;
-        }));
+          })
+          .join("");
 
-        container.innerHTML = groupsHtml.join("");
+        container.innerHTML = `
+            <div class="phase-tabs">${tabsHtml}</div>
+            <div class="phase-content">${sectionsHtml}</div>
+          `;
 
-        setTimeout(() => {
-          initScoreControls();
-          document.querySelectorAll(".btn-save-match").forEach((btn) => {
-            btn.addEventListener("click", () =>
-              saveMatchResult(btn.dataset.matchId),
+        container.querySelectorAll(".phase-tab-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const phaseId = btn.dataset.phaseId;
+            container.querySelectorAll(".phase-tab-btn").forEach((b) =>
+              b.classList.remove("active"),
             );
+            btn.classList.add("active");
+            container.querySelectorAll(".phase-section").forEach((s) => {
+              s.style.display = String(s.dataset.phaseId) === String(phaseId)
+                ? ""
+                : "none";
+            });
+            currentPhaseByStatus[status] = phaseId;
           });
-        }, 100);
+        });
+
+        initAccordions();
+        initScoreControls();
+        container.querySelectorAll(".btn-save-match").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            saveMatchResult(btn.dataset.matchId),
+          );
+        });
+
+        preResolveSlotLabels(phaseGroups)
+          .then(() => applySlotLabels(container))
+          .catch((err) =>
+            console.warn("No se pudieron pre-resolver los slots:", err),
+          );
       }
 
       async function saveMatchResult(matchId) {
@@ -763,15 +977,18 @@
           }
 
           updateTabCounts();
-          const activeTab = document.querySelector(".tab-btn.active");
-          const currentTab = activeTab ? activeTab.dataset.tab : "active";
+          const activeSubtab = document.querySelector(".subtab-btn.active");
+          const currentSubtab = activeSubtab
+            ? activeSubtab.dataset.subtab
+            : "active";
+          currentStatus = currentSubtab;
           const { active, finished } = splitMatchesByStatus(allMatches);
           const container = document.getElementById("matches-container");
 
-          if (currentTab === "active") {
-            await renderGroupList(active, container);
+          if (currentSubtab === "active") {
+            renderGroupList(active, container, "active");
           } else {
-            await renderGroupList(finished, container);
+            renderGroupList(finished, container, "finished");
           }
 
           showSaveNotification();

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="CSS/footer.css" />
   </head>
   <body>
-<header class="navbar-secondary">
+    <header class="navbar-secondary">
       <button class="hamburger-menu" id="hamburgerMenu" aria-label="Menú">
         <span class="hamburger-line"></span>
         <span class="hamburger-line"></span>
@@ -26,7 +26,7 @@
         <span class="logo1-text">PredictiLab</span>
       </div>
 
-      <nav class="navbar-center">
+      <nav class="navbar-center" aria-label="Navbar Central">
         <a href="dashboard.html">Inicio</a>
         <a href="predictions.html">Predicciones</a>
         <a href="ranking.html" class="active">Ranking</a>
@@ -39,18 +39,22 @@
 
     <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
     <div class="mobile-menu" id="mobileMenu">
-<div class="mobile-menu-header">
-            <img src="assets/images/Fondo-oscuro.svg" alt="Logo PredictiLab" style="height: 32px;">
-            <span class="mobile-menu-title">PredictiLab</span>
-            <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
-            </div>
-        <nav class="mobile-menu-nav">
-            <a href="dashboard.html">Inicio</a>
-            <a href="predictions.html">Predicciones</a>
-            <a href="ranking.html" class="active">Ranking</a>
-            <a href="groups.html">Tabla de equipos</a>
-            <a href="bracket.html">Eliminatorias</a>
-        </nav>
+      <div class="mobile-menu-header">
+        <img
+          src="assets/images/Fondo-oscuro.svg"
+          alt="Logo PredictiLab"
+          style="height: 32px"
+        />
+        <span class="mobile-menu-title">PredictiLab</span>
+        <button class="mobile-menu-close" id="mobileMenuClose">&times;</button>
+      </div>
+      <nav class="mobile-menu-nav" aria-label="Navbar Mobile">
+        <a href="dashboard.html">Inicio</a>
+        <a href="predictions.html">Predicciones</a>
+        <a href="ranking.html" class="active">Ranking</a>
+        <a href="groups.html">Tabla de equipos</a>
+        <a href="bracket.html">Eliminatorias</a>
+      </nav>
     </div>
 
     <main class="ranking-container">
@@ -61,7 +65,11 @@
         </div>
 
         <div class="ranking-header-right">
-          <button id="forceSnapshotBtn" class="btn-snapshot" style="display: none;">
+          <button
+            id="forceSnapshotBtn"
+            class="btn-snapshot"
+            style="display: none"
+          >
             Guardar Snapshot
           </button>
 
@@ -248,11 +256,19 @@
                 <th>Puntos</th>
                 <th>
                   Exactos
-                  <span class="th-tooltip" data-tooltip="Cantidad de partidos donde acertaste el resultado completo.">ⓘ</span>
+                  <span
+                    class="th-tooltip"
+                    data-tooltip="Cantidad de partidos donde acertaste el resultado completo."
+                    >ⓘ</span
+                  >
                 </th>
                 <th>
                   Parciales
-                  <span class="th-tooltip" data-tooltip="Cantidad de marcadores individuales acertados.">ⓘ</span>
+                  <span
+                    class="th-tooltip"
+                    data-tooltip="Cantidad de marcadores individuales acertados."
+                    >ⓘ</span
+                  >
                 </th>
                 <th>Semana</th>
               </tr>
@@ -331,42 +347,42 @@
     <script type="module" src="/js/app/init.js"></script>
     <script type="module" src="/js/pages/ranking.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const hamburger = document.getElementById('hamburgerMenu');
-            const mobileMenu = document.getElementById('mobileMenu');
-            const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
-            const mobileMenuClose = document.getElementById('mobileMenuClose');
-            const mobileMenuLinks = mobileMenu.querySelectorAll('a');
+      document.addEventListener("DOMContentLoaded", () => {
+        const hamburger = document.getElementById("hamburgerMenu");
+        const mobileMenu = document.getElementById("mobileMenu");
+        const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
+        const mobileMenuClose = document.getElementById("mobileMenuClose");
+        const mobileMenuLinks = mobileMenu.querySelectorAll("a");
 
-            function openMobileMenu() {
-                hamburger.classList.add('active');
-                mobileMenu.classList.add('active');
-                mobileMenuOverlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
+        function openMobileMenu() {
+          hamburger.classList.add("active");
+          mobileMenu.classList.add("active");
+          mobileMenuOverlay.classList.add("active");
+          document.body.style.overflow = "hidden";
+        }
 
-            function closeMobileMenu() {
-                hamburger.classList.remove('active');
-                mobileMenu.classList.remove('active');
-                mobileMenuOverlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
+        function closeMobileMenu() {
+          hamburger.classList.remove("active");
+          mobileMenu.classList.remove("active");
+          mobileMenuOverlay.classList.remove("active");
+          document.body.style.overflow = "";
+        }
 
-            hamburger.addEventListener('click', () => {
-                if (mobileMenu.classList.contains('active')) {
-                    closeMobileMenu();
-                } else {
-                    openMobileMenu();
-                }
-            });
-
-            mobileMenuOverlay.addEventListener('click', closeMobileMenu);
-            mobileMenuClose.addEventListener('click', closeMobileMenu);
-
-            mobileMenuLinks.forEach(link => {
-                link.addEventListener('click', closeMobileMenu);
-            });
+        hamburger.addEventListener("click", () => {
+          if (mobileMenu.classList.contains("active")) {
+            closeMobileMenu();
+          } else {
+            openMobileMenu();
+          }
         });
+
+        mobileMenuOverlay.addEventListener("click", closeMobileMenu);
+        mobileMenuClose.addEventListener("click", closeMobileMenu);
+
+        mobileMenuLinks.forEach((link) => {
+          link.addEventListener("click", closeMobileMenu);
+        });
+      });
     </script>
-</body>
+  </body>
 </html>
