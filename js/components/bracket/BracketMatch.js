@@ -1,5 +1,20 @@
 import { formatSlotLabel } from "/js/services/admin/tournament-ui.js"
 
+const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+const MONTHS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+
+function formatMatchDate(dateStr) {
+    if (!dateStr) return ""
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return ""
+    const day = DAYS[d.getUTCDay()]
+    const num = d.getUTCDate()
+    const month = MONTHS[d.getUTCMonth()]
+    const h = String(d.getUTCHours()).padStart(2, "0")
+    const m = String(d.getUTCMinutes()).padStart(2, "0")
+    return `${day} ${num} ${month} • ${h}:${m}`
+}
+
 export function resolveFlagUrl(flagUrl) {
     if (!flagUrl) return "/assets/images/predictilab-gray.svg"
     if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl
@@ -94,6 +109,8 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
         predictionDisplay = `<span class="bracket-pred-mini">${homePredDisplay}-${awayPredDisplay}</span>`
     }
 
+    const dateTimeDisplay = !isFinished ? formatMatchDate(match.match_date) : ""
+
     const typeClass = matchType !== "normal" ? ` bracket-match-${matchType}` : ''
 
     return `
@@ -102,6 +119,7 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
                 ${matchIcon}
                 <span class="bracket-match-number${matchNumberClass}">${matchNumberLabel}</span>
                 ${phaseTag}
+                ${dateTimeDisplay ? `<span class="bracket-match-datetime">${dateTimeDisplay}</span>` : ""}
             </div>
             <div class="bracket-match-teams">
                 <div class="bracket-team home ${isFinished && match.home_score > match.away_score ? "winner" : ""} ${homeIsTbd ? "tbd" : ""}">

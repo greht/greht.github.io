@@ -169,10 +169,10 @@ async function renderMatchCard(match) {
         minute: "2-digit"
       }).replace(".", "");
 
-      if (match.status !== "live" && match.status !== "finished") {
-        isLocked = !canPredict(match.match_date);
-      } else {
+      if (match.status === "finished") {
         isLocked = true;
+      } else {
+        isLocked = !canPredict(match.match_date);
       }
 
     } catch (e) {
@@ -180,7 +180,7 @@ async function renderMatchCard(match) {
     }
   }
 
-  if (match.status === "finished" || match.status === "live") {
+  if (match.status === "finished") {
     isLocked = true;
   }
 
@@ -203,6 +203,8 @@ async function renderMatchCard(match) {
     statusText = "Pendiente de equipos";
   } else if (match.status === "finished") {
     statusText = "Finalizado";
+  } else if (canPredict(match.match_date)) {
+    statusText = "Próximamente";
   } else if (match.status === "live") {
     statusText = "EN VIVO";
   } else if (isCloseToStart) {

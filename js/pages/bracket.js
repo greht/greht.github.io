@@ -61,7 +61,7 @@ function renderSkeleton() {
     container.innerHTML = `
         <div class="bracket-wrapper bracket-symmetric bracket-skeleton-wrapper">
             <div class="bracket-skeleton-left">
-                ${skeletonCol("Dieciseisavos", 8)}
+                ${skeletonCol("Eliminatorias 32", 8)}
                 ${skeletonCol("Octavos", 4)}
                 ${skeletonCol("Cuartos", 2)}
             </div>
@@ -73,7 +73,7 @@ function renderSkeleton() {
             <div class="bracket-skeleton-right">
                 ${skeletonCol("Cuartos", 2)}
                 ${skeletonCol("Octavos", 4)}
-                ${skeletonCol("Dieciseisavos", 8)}
+                ${skeletonCol("Eliminatorias 32", 8)}
             </div>
         </div>
     `
@@ -130,7 +130,7 @@ async function renderSymmetricBracket(bracketStructure, leagueId) {
     const leftHtml = `
         <div class="bracket-column left" data-phase="R32" data-phase-order="${r32Order}">
             <div class="bracket-column-header">
-                <span class="bracket-phase-name">Dieciseisavos</span>
+                <span class="bracket-phase-name">Eliminatorias 32</span>
                 <span class="bracket-phase-count">${leftR32.length} partidos</span>
             </div>
             <div class="bracket-column-matches">
@@ -178,7 +178,7 @@ async function renderSymmetricBracket(bracketStructure, leagueId) {
         </div>
         <div class="bracket-column right" data-phase="R32" data-phase-order="${r32Order}">
             <div class="bracket-column-header">
-                <span class="bracket-phase-name">Dieciseisavos</span>
+                <span class="bracket-phase-name">Eliminatorias 32</span>
                 <span class="bracket-phase-count">${rightR32.length} partidos</span>
             </div>
             <div class="bracket-column-matches">
