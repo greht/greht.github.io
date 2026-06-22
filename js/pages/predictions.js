@@ -740,7 +740,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (matches && matches.length > 0) {
 
     if (!authResult) {
-      await renderMatches(matches, [], reattachMatchListeners);
+      await renderMatches(matches, []);
       return
     }
 
@@ -766,37 +766,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
     });
-
-    await renderMatches(matches, savedPredictions, reattachMatchListeners);
-
-    if (savedPredictions && savedPredictions.length > 0) {
-      savedPredictions.forEach(p => {
-        const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
-        if (!card) return
-        const homeInput = card.querySelector('[data-team="home"]')
-        const awayInput = card.querySelector('[data-team="away"]')
-        if (homeInput) homeInput.value = p.home_predictions ?? ""
-        if (awayInput) awayInput.value = p.away_predictions ?? ""
-      })
-
-      document.querySelectorAll(".matches-group").forEach(group => {
-        const dayMatches = group.querySelectorAll(".match-card")
-        let completed = 0
-        dayMatches.forEach(card => {
-          const matchId = card.dataset.matchId
-          const match = matches.find(m => m.id == matchId)
-          if (hasPrediction(match)) {
-            completed++
-          }
-        })
-        const countEl = group.querySelector(".count")
-        const totalMatches = dayMatches.length
-        if (countEl) countEl.textContent = `${completed}/${totalMatches}`
-      })
-    }
-
-    updateStats(matches, savedPredictions, user.id)
-    updateProgress(matches, savedPredictions || [])
 
     function attachCardInputListeners(card) {
       const inputs = card.querySelectorAll(".score-input")
@@ -856,7 +825,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       attachInputListeners()
     }
 
-    reattachMatchListeners()
+    await renderMatches(matches, savedPredictions, reattachMatchListeners);
+
+    if (savedPredictions && savedPredictions.length > 0) {
+      savedPredictions.forEach(p => {
+        const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
+        if (!card) return
+        const homeInput = card.querySelector('[data-team="home"]')
+        const awayInput = card.querySelector('[data-team="away"]')
+        if (homeInput) homeInput.value = p.home_predictions ?? ""
+        if (awayInput) awayInput.value = p.away_predictions ?? ""
+      })
+
+      document.querySelectorAll(".matches-group").forEach(group => {
+        const dayMatches = group.querySelectorAll(".match-card")
+        let completed = 0
+        dayMatches.forEach(card => {
+          const matchId = card.dataset.matchId
+          const match = matches.find(m => m.id == matchId)
+          if (hasPrediction(match)) {
+            completed++
+          }
+        })
+        const countEl = group.querySelector(".count")
+        const totalMatches = dayMatches.length
+        if (countEl) countEl.textContent = `${completed}/${totalMatches}`
+      })
+    }
 
     updateStats(matches, savedPredictions, user.id)
     updateProgress(matches, savedPredictions || [])
