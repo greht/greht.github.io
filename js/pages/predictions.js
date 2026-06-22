@@ -102,6 +102,14 @@ function canPredict(matchDate) {
   return diffMinutes > 15;
 }
 
+async function setMatchesLiveSafely() {
+  try {
+    await supabase.rpc("set_matches_live");
+  } catch (err) {
+    console.warn("No se pudo invocar set_matches_live:", err);
+  }
+}
+
 async function renderMatchCard(match) {
   // Obtener el leagueId del match
   const leagueId = match.league_id || '1ebd76d7-5839-4c80-a41a-554de1bb22f5'
@@ -788,51 +796,55 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateStats(matches, savedPredictions, user.id)
     updateProgress(matches, savedPredictions || [])
 
+    function attachCardInputListeners(card) {
+      const inputs = card.querySelectorAll(".score-input")
+      let timeout
+
+      inputs.forEach(input => {
+        input.addEventListener("input", () => {
+          clearTimeout(timeout)
+          timeout = setTimeout(async () => {
+            const matchId = card.dataset.matchId
+            const homeScore = card.querySelector('[data-team="home"]').value || 0
+            const awayScore = card.querySelector('[data-team="away"]').value || 0
+            const homeScoreVal = parseInt(homeScore) || 0
+            const awayScoreVal = parseInt(awayScore) || 0
+
+            await savePrediction(user.id, matchId, homeScoreVal, awayScoreVal)
+
+            const match = matches.find(m => m.id == matchId)
+            if (match) {
+              match.home_predictions = homeScoreVal
+              match.away_predictions = awayScoreVal
+            }
+
+            const existingIndex = savedPredictions.findIndex(p => p.match_id == matchId)
+            if (existingIndex >= 0) {
+              savedPredictions[existingIndex].home_predictions = homeScoreVal
+              savedPredictions[existingIndex].away_predictions = awayScoreVal
+            } else {
+              savedPredictions.push({
+                match_id: matchId,
+                home_predictions: homeScoreVal,
+                away_predictions: awayScoreVal
+              })
+            }
+
+            updateAccordionProgress(card, matches)
+            updateStats(matches, savedPredictions, user.id)
+            updateProgress(matches, savedPredictions)
+
+            const updatedPredictions = await getPredictions(user.id)
+            savedPredictions = updatedPredictions
+            checkAndCelebrateCompletion(matches, updatedPredictions, currentPhaseName, currentPhaseId)
+          }, 800)
+        })
+      })
+    }
+
     function attachInputListeners() {
       document.querySelectorAll(".match-card").forEach(card => {
-        const inputs = card.querySelectorAll(".score-input")
-        let timeout
-
-        inputs.forEach(input => {
-          input.addEventListener("input", () => {
-            clearTimeout(timeout)
-            timeout = setTimeout(async () => {
-              const matchId = card.dataset.matchId
-              const homeScore = card.querySelector('[data-team="home"]').value || 0
-              const awayScore = card.querySelector('[data-team="away"]').value || 0
-              const homeScoreVal = parseInt(homeScore) || 0
-              const awayScoreVal = parseInt(awayScore) || 0
-
-              await savePrediction(user.id, matchId, homeScoreVal, awayScoreVal)
-
-              const match = matches.find(m => m.id == matchId)
-              if (match) {
-                match.home_predictions = homeScoreVal
-                match.away_predictions = awayScoreVal
-              }
-
-              const existingIndex = savedPredictions.findIndex(p => p.match_id == matchId)
-              if (existingIndex >= 0) {
-                savedPredictions[existingIndex].home_predictions = homeScoreVal
-                savedPredictions[existingIndex].away_predictions = awayScoreVal
-              } else {
-                savedPredictions.push({
-                  match_id: matchId,
-                  home_predictions: homeScoreVal,
-                  away_predictions: awayScoreVal
-                })
-              }
-
-              updateAccordionProgress(card, matches)
-              updateStats(matches, savedPredictions, user.id)
-              updateProgress(matches, savedPredictions)
-
-              const updatedPredictions = await getPredictions(user.id)
-              savedPredictions = updatedPredictions
-              checkAndCelebrateCompletion(matches, updatedPredictions, currentPhaseName, currentPhaseId)
-            }, 800)
-          })
-        })
+        attachCardInputListeners(card)
       })
     }
 
@@ -857,31 +869,63 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const updatedMatch = payload.new;
             const matchIndex = matches.findIndex(m => m.id === updatedMatch.id);
+            const previousStatus = matchIndex !== -1 ? matches[matchIndex].status : null;
             if (matchIndex !== -1) {
               Object.assign(matches[matchIndex], updatedMatch);
             } else {
               matches.push(updatedMatch);
             }
             matchesGlobal = matches;
-            await renderMatches(matches, savedPredictions);
-            savedPredictions.forEach(p => {
-              const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
-              if (!card) return
-              const homeInput = card.querySelector('[data-team="home"]')
-              const awayInput = card.querySelector('[data-team="away"]')
-              if (homeInput) homeInput.value = p.home_predictions ?? ""
-              if (awayInput) awayInput.value = p.away_predictions ?? ""
-            });
-            initScoreControls();
-            attachInputListeners();
-            updateStats(matches, savedPredictions, user.id);
-            updateProgress(matches, savedPredictions);
+
+            const statusChangedToLiveOrFinished =
+              (previousStatus !== "live" && previousStatus !== "finished") &&
+              (updatedMatch.status === "live" || updatedMatch.status === "finished");
+
+            if (statusChangedToLiveOrFinished) {
+              const card = document.querySelector(`.match-card[data-match-id="${updatedMatch.id}"]`);
+              if (card) {
+                const html = await renderMatchCard(updatedMatch);
+                const wrapper = document.createElement("div");
+                wrapper.innerHTML = html.trim();
+                const newCard = wrapper.firstElementChild;
+                if (newCard) {
+                  card.replaceWith(newCard);
+                  const prediction = savedPredictions.find(p => p.match_id == updatedMatch.id);
+                  if (prediction) {
+                    const homeInput = newCard.querySelector('[data-team="home"]');
+                    const awayInput = newCard.querySelector('[data-team="away"]');
+                    if (homeInput) homeInput.value = prediction.home_predictions ?? "";
+                    if (awayInput) awayInput.value = prediction.away_predictions ?? "";
+                  }
+                  attachCardInputListeners(newCard);
+                  initScoreControls();
+                }
+              }
+            } else {
+              await renderMatches(matches, savedPredictions);
+              savedPredictions.forEach(p => {
+                const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
+                if (!card) return
+                const homeInput = card.querySelector('[data-team="home"]')
+                const awayInput = card.querySelector('[data-team="away"]')
+                if (homeInput) homeInput.value = p.home_predictions ?? ""
+                if (awayInput) awayInput.value = p.away_predictions ?? ""
+              });
+              initScoreControls();
+              attachInputListeners();
+              updateStats(matches, savedPredictions, user.id);
+              updateProgress(matches, savedPredictions);
+            }
           }
         }
       )
       .subscribe();
 
+    setMatchesLiveSafely();
+
     setInterval(async () => {
+      await setMatchesLiveSafely();
+
       let needsRerender = false;
 
       document.querySelectorAll(".match-card").forEach(card => {
@@ -947,7 +991,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         attachInputListeners();
         updateProgress(matches, savedPredictions);
       }
-    }, 60000);
+    }, 300000);
   }
 
   if (!matches || matches.length === 0) return

@@ -1171,14 +1171,59 @@
       loadNavbar();
       loadFooter();
 
+      async function setMatchesLiveSafely() {
+        try {
+          await supabase.rpc("set_matches_live");
+        } catch (err) {
+          console.warn("No se pudo invocar set_matches_live:", err);
+        }
+      }
+
+      function refreshAdminGroups() {
+        const container = document.getElementById("matches-container");
+        const activeSubtab = document.querySelector(".subtab-btn.active");
+        const currentSubtab = activeSubtab ? activeSubtab.dataset.subtab : "active";
+        currentStatus = currentSubtab;
+        const { active, finished } = splitMatchesByStatus(allMatches);
+        if (currentSubtab === "active") {
+          renderGroupList(active, container, "active");
+        } else {
+          renderGroupList(finished, container, "finished");
+        }
+        updateTabCounts();
+      }
+
       (async () => {
         const isAdmin = await checkAdminAccess();
         if (isAdmin) {
           loadMatches();
+          setMatchesLiveSafely();
+
+          supabase
+            .channel("admin-matches-changes")
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "matches" },
+              (payload) => {
+                if (payload.eventType === "UPDATE" || payload.eventType === "INSERT") {
+                  const updated = payload.new;
+                  const idx = allMatches.findIndex(m => m.id === updated.id);
+                  if (idx !== -1) {
+                    allMatches[idx] = { ...allMatches[idx], ...updated };
+                  } else {
+                    allMatches.push(updated);
+                  }
+                  refreshAdminGroups();
+                }
+              }
+            )
+            .subscribe();
         }
       })();
 
-      setInterval(() => {
+      setInterval(async () => {
+        await setMatchesLiveSafely();
+
         document.querySelectorAll(".match-card").forEach(card => {
           const matchId = card.dataset.matchId;
           const match = allMatches.find(m => m.id === matchId);
@@ -1188,12 +1233,17 @@
           const now = new Date();
           const diff = date.getTime() - now.getTime();
 
+          if (diff <= 0 && match.status !== "live") {
+            const statusSelect = card.querySelector(".status-select");
+            if (statusSelect) statusSelect.value = "live";
+          }
+
           const statusEl = card.querySelector(".match-header-right span");
           if (statusEl && diff <= 0) {
             statusEl.textContent = "EN VIVO";
           }
         });
-      }, 60000);
+      }, 300000);
 
       // Bracket visibility toggle
       async function initBracketVisibility() {

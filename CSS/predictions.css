@@ -245,34 +245,34 @@ body {
   white-space: pre-line;
   text-align: center;
   position: absolute;
-  bottom: calc(100% + 10px);
+  bottom: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--color-primary-100);
   color: var(--color-primary);
-  padding: 8px 12px;
-  border-radius: 6px;
-  border-left: 3px solid var(--color-primary);
-  font-size: 13px;
-  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1.4;
   z-index: 100;
   pointer-events: none;
-  min-width: 120px;
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(93, 27, 107, 0.12);
 }
 
 .progress-segment.completed:hover::after,
 .progress-segment.completed.show-tooltip::after {
-  border-left-color: var(--color-accent);
   color: var(--color-accent);
   background: var(--color-accent-100);
+  box-shadow: 0 4px 12px rgba(143, 186, 54, 0.18);
 }
 
 .progress-segment:hover::before,
 .progress-segment.show-tooltip::before {
   content: "";
   position: absolute;
-  bottom: calc(100% + 4px);
+  bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;

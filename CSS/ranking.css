@@ -507,8 +507,8 @@ main {
   bottom: calc(100% + 10px);
   left: 50%;
   transform: translateX(-50%) translateY(5px);
-  background: var(--color-primary);
-  color: var(--color-bg);
+  background: var(--color-primary-100);
+  color: var(--color-primary);
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 12px;
@@ -536,7 +536,7 @@ main {
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--color-primary);
+  border-top-color: var(--color-primary-100);
   opacity: 0;
   visibility: hidden;
   transition:
@@ -1597,6 +1597,18 @@ tbody tr.is-you {
   .user-sticky-message {
     font-size: 15px;
   }
+
+  .th-tooltip::after {
+    bottom: auto;
+    top: calc(100% + 10px);
+  }
+
+  .th-tooltip::before {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--color-primary-100);
+  }
 }
 
 @media (max-width: 480px) {
@@ -1868,6 +1880,18 @@ tbody tr.is-you {
   .user-sticky-message {
     font-size: 13px;
     margin-top: 6px;
+  }
+
+  .th-tooltip::after {
+    bottom: auto;
+    top: calc(100% + 10px);
+  }
+
+  .th-tooltip::before {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: var(--color-primary-100);
   }
 }
 
