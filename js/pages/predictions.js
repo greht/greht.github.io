@@ -496,7 +496,7 @@ function renderTabs(activeCount, finishedCount) {
   `;
 }
 
-async function renderMatches(matches, predictions = []) {
+async function renderMatches(matches, predictions = [], onRendered) {
   const container = document.querySelector(".card-order");
   const tabsContainer = document.getElementById("predictionsTabsContainer");
   const phaseTabsContainer = document.getElementById("phaseTabsContainer");
@@ -509,13 +509,13 @@ async function renderMatches(matches, predictions = []) {
 
   if (tabsContainer) {
     tabsContainer.innerHTML = renderTabs(active.length, finished.length);
-    initTabs(active, finished, predictions, phaseTabsContainer);
+    initTabs(active, finished, predictions, phaseTabsContainer, onRendered);
   }
 
-  await renderGroupList(active, predictions, container);
+  await renderGroupList(active, predictions, container, onRendered);
 }
 
-function initTabs(active, finished, predictions, phaseTabsContainer) {
+function initTabs(active, finished, predictions, phaseTabsContainer, onRendered) {
   const tabsContainer = document.getElementById("predictionsTabsContainer");
   if (!tabsContainer) return;
 
@@ -539,7 +539,7 @@ function initTabs(active, finished, predictions, phaseTabsContainer) {
 
     if (phaseTabsContainer && uniquePhases.length > 1) {
       phaseTabsContainer.innerHTML = renderPhaseTabs(uniquePhases);
-      initPhaseTabs(uniquePhases, groups, predictions, phaseTabsContainer, findPhaseId);
+      initPhaseTabs(uniquePhases, groups, predictions, phaseTabsContainer, findPhaseId, onRendered);
       phaseTabsContainer.style.display = "block";
     } else if (phaseTabsContainer) {
       phaseTabsContainer.innerHTML = "";
@@ -572,16 +572,16 @@ function initTabs(active, finished, predictions, phaseTabsContainer) {
     const container = document.querySelector(".card-order");
     if (tab === "active") {
       updatePhaseTabs(active);
-      await renderGroupList(active, predictions, container);
+      await renderGroupList(active, predictions, container, onRendered);
       restoreInputValues(predictions);
     } else {
       updatePhaseTabs(finished);
-      await renderGroupList(finished, predictions, container);
+      await renderGroupList(finished, predictions, container, onRendered);
       restoreInputValues(predictions);
     }
   });
 
-  function initPhaseTabs(phases, groups, predictions, phaseTabsContainer, findPhaseId) {
+  function initPhaseTabs(phases, groups, predictions, phaseTabsContainer, findPhaseId, onRendered) {
     if (!phaseTabsContainer || phaseTabsInitialized) return;
     phaseTabsInitialized = true;
 
@@ -606,7 +606,7 @@ function initTabs(active, finished, predictions, phaseTabsContainer) {
 
       const filtered = groups.filter(([_, matches]) => matches[0]?.phase?.name === selectedPhase);
       const container = document.querySelector(".card-order");
-      await renderGroupList(filtered, predictions, container);
+      await renderGroupList(filtered, predictions, container, onRendered);
     });
   }
 }
@@ -623,9 +623,10 @@ function renderPhaseTabs(phases) {
   `;
 }
 
-async function renderGroupList(groups, predictions, container) {
+async function renderGroupList(groups, predictions, container, onRendered) {
   if (groups.length === 0) {
     container.innerHTML = `<p class="no-matches">No hay fechas en esta sección.</p>`;
+    if (typeof onRendered === "function") onRendered();
     return;
   }
 
@@ -709,6 +710,7 @@ async function renderGroupList(groups, predictions, container) {
   container.innerHTML = groupsHtml.join("");
 
   initAccordions();
+  if (typeof onRendered === "function") onRendered();
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -738,7 +740,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (matches && matches.length > 0) {
 
     if (!authResult) {
-      await renderMatches(matches, []);
+      await renderMatches(matches, [], reattachMatchListeners);
       return
     }
 
@@ -765,7 +767,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     });
 
-    await renderMatches(matches, savedPredictions);
+    await renderMatches(matches, savedPredictions, reattachMatchListeners);
 
     if (savedPredictions && savedPredictions.length > 0) {
       savedPredictions.forEach(p => {
@@ -848,10 +850,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       })
     }
 
-    attachInputListeners()
+    const reattachMatchListeners = () => {
+      initScoreControls()
+      initMatchCards()
+      attachInputListeners()
+    }
 
-    initScoreControls()
-    initMatchCards()
+    reattachMatchListeners()
 
     updateStats(matches, savedPredictions, user.id)
     updateProgress(matches, savedPredictions || [])
@@ -902,7 +907,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
               }
             } else {
-              await renderMatches(matches, savedPredictions);
+              await renderMatches(matches, savedPredictions, reattachMatchListeners);
               savedPredictions.forEach(p => {
                 const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
                 if (!card) return
@@ -911,8 +916,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (homeInput) homeInput.value = p.home_predictions ?? ""
                 if (awayInput) awayInput.value = p.away_predictions ?? ""
               });
-              initScoreControls();
-              attachInputListeners();
               updateStats(matches, savedPredictions, user.id);
               updateProgress(matches, savedPredictions);
             }
@@ -978,7 +981,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       if (needsRerender) {
-        await renderMatches(matches, savedPredictions);
+        await renderMatches(matches, savedPredictions, reattachMatchListeners);
         savedPredictions.forEach(p => {
           const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
           if (!card) return
@@ -987,8 +990,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (homeInput) homeInput.value = p.home_predictions ?? ""
           if (awayInput) awayInput.value = p.away_predictions ?? ""
         });
-        initScoreControls();
-        attachInputListeners();
         updateProgress(matches, savedPredictions);
       }
     }, 300000);
