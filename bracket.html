@@ -73,40 +73,12 @@
         </section>
       </div>
 
-      <div id="bracketUnderConstruction" style="display: none">
-        <div class="bracket-construction-message">
-          <div class="construction-icon">🔒</div>
-          <h1>En construcción</h1>
-          <p>La vista de eliminatorias estará disponible próximamente.</p>
-          <p class="construction-subtitle">
-            Estamos preparando el bracket para que puedas seguir todos los
-            cruces del torneo.
-          </p>
-        </div>
-      </div>
     </main>
 
     <footer id="footer" class="footer-system"></footer>
 
     <script type="module" src="/js/app/init.js"></script>
     <script type="module" src="/js/pages/bracket.js"></script>
-    <script type="module">
-      import { getSetting } from "/js/services/settings.js";
-
-      // Check bracket visibility
-      document.addEventListener("DOMContentLoaded", async () => {
-        const isVisible = await getSetting("bracket_visible");
-        const content = document.getElementById("bracketContent");
-        const construction = document.getElementById(
-          "bracketUnderConstruction",
-        );
-
-        if (isVisible !== "true") {
-          content.style.display = "none";
-          construction.style.display = "block";
-        }
-      });
-    </script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
         const hamburger = document.getElementById("hamburgerMenu");

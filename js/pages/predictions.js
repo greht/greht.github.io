@@ -9,7 +9,6 @@ import { checkAndCelebrateCompletion } from "/js/utils/celebration.js"
 import { requireAuth } from "/js/services/auth.js"
 import { getProfile } from "/js/services/profile.js"
 import { getTimezoneOffset, toLocalTime, toRealUtcDate, formatLocalDate } from "/js/utils/timezone.js"
-import { getSetting } from "/js/services/settings.js"
 import { formatSlotLabel } from "/js/services/admin/tournament-ui.js"
 
 function resolveFlagUrl(flagUrl) {
@@ -721,22 +720,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   renderSkeletons()
 
-  // Verificar si el bracket es visible
-  let isBracketVisible = null
-  try {
-    isBracketVisible = await getSetting("bracket_visible")
-  } catch (error) {
-    console.error("Error fetching bracket_visible setting:", error)
-  }
-  const bracketVisible = isBracketVisible === "true"
-
   let matches = await getMatches()
-  
-  // Si el bracket no es visible, filtrar partidos de fases eliminatorias (display_order >= 2)
-  if (!bracketVisible) {
-    matches = matches.filter(match => !match.phase || match.phase.display_order < 2)
-  }
-  
+
   matchesGlobal = matches;
 
   if (matches && matches.length > 0) {

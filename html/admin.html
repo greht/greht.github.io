@@ -58,23 +58,6 @@
     </div>
 
     <main class="predictions-container">
-      <section class="bracket-visibility-banner">
-        <div class="bracket-visibility-content">
-          <div class="bracket-visibility-info">
-            <span class="bracket-visibility-icon" id="bracketVisibilityIcon">🔒</span>
-            <div>
-              <strong>Bracket público:</strong>
-              <span id="bracketVisibilityStatus">Oculto</span>
-            </div>
-          </div>
-          <label class="bracket-visibility-switch">
-            <input type="checkbox" id="bracketVisibilityToggle">
-            <span class="bracket-visibility-slider"></span>
-          </label>
-        </div>
-        <p class="bracket-visibility-hint">Cuando está oculto, la vista de eliminatorias no es visible para los usuarios.</p>
-      </section>
-
       <section class="header-section">
         <div class="header-title-row">
           <div>
@@ -148,7 +131,6 @@
       import { loadNavbar, loadFooter } from "/js/components/navbar.js";
       import { loadQualifiedTeamsSection, formatSlotLabel } from "/js/services/admin/tournament-ui.js";
       import { loadBracketConfigSection } from "/js/services/admin/bracket-admin-ui.js";
-      import { getSetting, updateSetting } from "/js/services/settings.js";
 
       let currentUser = null;
       let allMatches = [];
@@ -1245,44 +1227,6 @@
         });
       }, 300000);
 
-      // Bracket visibility toggle
-      async function initBracketVisibility() {
-        const toggle = document.getElementById("bracketVisibilityToggle");
-        const icon = document.getElementById("bracketVisibilityIcon");
-        const status = document.getElementById("bracketVisibilityStatus");
-        
-        const isVisible = await getSetting("bracket_visible");
-        const visible = isVisible === "true";
-        
-        toggle.checked = visible;
-        updateVisibilityUI(visible);
-        
-        toggle.addEventListener("change", async () => {
-          const newValue = toggle.checked.toString();
-          const success = await updateSetting("bracket_visible", newValue);
-          
-          if (success) {
-            updateVisibilityUI(toggle.checked);
-          } else {
-            alert("Error al actualizar la configuración");
-            toggle.checked = !toggle.checked;
-          }
-        });
-        
-        function updateVisibilityUI(visible) {
-          if (visible) {
-            icon.textContent = "🔓";
-            status.textContent = "Visible";
-            status.style.color = "var(--color-accent)";
-          } else {
-            icon.textContent = "🔒";
-            status.textContent = "Oculto";
-            status.style.color = "var(--color-text-secundary)";
-          }
-        }
-      }
-      
-      initBracketVisibility();
     </script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
