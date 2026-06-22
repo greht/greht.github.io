@@ -171,36 +171,33 @@ async function renderSymmetricBracket(bracketStructure, leagueId) {
     `
 
     requestAnimationFrame(() => {
-        setTimeout(() => {
+        requestAnimationFrame(() => {
             const wrapper = container.querySelector(".bracket-wrapper")
             if (wrapper) {
                 renderBracketConnectors(wrapper)
             }
-        }, 150)
+        })
     })
 }
 
 async function renderMatches(matches, leagueId, phaseOrder) {
-    const results = []
-    for (const match of matches) {
-        results.push(await renderBracketMatch(match, leagueId, phaseOrder))
-    }
+    const results = await Promise.all(
+        matches.map(match => renderBracketMatch(match, leagueId, phaseOrder))
+    )
     return results.join("")
 }
 
 async function renderMatchesWithLabel(matches, leagueId, phaseOrder, phaseLabel) {
-    const results = []
-    for (const match of matches) {
-        results.push(await renderBracketMatch(match, leagueId, phaseOrder, phaseLabel))
-    }
+    const results = await Promise.all(
+        matches.map(match => renderBracketMatch(match, leagueId, phaseOrder, phaseLabel))
+    )
     return results.join("")
 }
 
 async function renderMatchesWithType(matches, leagueId, phaseOrder, phaseLabel, matchType) {
-    const results = []
-    for (const match of matches) {
-        results.push(await renderBracketMatch(match, leagueId, phaseOrder, phaseLabel, matchType))
-    }
+    const results = await Promise.all(
+        matches.map(match => renderBracketMatch(match, leagueId, phaseOrder, phaseLabel, matchType))
+    )
     return results.join("")
 }
 

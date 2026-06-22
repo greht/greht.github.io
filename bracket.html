@@ -2,7 +2,7 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Eliminatorias - PredictiLab</title>
 
     <link rel="stylesheet" href="CSS/styles.css" />
@@ -61,9 +61,10 @@
     <main class="bracket-container">
       <div id="bracketContent">
         <section class="bracket-header">
-          <h1>Bracket de Eliminatorias</h1>
+          <h1>Eliminatorias</h1>
           <p>
-            Sigue el avance de los equipos a través de las fases eliminatorias del torneo
+            Sigue el avance de los equipos a través de las fases eliminatorias
+            del torneo
           </p>
         </section>
 
@@ -72,12 +73,15 @@
         </section>
       </div>
 
-      <div id="bracketUnderConstruction" style="display: none;">
+      <div id="bracketUnderConstruction" style="display: none">
         <div class="bracket-construction-message">
           <div class="construction-icon">🔒</div>
           <h1>En construcción</h1>
           <p>La vista de eliminatorias estará disponible próximamente.</p>
-          <p class="construction-subtitle">Estamos preparando el bracket para que puedas seguir todos los cruces del torneo.</p>
+          <p class="construction-subtitle">
+            Estamos preparando el bracket para que puedas seguir todos los
+            cruces del torneo.
+          </p>
         </div>
       </div>
     </main>
@@ -88,13 +92,15 @@
     <script type="module" src="/js/pages/bracket.js"></script>
     <script type="module">
       import { getSetting } from "/js/services/settings.js";
-      
+
       // Check bracket visibility
       document.addEventListener("DOMContentLoaded", async () => {
         const isVisible = await getSetting("bracket_visible");
         const content = document.getElementById("bracketContent");
-        const construction = document.getElementById("bracketUnderConstruction");
-        
+        const construction = document.getElementById(
+          "bracketUnderConstruction",
+        );
+
         if (isVisible !== "true") {
           content.style.display = "none";
           construction.style.display = "block";

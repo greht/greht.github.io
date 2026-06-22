@@ -22,16 +22,20 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
     const homeSlotLabel = match.home_slot ? await formatSlotLabel(match.home_slot, leagueId) : matchNumberLabel
     const awaySlotLabel = match.away_slot ? await formatSlotLabel(match.away_slot, leagueId) : matchNumberLabel
 
-    const homeTeam = match.home_team?.name || homeSlotLabel
-    const awayTeam = match.away_team?.name || awaySlotLabel
-    const homeFlag = match.home_team?.flag_url
-        ? resolveFlagUrl(match.home_team.flag_url)
+    // Supabase puede devolver joins como objeto o array
+    const homeTeamData = Array.isArray(match.home_team) ? match.home_team[0] : match.home_team
+    const awayTeamData = Array.isArray(match.away_team) ? match.away_team[0] : match.away_team
+
+    const homeTeam = homeTeamData?.name || homeSlotLabel
+    const awayTeam = awayTeamData?.name || awaySlotLabel
+    const homeFlag = homeTeamData?.flag_url
+        ? resolveFlagUrl(homeTeamData.flag_url)
         : "/assets/images/tbd-flag.svg"
-    const awayFlag = match.away_team?.flag_url
-        ? resolveFlagUrl(match.away_team.flag_url)
+    const awayFlag = awayTeamData?.flag_url
+        ? resolveFlagUrl(awayTeamData.flag_url)
         : "/assets/images/tbd-flag.svg"
-    const homeIsTbd = !match.home_team
-    const awayIsTbd = !match.away_team
+    const homeIsTbd = !homeTeamData
+    const awayIsTbd = !awayTeamData
 
     const isFinished = match.status === "finished"
     const isLive = match.status === "live"
