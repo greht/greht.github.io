@@ -1,5 +1,3 @@
-import { updateProgress } from "../utils/progress.js";
-
 export function initScoreControls() {
     document.querySelectorAll(".score-control").forEach(control => {
         const input = control.querySelector(".score-input");
@@ -32,8 +30,6 @@ export function initScoreControls() {
         input.addEventListener("input", () => {
             input.value = input.value.replace(/[^0-9]/g, '');
             if (parseInt(input.value) > 20) input.value = 20;
-
-            updateProgress();
         });
     });
 }

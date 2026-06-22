@@ -112,18 +112,21 @@
           </svg>
 
           <p>
-            <span class="insight-text">Estás a</span>
-            <strong> <span id="remaining"></span> predicciones </strong>
-            <span class="insight-text">para completar</span>
-            <strong><span id="phaseLabel">esta fase</span></strong>
-            <span class="insight-text">⚽</span>
+            <span id="insightInProgress">
+              <span class="insight-text">Estás a</span>
+              <strong> <span id="remaining"></span> predicciones </strong>
+              <span class="insight-text">para completar</span>
+              <strong><span id="phaseLabel">esta fase</span></strong>
+              <span class="insight-text">⚽</span>
+            </span>
+            <span id="insightComplete" style="display: none;">
+              🎉 ¡Felicidades! Has completado todas las predicciones del torneo.
+            </span>
           </p>
         </div>
 
         <div class="insight-right">
-          <div class="progress-bar">
-            <div class="progress-fill" id="progressFill"></div>
-          </div>
+          <div class="progress-bar segmented" id="progressSegments"></div>
 
           <span class="progress-text" id="progressText"
             >0 de 0 completadas</span

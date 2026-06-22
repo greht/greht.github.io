@@ -57,7 +57,7 @@
     min-height: 800px;
 }
 
-/* ===== BRACKET SIMÉTRICO ===== */
+/*  BRACKET SIMÉTRICO */
 .bracket-symmetric {
     display: flex;
     align-items: stretch;
@@ -80,10 +80,6 @@
     height: auto;
 }
 
-/* Alturas proporcionales para que los hijos de la siguiente ronda
-   queden centrados verticalmente entre los 2 partidos que los alimentan.
-   Usamos space-around para distribución uniforme, y la altura se iguala
-   entre columnas con align-items: stretch del padre. */
 .bracket-symmetric .bracket-column-matches {
     display: flex;
     flex-direction: column;
@@ -98,7 +94,7 @@
     gap: 6px;
 }
 
-/* ===== COLUMNA CENTRAL (Final / SF / 3er lugar) ===== */
+/*  COLUMNA CENTRAL (Final / SF / 3er lugar)  */
 .bracket-symmetric .bracket-center-column {
     display: flex;
     flex-direction: column;
@@ -127,26 +123,20 @@
     width: 240px;
 }
 
-/* Fila de Semifinal: apilar SF1 y SF2 verticalmente */
 .bracket-symmetric .bracket-row-sf {
     flex-direction: column;
     gap: 8px;
 }
 
-/* Lado derecho: invertir orden visual con flex-direction: column-reverse
-   pero los matches deben mantener el orden lógico */
 .bracket-symmetric .bracket-column.right .bracket-column-matches {
     flex-direction: column;
 }
 
-/* Quitamos las reglas antiguas de bracket-final ya que ahora es bracket-center-column */
 .bracket-symmetric .bracket-column.bracket-final {
     display: none;
 }
 
-/* Reglas legacy removidas (bracket-section-divider, bracket-sf-section, etc.) - ahora se usa bracket-center-row */
-
-/* ===== CONECTORES SVG ===== */
+/*  CONECTORES SVG  */
 .bracket-connectors-svg {
     position: absolute;
     top: 0;
@@ -191,7 +181,7 @@
     opacity: 1;
 }
 
-/* ===== COLUMNAS ===== */
+/*  COLUMNAS  */
 .bracket-column {
     display: flex;
     flex-direction: column;
@@ -241,7 +231,7 @@
     border-top: none;
 }
 
-/* ===== TARJETAS DE PARTIDO ===== */
+/* TARJETAS DE PARTIDO */
 .bracket-match {
     background: var(--bracket-card-bg);
     border: 1px solid var(--bracket-card-border);
@@ -300,7 +290,7 @@
     letter-spacing: 0.3px;
 }
 
-/* Tarjeta de la FINAL - estilo dorado, más ancha y vistosa */
+/* Tarjeta de la FINAL */
 .bracket-match-final {
     max-width: 200px !important;
     border: 2px solid #d4a843 !important;
@@ -328,7 +318,7 @@
     font-weight: 700;
 }
 
-/* Tarjeta del 3er LUGAR - estilo bronce, mismo ancho que Final */
+/* Tarjeta del 3er LUGAR */
 .bracket-match-third {
     max-width: 200px !important;
     width: 200px;

@@ -811,10 +811,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                 match.away_predictions = awayScoreVal
               }
 
+              const existingIndex = savedPredictions.findIndex(p => p.match_id == matchId)
+              if (existingIndex >= 0) {
+                savedPredictions[existingIndex].home_predictions = homeScoreVal
+                savedPredictions[existingIndex].away_predictions = awayScoreVal
+              } else {
+                savedPredictions.push({
+                  match_id: matchId,
+                  home_predictions: homeScoreVal,
+                  away_predictions: awayScoreVal
+                })
+              }
+
               updateAccordionProgress(card, matches)
               updateStats(matches, savedPredictions, user.id)
+              updateProgress(matches, savedPredictions)
 
               const updatedPredictions = await getPredictions(user.id)
+              savedPredictions = updatedPredictions
               checkAndCelebrateCompletion(matches, updatedPredictions, currentPhaseName, currentPhaseId)
             }, 800)
           })
@@ -861,6 +875,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             initScoreControls();
             attachInputListeners();
             updateStats(matches, savedPredictions, user.id);
+            updateProgress(matches, savedPredictions);
           }
         }
       )
@@ -930,6 +945,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
         initScoreControls();
         attachInputListeners();
+        updateProgress(matches, savedPredictions);
       }
     }, 60000);
   }

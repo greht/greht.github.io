@@ -197,6 +197,95 @@ body {
   transition: width 0.4s ease;
 }
 
+.progress-bar.segmented {
+  display: flex;
+  width: 100%;
+  height: 18px;
+  background: var(--color-bg-secundary);
+  border-radius: 20px;
+  overflow: visible;
+  position: relative;
+  gap: 2px;
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+.progress-segment {
+  position: relative;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 12px;
+  min-width: 0;
+  cursor: default;
+  height: 100%;
+  transition: background 0.2s ease;
+}
+
+.progress-segment .fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: var(--color-primary);
+  transition: width 0.4s ease;
+  border-radius: 12px;
+}
+
+.progress-segment.completed .fill {
+  background: var(--color-accent);
+}
+
+.progress-segment:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.progress-segment:hover::after,
+.progress-segment.show-tooltip::after {
+  content: attr(data-tooltip);
+  white-space: pre-line;
+  text-align: center;
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary-100);
+  color: var(--color-primary);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid var(--color-primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  z-index: 100;
+  pointer-events: none;
+  min-width: 120px;
+}
+
+.progress-segment.completed:hover::after,
+.progress-segment.completed.show-tooltip::after {
+  border-left-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-100);
+}
+
+.progress-segment:hover::before,
+.progress-segment.show-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--color-primary-100);
+  z-index: 100;
+  pointer-events: none;
+}
+
+.progress-segment.completed:hover::before,
+.progress-segment.completed.show-tooltip::before {
+  border-top-color: var(--color-accent-100);
+}
+
 .progress-text {
   display: block;
   margin-top: 8px;
@@ -1208,6 +1297,10 @@ body {
     max-width: 100%;
     padding: 0;
   }
+
+  .progress-bar.segmented {
+    height: 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1497,5 +1590,14 @@ body {
     width: 90%;
     max-width: 100%;
     padding: 0;
+  }
+
+  .progress-bar.segmented {
+    height: 14px;
+  }
+
+  .progress-segment:hover::after {
+    font-size: 10px;
+    padding: 3px 6px;
   }
 }
