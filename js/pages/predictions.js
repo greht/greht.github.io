@@ -13,7 +13,7 @@ import { getSetting } from "/js/services/settings.js"
 import { formatSlotLabel } from "/js/services/admin/tournament-ui.js"
 
 function resolveFlagUrl(flagUrl) {
-  if (!flagUrl) return "/assets/images/flag-mexV2.svg";
+  if (!flagUrl) return "/assets/images/predictilab-gray.svg";
   if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
   if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
     return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
@@ -114,6 +114,7 @@ async function renderMatchCard(match) {
   const awayTeam = match.away_team?.name || awaySlotLabel;
   const homeFlag = resolveFlagUrl(match.home_team?.flag_url);
   const awayFlag = resolveFlagUrl(match.away_team?.flag_url);
+  const teamsNotDefined = !match.home_team || !match.away_team;
   
   const isKnockout = match.phase && match.phase.display_order >= 2;
   const matchLabel = isKnockout && match.match_number 
@@ -179,6 +180,10 @@ async function renderMatchCard(match) {
     isLocked = true;
   }
 
+  if (teamsNotDefined) {
+    isLocked = true;
+  }
+
   const statusMap = {
     scheduled: "Próximamente",
     live: "EN VIVO",
@@ -186,7 +191,9 @@ async function renderMatchCard(match) {
   };
 
   let statusText;
-  if (match.status === "finished") {
+  if (teamsNotDefined) {
+    statusText = "Pendiente de equipos";
+  } else if (match.status === "finished") {
     statusText = "Finalizado";
   } else if (match.status === "live") {
     statusText = "EN VIVO";

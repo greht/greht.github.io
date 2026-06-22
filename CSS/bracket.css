@@ -710,3 +710,113 @@
         padding: 0px 3px;
     }
 }
+
+/* ===== SKELETON LOADING ===== */
+@keyframes skeleton-shimmer {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
+}
+
+.bracket-skeleton-left,
+.bracket-skeleton-right {
+    display: flex;
+    align-items: stretch;
+}
+
+.bracket-skeleton-wrapper .bracket-column-matches {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 0 0 8px 8px;
+    border: 1px solid var(--bracket-card-border);
+    border-top: none;
+    min-height: 800px;
+    gap: 6px;
+}
+
+.skeleton-match {
+    background: var(--bracket-card-bg) !important;
+    border: 1px solid var(--bracket-card-border);
+    border-radius: 6px;
+    padding: 5px 6px;
+    min-height: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-match::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 100%
+    );
+    background-size: 200px 100%;
+    background-repeat: no-repeat;
+    animation: skeleton-shimmer 1.5s infinite linear;
+    pointer-events: none;
+}
+
+.skeleton-match .bracket-match-top {
+    display: flex;
+    margin-bottom: 3px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--bracket-card-border);
+}
+
+.skeleton-match .bracket-match-teams {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.skeleton-match .bracket-team {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 14px;
+}
+
+.skeleton-flag {
+    width: 16px;
+    height: 12px;
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+    background-size: 200px 100%;
+    border-radius: 2px;
+    flex-shrink: 0;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}
+
+.skeleton-bar {
+    flex: 1;
+    height: 10px;
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+    background-size: 200px 100%;
+    border-radius: 3px;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}
+
+.skeleton-bar-short {
+    width: 40px;
+    height: 10px;
+    background: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+    background-size: 200px 100%;
+    border-radius: 3px;
+    animation: skeleton-shimmer 1.5s infinite linear;
+}

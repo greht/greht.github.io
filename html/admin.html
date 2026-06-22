@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/CSS/footer.css" />
     <link rel="stylesheet" href="/CSS/admin.css" />
   </head>
-  <body>
+  <body class="admin-page">
     <header class="navbar-secondary">
       <button class="hamburger-menu" id="hamburgerMenu" aria-label="Menú">
         <span class="hamburger-line"></span>
@@ -29,9 +29,9 @@
       <nav class="navbar-center">
         <a href="/dashboard.html">Inicio</a>
         <a href="/predictions.html">Predicciones</a>
-        <a href="/bracket.html">Eliminatorias</a>
         <a href="/ranking.html">Ranking</a>
         <a href="/groups.html">Tabla de equipos</a>
+        <a href="/bracket.html">Eliminatorias</a>
       </nav>
 
       <div id="navbarContainer" class="navbar-right"></div>
@@ -51,9 +51,9 @@
       <nav class="mobile-menu-nav">
         <a href="/dashboard.html">Inicio</a>
         <a href="/predictions.html">Predicciones</a>
-        <a href="/bracket.html">Eliminatorias</a>
         <a href="/ranking.html">Ranking</a>
         <a href="/groups.html">Tabla de equipos</a>
+        <a href="/bracket.html">Eliminatorias</a>
       </nav>
     </div>
 
@@ -154,7 +154,7 @@
       let allMatches = [];
 
       function resolveFlagUrl(flagUrl) {
-        if (!flagUrl) return "/assets/images/flag-mexV2.svg";
+        if (!flagUrl) return "/assets/images/predictilab-gray.svg";
         if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
         if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
           return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);

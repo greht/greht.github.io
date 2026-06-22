@@ -11,31 +11,70 @@ function renderSkeleton() {
     const container = document.getElementById("bracketContainer")
     if (!container) return
 
-    container.innerHTML = `
-        <div class="bracket-skeleton">
-            ${Array.from({ length: 9 }).map(() => `
-                <div class="bracket-column skeleton-col">
-                    <div class="bracket-column-header">
-                        <span class="skeleton-text bracket-phase-name">...</span>
-                    </div>
-                    <div class="bracket-column-matches">
-                        ${Array.from({ length: 2 }).map(() => `
-                            <div class="bracket-match skeleton-match">
-                                <div class="bracket-match-teams">
-                                    <div class="bracket-team">
-                                        <div class="skeleton-flag"></div>
-                                        <span class="skeleton-text">---</span>
-                                    </div>
-                                    <div class="bracket-team">
-                                        <div class="skeleton-flag"></div>
-                                        <span class="skeleton-text">---</span>
-                                    </div>
-                                </div>
+    const skeletonCol = (phaseName, matchCount) => `
+        <div class="bracket-column skeleton-col">
+            <div class="bracket-column-header">
+                <span class="skeleton-text bracket-phase-name">${phaseName}</span>
+            </div>
+            <div class="bracket-column-matches">
+                ${Array.from({ length: matchCount }).map(() => `
+                    <div class="bracket-match skeleton-match">
+                        <div class="bracket-match-top">
+                            <span class="skeleton-bar skeleton-bar-short"></span>
+                        </div>
+                        <div class="bracket-match-teams">
+                            <div class="bracket-team">
+                                <div class="skeleton-flag"></div>
+                                <span class="skeleton-bar"></span>
                             </div>
-                        `).join("")}
+                            <div class="bracket-team">
+                                <div class="skeleton-flag"></div>
+                                <span class="skeleton-bar"></span>
+                            </div>
+                        </div>
+                    </div>
+                `).join("")}
+            </div>
+        </div>
+    `
+
+    const skeletonCenterRow = (label) => `
+        <div class="bracket-center-row">
+            <div class="bracket-match skeleton-match skeleton-match-wide">
+                <div class="bracket-match-top">
+                    <span class="skeleton-bar skeleton-bar-short"></span>
+                </div>
+                <div class="bracket-match-teams">
+                    <div class="bracket-team">
+                        <div class="skeleton-flag"></div>
+                        <span class="skeleton-bar"></span>
+                    </div>
+                    <div class="bracket-team">
+                        <div class="skeleton-flag"></div>
+                        <span class="skeleton-bar"></span>
                     </div>
                 </div>
-            `).join("")}
+            </div>
+        </div>
+    `
+
+    container.innerHTML = `
+        <div class="bracket-wrapper bracket-symmetric bracket-skeleton-wrapper">
+            <div class="bracket-skeleton-left">
+                ${skeletonCol("Dieciseisavos", 8)}
+                ${skeletonCol("Octavos", 4)}
+                ${skeletonCol("Cuartos", 2)}
+            </div>
+            <div class="bracket-center-column">
+                ${skeletonCenterRow("Final")}
+                ${skeletonCenterRow("Semifinal")}
+                ${skeletonCenterRow("3.er Puesto")}
+            </div>
+            <div class="bracket-skeleton-right">
+                ${skeletonCol("Cuartos", 2)}
+                ${skeletonCol("Octavos", 4)}
+                ${skeletonCol("Dieciseisavos", 8)}
+            </div>
         </div>
     `
 }
@@ -211,7 +250,13 @@ function updateConnectors() {
     renderBracketConnectors(wrapper)
 }
 
-async function refreshData(userId) {
+async function refreshData(userId, showSkeleton = true) {
+    if (showSkeleton) {
+        renderSkeleton()
+    }
+
+    const startTime = Date.now()
+
     const [phases, matches, predictions] = await Promise.all([
         getBracketPhases(),
         getBracketMatches(),
@@ -222,19 +267,24 @@ async function refreshData(userId) {
 
     const leagueId = matches.find(m => m.league_id)?.league_id || '1ebd76d7-5839-4c80-a41a-554de1bb22f5'
 
+    // Garantizar mínimo de 400ms de skeleton para evitar parpadeo
+    const elapsed = Date.now() - startTime
+    if (elapsed < 400) {
+        await new Promise(resolve => setTimeout(resolve, 400 - elapsed))
+    }
+
     await renderSymmetricBracket(bracketData, leagueId)
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
     const authResult = await requireAuth("/login.html")
-    renderSkeleton()
 
     let userId = null
     if (authResult) {
         userId = authResult.user.id
     }
 
-    await refreshData(userId)
+    await refreshData(userId, true)
 
     window.addEventListener("resize", () => {
         clearTimeout(resizeTimeout)
@@ -251,7 +301,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 table: "matches"
             },
             async (payload) => {
-                await refreshData(userId)
+                await refreshData(userId, true)
             }
         )
         .subscribe()

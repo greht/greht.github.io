@@ -1708,8 +1708,10 @@ button {
 }
 
 /* Ocultar links de Eliminatorias por defecto */
-a[href="bracket.html"],
-a[href="/bracket.html"] {
+.navbar-center a[href="bracket.html"],
+.navbar-center a[href="/bracket.html"],
+.mobile-menu-nav a[href="bracket.html"],
+.mobile-menu-nav a[href="/bracket.html"] {
   display: none !important;
 }
 
@@ -1721,5 +1723,16 @@ body.bracket-visible .navbar-center a[href="/bracket.html"] {
 
 body.bracket-visible .mobile-menu-nav a[href="bracket.html"],
 body.bracket-visible .mobile-menu-nav a[href="/bracket.html"] {
+  display: block !important;
+}
+
+/* Siempre visible en el admin */
+body.admin-page .navbar-center a[href="bracket.html"],
+body.admin-page .navbar-center a[href="/bracket.html"] {
+  display: inline-flex !important;
+}
+
+body.admin-page .mobile-menu-nav a[href="bracket.html"],
+body.admin-page .mobile-menu-nav a[href="/bracket.html"] {
   display: block !important;
 }

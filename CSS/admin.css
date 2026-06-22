@@ -443,6 +443,38 @@
   }
 }
 
+@media (min-width: 769px) {
+  .navbar-center {
+    display: flex;
+    position: static;
+    left: auto;
+    transform: none;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    flex: 1;
+  }
+
+  .navbar-center a {
+    display: inline-flex;
+    padding: 0 18px;
+    height: 40px;
+    align-items: center;
+    text-decoration: none;
+    color: var(--color-text-secundary);
+    font-weight: 500;
+    position: relative;
+  }
+
+  .navbar-center a:hover {
+    color: var(--color-primary);
+  }
+
+  .hamburger-menu {
+    display: none;
+  }
+}
+
 /* Main tabs as cards */
 .main-tabs {
   display: flex;

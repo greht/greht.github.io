@@ -2,7 +2,7 @@ import { supabase } from "/config/supabase.js"
 import { checkAdmin } from "/config/admin.js"
 
 function resolveFlagUrl(flagUrl) {
-    if (!flagUrl) return "/assets/images/flag-mexV2.svg";
+    if (!flagUrl) return "/assets/images/predictilab-gray.svg";
     if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
     if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
       return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
