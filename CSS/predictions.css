@@ -1148,6 +1148,31 @@ body {
     font-size: 12px;
   }
 
+  .phase-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+  }
+
+  .phase-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .phase-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 11px;
+    padding: 5px 12px;
+    scroll-snap-align: start;
+  }
+
   .match-body {
     display: flex;
     flex-direction: column;
@@ -1440,6 +1465,31 @@ body {
 
   .tab-btn {
     font-size: 12px;
+  }
+
+  .phase-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent);
+  }
+
+  .phase-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .phase-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    font-size: 11px;
+    padding: 5px 12px;
+    scroll-snap-align: start;
   }
 
   .match-body {
