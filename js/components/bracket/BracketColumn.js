@@ -1,7 +1,10 @@
 import { renderBracketMatch } from "/js/components/bracket/BracketMatch.js"
 
-export function renderBracketColumn(phase) {
-    const matchesHtml = phase.matches.map(match => renderBracketMatch(match)).join("")
+export async function renderBracketColumn(phase, leagueId) {
+    const matchesHtmlArray = await Promise.all(
+        phase.matches.map(match => renderBracketMatch(match, leagueId))
+    )
+    const matchesHtml = matchesHtmlArray.join("")
 
     return `
         <div class="bracket-column" data-phase-id="${phase.id}" data-phase-index="${phase.display_order}">

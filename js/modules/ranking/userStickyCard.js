@@ -54,12 +54,15 @@ export async function renderUserStickyCard(state) {
     let profile = users.find(u => u.user_id === user.id);
 
     if (!profile) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error } = await supabase
             .from("profiles")
             .select("user_id, user_name, country_code, points, avatar_url")
             .eq("user_id", user.id)
-            .single();
-        profile = profileData;
+            .limit(1);
+        
+        if (!error && profileData && profileData.length > 0) {
+            profile = profileData[0];
+        }
     }
 
     const points = profile?.points || 0;

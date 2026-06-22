@@ -10,11 +10,14 @@ export async function createProfile(userId, username, country) {
 }
 
 export async function getProfile(userId) {
-  return await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("user_id", userId)
-    .single()
+    .limit(1)
+  
+  if (error || !data || data.length === 0) return { data: null, error }
+  return { data: data[0], error: null }
 }
 
 export async function updateUsername(userId, username) {
@@ -39,11 +42,13 @@ export async function uploadAvatar(file, userId) {
 
   const { data } = supabase.storage.from("avatars").getPublicUrl(filePath)
 
-  const { data: profile } = await supabase
+  const { data: profileData, error: profileError } = await supabase
     .from("profiles")
     .select("avatar_url")
     .eq("user_id", userId)
-    .single()
+    .limit(1)
+
+  const profile = (!profileError && profileData && profileData.length > 0) ? profileData[0] : null
 
   if (profile?.avatar_url && profile.avatar_url.startsWith('http')) {
     const parts = profile.avatar_url.split('/')

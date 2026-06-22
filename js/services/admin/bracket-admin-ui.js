@@ -115,7 +115,7 @@ async function renderBracketConfig() {
                     <span class="bracket-match-count">${currentMatches.length} partidos</span>
                 </div>
                 <div class="bracket-match-list">
-                    ${currentMatches.map((match, index) => renderBracketMatchRow(match, index)).join("")}
+                    ${currentMatches.map((match, index) => renderBracketMatchRow(match, index, currentMatches.length)).join("")}
                 </div>
             </div>
 
@@ -134,7 +134,7 @@ async function renderBracketConfig() {
     initReorderHandlers()
 }
 
-function renderBracketMatchRow(match, index) {
+function renderBracketMatchRow(match, index, totalMatches) {
     const homeTeam = match.home_team?.name || "TBD"
     const awayTeam = match.away_team?.name || "TBD"
     const homeFlag = resolveFlagUrl(match.home_team?.flag_url)
@@ -143,9 +143,15 @@ function renderBracketMatchRow(match, index) {
     const isFirst = index === 0
     const isLast = index === currentMatches.length - 1
 
+    const halfMark = totalMatches / 2
+    const isLeftSide = position <= halfMark
+    const sideLabel = isLeftSide ? "IZQ" : "DER"
+    const sideClass = isLeftSide ? "left" : "right"
+
     return `
-        <div class="bracket-match-row" data-match-id="${match.id}" data-position="${position}">
+        <div class="bracket-match-row" data-match-id="${match.id}" data-position="${position}" data-side="${isLeftSide ? 'left' : 'right'}">
             <div class="bracket-position-badge">${position}</div>
+            <div class="bracket-side-badge ${sideClass}">${sideLabel}</div>
 
             <div class="bracket-match-info">
                 <div class="bracket-match-teams-preview">

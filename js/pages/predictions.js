@@ -10,6 +10,7 @@ import { requireAuth } from "/js/services/auth.js"
 import { getProfile } from "/js/services/profile.js"
 import { getTimezoneOffset, toLocalTime, toRealUtcDate, formatLocalDate } from "/js/utils/timezone.js"
 import { getSetting } from "/js/services/settings.js"
+import { formatSlotLabel } from "/js/services/admin/tournament-ui.js"
 
 function resolveFlagUrl(flagUrl) {
   if (!flagUrl) return "/assets/images/flag-mexV2.svg";
@@ -101,12 +102,24 @@ function canPredict(matchDate) {
   return diffMinutes > 15;
 }
 
-function renderMatchCard(match) {
-  const homeTeam = match.home_team?.name || "Equipo Local";
-  const awayTeam = match.away_team?.name || "Equipo Visitante";
+async function renderMatchCard(match) {
+  // Obtener el leagueId del match
+  const leagueId = match.league_id || '1ebd76d7-5839-4c80-a41a-554de1bb22f5'
+  
+  // Formatear los slots para mostrar etiquetas más intuitivas
+  const homeSlotLabel = match.home_slot ? await formatSlotLabel(match.home_slot, leagueId) : "Equipo Local"
+  const awaySlotLabel = match.away_slot ? await formatSlotLabel(match.away_slot, leagueId) : "Equipo Visitante"
+  
+  const homeTeam = match.home_team?.name || homeSlotLabel;
+  const awayTeam = match.away_team?.name || awaySlotLabel;
   const homeFlag = resolveFlagUrl(match.home_team?.flag_url);
   const awayFlag = resolveFlagUrl(match.away_team?.flag_url);
-  const group = match.group?.name ? `Grupo ${match.group.name}` : "Grupo";
+  
+  const isKnockout = match.phase && match.phase.display_order >= 2;
+  const matchLabel = isKnockout && match.match_number 
+    ? `P${match.match_number}` 
+    : (match.group?.name ? `Grupo ${match.group.name}` : "Grupo");
+  
   const viewportWidth = window.innerWidth;
 
   const isMobile =
@@ -200,7 +213,7 @@ function renderMatchCard(match) {
 
       <div class="match-header">
         <div class="match-header-left">
-          <span class="tag">${group}</span>
+          <span class="tag">${matchLabel}</span>
           <span class="time">${matchDate}</span>
         </div>
 
@@ -264,7 +277,7 @@ function renderMatchCard(match) {
     <div class="match-card" data-match-id="${match.id}">
       <div class="match-header">
         <div class="match-header-left">
-          <span class="tag">${group}</span>
+          <span class="tag">${matchLabel}</span>
           <span class="time">${matchDate}</span>
         </div>
 
@@ -468,7 +481,7 @@ function renderTabs(activeCount, finishedCount) {
   `;
 }
 
-function renderMatches(matches, predictions = []) {
+async function renderMatches(matches, predictions = []) {
   const container = document.querySelector(".card-order");
   const tabsContainer = document.getElementById("predictionsTabsContainer");
   const phaseTabsContainer = document.getElementById("phaseTabsContainer");
@@ -484,7 +497,7 @@ function renderMatches(matches, predictions = []) {
     initTabs(active, finished, predictions, phaseTabsContainer);
   }
 
-  renderGroupList(active, predictions, container);
+  await renderGroupList(active, predictions, container);
 }
 
 function initTabs(active, finished, predictions, phaseTabsContainer) {
@@ -521,7 +534,7 @@ function initTabs(active, finished, predictions, phaseTabsContainer) {
 
   updatePhaseTabs(active);
 
-  tabsContainer.addEventListener("click", (e) => {
+  tabsContainer.addEventListener("click", async (e) => {
     const tabBtn = e.target.closest(".tab-btn");
     if (!tabBtn) return;
 
@@ -544,11 +557,11 @@ function initTabs(active, finished, predictions, phaseTabsContainer) {
     const container = document.querySelector(".card-order");
     if (tab === "active") {
       updatePhaseTabs(active);
-      renderGroupList(active, predictions, container);
+      await renderGroupList(active, predictions, container);
       restoreInputValues(predictions);
     } else {
       updatePhaseTabs(finished);
-      renderGroupList(finished, predictions, container);
+      await renderGroupList(finished, predictions, container);
       restoreInputValues(predictions);
     }
   });
@@ -566,7 +579,7 @@ function initTabs(active, finished, predictions, phaseTabsContainer) {
       updateCurrentPhase(phases[0])
     }
 
-    phaseTabsContainer.addEventListener("click", (e) => {
+    phaseTabsContainer.addEventListener("click", async (e) => {
       const tabBtn = e.target.closest(".phase-tab-btn");
       if (!tabBtn) return;
 
@@ -578,7 +591,7 @@ function initTabs(active, finished, predictions, phaseTabsContainer) {
 
       const filtered = groups.filter(([_, matches]) => matches[0]?.phase?.name === selectedPhase);
       const container = document.querySelector(".card-order");
-      renderGroupList(filtered, predictions, container);
+      await renderGroupList(filtered, predictions, container);
     });
   }
 }
@@ -595,7 +608,7 @@ function renderPhaseTabs(phases) {
   `;
 }
 
-function renderGroupList(groups, predictions, container) {
+async function renderGroupList(groups, predictions, container) {
   if (groups.length === 0) {
     container.innerHTML = `<p class="no-matches">No hay fechas en esta sección.</p>`;
     return;
@@ -604,7 +617,8 @@ function renderGroupList(groups, predictions, container) {
   const grouped = groupMatchesByDay(matchesGlobal);
   const allKeys = Object.keys(grouped);
 
-  container.innerHTML = groups.map(([dayLabel, dayMatches]) => {
+  // Renderizar todos los grupos
+  const groupsHtml = await Promise.all(groups.map(async ([dayLabel, dayMatches]) => {
     const originalIndex = allKeys.indexOf(dayLabel);
     const phaseNumber = originalIndex + 1;
 
@@ -613,6 +627,11 @@ function renderGroupList(groups, predictions, container) {
     const groupPoints = getGroupPoints(dayMatches, predictions);
     const phaseName = dayMatches[0]?.phase?.name || "";
     const journeyLabel = phaseName ? `Fecha ${phaseNumber} - ${phaseName}` : `Fecha ${phaseNumber}`;
+
+    // Renderizar todas las tarjetas de partidos de este grupo
+    const matchesHtml = await Promise.all(
+      dayMatches.map(match => renderMatchCard(match))
+    );
 
     return `
       <div class="matches-group">
@@ -665,12 +684,14 @@ function renderGroupList(groups, predictions, container) {
 </button>
 
         <div class="matches-group-content">
-          ${dayMatches.map(match => renderMatchCard(match)).join("")}
+          ${matchesHtml.join("")}
         </div>
 
       </div>
     `;
-  }).join("");
+  }));
+
+  container.innerHTML = groupsHtml.join("");
 
   initAccordions();
 }
@@ -702,7 +723,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (matches && matches.length > 0) {
 
     if (!authResult) {
-      renderMatches(matches, []);
+      await renderMatches(matches, []);
       return
     }
 
@@ -729,7 +750,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     });
 
-    renderMatches(matches, savedPredictions);
+    await renderMatches(matches, savedPredictions);
 
     if (savedPredictions && savedPredictions.length > 0) {
       savedPredictions.forEach(p => {
@@ -821,7 +842,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               matches.push(updatedMatch);
             }
             matchesGlobal = matches;
-            renderMatches(matches, savedPredictions);
+            await renderMatches(matches, savedPredictions);
             savedPredictions.forEach(p => {
               const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
               if (!card) return
@@ -838,7 +859,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       )
       .subscribe();
 
-    setInterval(() => {
+    setInterval(async () => {
       let needsRerender = false;
 
       document.querySelectorAll(".match-card").forEach(card => {
@@ -891,7 +912,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       if (needsRerender) {
-        renderMatches(matches, savedPredictions);
+        await renderMatches(matches, savedPredictions);
         savedPredictions.forEach(p => {
           const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
           if (!card) return

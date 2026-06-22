@@ -16,6 +16,100 @@ function resolveFlagUrl(flagUrl) {
     return "/" + path;
 }
 
+// Caché para evitar consultas repetidas a la BD
+const slotLabelCache = new Map()
+
+// Mapeo de fases a su rango de match_numbers esperado
+const phaseToMatchNumberRange = {
+    'Eliminatoria de 32': { start: 73, count: 16 },
+    'Octavos de final': { start: 89, count: 8 },
+    'Cuartos de final': { start: 97, count: 4 },
+    'Semifinal': { start: 101, count: 2 },
+    'Eliminatoria por el 3er lugar': { start: 103, count: 1 },
+    'Final': { start: 104, count: 1 }
+}
+
+export async function formatSlotLabel(slotCode, leagueId) {
+    console.log(`formatSlotLabel called with: slotCode=${slotCode}, leagueId=${leagueId}`)
+    
+    // Si ya está en caché, devolverlo
+    const cacheKey = `${slotCode}_${leagueId}`
+    if (slotLabelCache.has(cacheKey)) {
+        console.log(`  → Cached: ${slotLabelCache.get(cacheKey)}`)
+        return slotLabelCache.get(cacheKey)
+    }
+    
+    // Mapeo de prefijos a nombres de fases
+    const phaseMap = {
+        'R32_': 'Eliminatoria de 32',
+        'R16_': 'Octavos de final',
+        'QF_': 'Cuartos de final',
+        'SF_': 'Semifinal',
+        'L_SF_': 'Semifinal'
+    }
+    
+    // Buscar si el slot corresponde a un prefijo conocido
+    for (const [prefix, phaseName] of Object.entries(phaseMap)) {
+        if (slotCode.startsWith(prefix)) {
+            const position = parseInt(slotCode.split('_').pop())
+            console.log(`  → Matched prefix: ${prefix}, phaseName: ${phaseName}, position: ${position}`)
+            
+            // Primero intentar buscar el partido en la BD
+            const phase = await getPhaseByName(phaseName)
+            if (phase) {
+                console.log(`  → Phase found: ${phase.id}`)
+                
+                const { data: matchData, error } = await supabase
+                    .from('matches')
+                    .select('id, match_number')
+                    .eq('phase_id', phase.id)
+                    .eq('bracket_position', position)
+                    .eq('league_id', leagueId)
+                    .limit(1)
+                
+                console.log(`  → Query result:`, matchData, error)
+                
+                if (!error && matchData && matchData.length > 0) {
+                    const matchNumber = matchData[0].match_number
+                    const isLoser = slotCode.startsWith('L_SF_')
+                    
+                    const label = isLoser 
+                        ? `Perdedor P${matchNumber}` 
+                        : `Ganador P${matchNumber}`
+                    
+                    console.log(`  → Label from DB: ${label}`)
+                    slotLabelCache.set(cacheKey, label)
+                    return label
+                }
+            }
+            
+            // Si no se encuentra en la BD, calcular el match_number esperado
+            const range = phaseToMatchNumberRange[phaseName]
+            if (range && position >= 1 && position <= range.count) {
+                const expectedMatchNumber = range.start + position - 1
+                const isLoser = slotCode.startsWith('L_SF_')
+                
+                const label = isLoser 
+                    ? `Perdedor P${expectedMatchNumber}` 
+                    : `Ganador P${expectedMatchNumber}`
+                
+                console.log(`  → Label calculated: ${label}`)
+                slotLabelCache.set(cacheKey, label)
+                return label
+            }
+            
+            console.log(`  → No match found and cannot calculate`)
+            slotLabelCache.set(cacheKey, slotCode)
+            return slotCode
+        }
+    }
+    
+    // Si no es un slot de fase eliminatoria, devolver tal cual
+    console.log(`  → No prefix matched, returning: ${slotCode}`)
+    slotLabelCache.set(cacheKey, slotCode)
+    return slotCode
+}
+
 let tournamentInitialized = false
 
 export async function loadQualifiedTeamsSection() {
@@ -42,7 +136,12 @@ export async function loadQualifiedTeamsSection() {
     const leagueOptions = leaguesList.map(l => `<option value="${l.id}">${l.name}</option>`).join("")
 
     const knockoutPhases = (phases || []).filter((p, i, arr) => arr.findIndex(x => x.name === p.name) === i)
+    console.log("=== knockoutPhases ===")
+    console.log("Fases disponibles:", knockoutPhases)
+    
     const stageOptions = knockoutPhases.map(p => `<option value="${p.name}">${p.name}</option>`).join("")
+    console.log("stageOptions HTML:", stageOptions)
+    
     const phaseIdOptions = knockoutPhases.map(p => `<option value="${p.id}">${p.name}</option>`).join("")
 
     container.innerHTML = `
@@ -156,7 +255,7 @@ function initQualifiedTeamsHandlers() {
     document.getElementById("load-qualified-btn")?.addEventListener("click", loadQualifiedTeams)
 }
 
-function formatSlotLabel(slot) {
+function formatSlotLabelForQualifiedTeams(slot) {
     const groups = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
     const thirdMatch = slot.match(/^THIRD_(\d+)$/)
     if (thirdMatch) return `Mejor 3° #${thirdMatch[1]}`
@@ -259,7 +358,7 @@ async function loadQualifiedTeams() {
 
         return `
             <div class="qualified-slot-card">
-                <div class="slot-code">${formatSlotLabel(slot)}</div>
+                <div class="slot-code">${formatSlotLabelForQualifiedTeams(slot)}</div>
                 <div class="slot-team">
                     ${team ? `
                         <img src="${resolveFlagUrl(team.flag_url)}" class="team-flag">
@@ -312,19 +411,19 @@ async function assignSlot(stage, slotCode, teamId) {
     const leagueId = document.getElementById("qualified-league-select")?.value
     if (!leagueId) { alert("Selecciona una liga"); return }
 
-    const existing = await supabase
+    const { data: existingData, error: existingError } = await supabase
         .from("qualified_teams")
         .select("id")
         .eq("league_id", leagueId)
         .eq("stage", stage)
         .eq("slot_code", slotCode)
-        .single()
+        .limit(1)
 
-    if (existing.data) {
+    if (existingData && existingData.length > 0) {
         const { error } = await supabase
             .from("qualified_teams")
             .update({ team_id: teamId })
-            .eq("id", existing.data.id)
+            .eq("id", existingData[0].id)
         if (error) alert("Error actualizando: " + error.message)
     } else {
         const { error } = await supabase
@@ -424,24 +523,31 @@ async function loadTemplates() {
         }
     }
 
-    grid.innerHTML = data.map(t => {
+    // Formatear las etiquetas de los slots
+    const formattedSlots = await Promise.all(data.map(async t => {
+        const homeSlotLabel = await formatSlotLabel(t.home_slot, leagueId)
+        const awaySlotLabel = await formatSlotLabel(t.away_slot, leagueId)
+        return { ...t, homeSlotLabel, awaySlotLabel }
+    }))
+
+    grid.innerHTML = formattedSlots.map(t => {
         const homeSlotTeam = resolvedSlots.get(t.home_slot)
         const awaySlotTeam = resolvedSlots.get(t.away_slot)
         const homeTeam = homeSlotTeam ? teamsMap.get(homeSlotTeam) : null
         const awayTeam = awaySlotTeam ? teamsMap.get(awaySlotTeam) : null
-        const homeLabel = homeTeam?.name || `TBD (${t.home_slot})`
-        const awayLabel = awayTeam?.name || `TBD (${t.away_slot})`
+        const homeLabel = homeTeam?.name || t.homeSlotLabel
+        const awayLabel = awayTeam?.name || t.awaySlotLabel
         return `
             <div class="template-card">
                 <span class="match-order">#${t.match_order}</span>
                 <div class="match-info">
                     <div class="match-team">
-                        <span class="slot-badge">${t.home_slot}</span>
+                        <span class="slot-badge">${t.homeSlotLabel}</span>
                         <span class="team-name">${homeLabel}</span>
                     </div>
                     <span class="vs-label">vs</span>
                     <div class="match-team">
-                        <span class="slot-badge">${t.away_slot}</span>
+                        <span class="slot-badge">${t.awaySlotLabel}</span>
                         <span class="team-name">${awayLabel}</span>
                     </div>
                 </div>
@@ -462,10 +568,17 @@ async function loadTemplates() {
     })
 }
 
-function showAddTemplateModal() {
+async function showAddTemplateModal() {
     const stage = document.getElementById("template-stage-select")?.value
+    const leagueId = document.getElementById("template-league-select")?.value
     const slots = getSlotsForStage(stage)
     const nextOrder = document.querySelectorAll(".template-card").length + 1
+
+    // Formatear las etiquetas de los slots
+    const formattedSlots = await Promise.all(slots.map(async s => {
+        const label = await formatSlotLabel(s, leagueId)
+        return { value: s, label }
+    }))
 
     const modal = document.createElement("div")
     modal.className = "modal-overlay"
@@ -478,11 +591,11 @@ function showAddTemplateModal() {
             </div>
             <div class="form-group">
                 <label>Slot Local:</label>
-                <select id="template-home-slot">${slots.map(s => `<option value="${s}">${s}</option>`).join("")}</select>
+                <select id="template-home-slot">${formattedSlots.map(s => `<option value="${s.value}">${s.label}</option>`).join("")}</select>
             </div>
             <div class="form-group">
                 <label>Slot Visitante:</label>
-                <select id="template-away-slot">${slots.map(s => `<option value="${s}">${s}</option>`).join("")}</select>
+                <select id="template-away-slot">${formattedSlots.map(s => `<option value="${s.value}">${s.label}</option>`).join("")}</select>
             </div>
             <div class="modal-actions">
                 <button id="save-template-btn" class="btn-primary">Guardar</button>
@@ -511,24 +624,50 @@ function showAddTemplateModal() {
 }
 
 function initGenerateHandlers() {
+    console.log("=== initGenerateHandlers ===")
+    console.log("generate-stage element:", document.getElementById("generate-stage"))
+    console.log("generate-league-select element:", document.getElementById("generate-league-select"))
+    
     document.getElementById("generate-btn")?.addEventListener("click", handleGenerate)
     const stageSelect = document.getElementById("generate-stage")
-    if (stageSelect) stageSelect.addEventListener("change", () => loadGeneratePreview())
+    if (stageSelect) {
+        console.log("Agregando event listener a generate-stage")
+        stageSelect.addEventListener("change", () => {
+            console.log("=== Cambio detectado en generate-stage ===")
+            console.log("Nuevo valor:", stageSelect.value)
+            loadGeneratePreview()
+        })
+    }
     const leagueSelect = document.getElementById("generate-league-select")
-    if (leagueSelect) leagueSelect.addEventListener("change", () => loadGeneratePreview())
+    if (leagueSelect) {
+        leagueSelect.addEventListener("change", () => loadGeneratePreview())
+    }
 }
 
 async function loadGeneratePreview() {
     const stage = document.getElementById("generate-stage")?.value
     const leagueId = document.getElementById("generate-league-select")?.value
     const preview = document.getElementById("generate-preview")
+    
+    console.log("=== loadGeneratePreview ===")
+    console.log("Stage seleccionado:", stage)
+    console.log("League ID:", leagueId)
+    
     if (!stage || !preview) return
 
     let query = supabase.from("knockout_templates").select("*").eq("stage", stage).order("match_order")
     if (leagueId) query = query.eq("league_id", leagueId)
 
     const { data: templates, error } = await query
-    if (error) { preview.innerHTML = `<p class="error">Error: ${error.message}</p>`; return }
+    
+    console.log("Plantillas encontradas:", templates?.length || 0)
+    console.log("Templates:", templates)
+    
+    if (error) { 
+        console.error("Error en consulta:", error)
+        preview.innerHTML = `<p class="error">Error: ${error.message}</p>`
+        return 
+    }
 
     if (!templates?.length) {
         preview.innerHTML = `<p class="empty-state">No hay plantillas para ${stage}. Agrega plantillas primero.</p>`
@@ -563,10 +702,19 @@ async function loadGeneratePreview() {
         }
     }
 
-    preview.innerHTML = `
-        <h4>Partidos (${templates.length}):</h4>
+    // Formatear las etiquetas de los slots
+    const formattedTemplates = await Promise.all(templates.map(async t => {
+        const homeSlotLabel = await formatSlotLabel(t.home_slot, leagueId)
+        const awaySlotLabel = await formatSlotLabel(t.away_slot, leagueId)
+        return { ...t, homeSlotLabel, awaySlotLabel }
+    }))
+
+    console.log("Formatted templates:", formattedTemplates)
+
+    const previewHtml = `
+        <h4>Partidos (${formattedTemplates.length}):</h4>
         <div class="preview-matches">
-            ${templates.map(t => {
+            ${formattedTemplates.map(t => {
                 const homeTeamId = resolvedSlots.get(t.home_slot)
                 const awayTeamId = resolvedSlots.get(t.away_slot)
                 const homeTeam = homeTeamId ? teamsMap.get(homeTeamId) : null
@@ -579,19 +727,19 @@ async function loadGeneratePreview() {
                         return date.toISOString().slice(0, 16)
                     } catch { return "" }
                 })()
-                const homeLabel = homeTeam?.name || `TBD (${t.home_slot})`
-                const awayLabel = awayTeam?.name || `TBD (${t.away_slot})`
+                const homeLabel = homeTeam?.name || t.homeSlotLabel
+                const awayLabel = awayTeam?.name || t.awaySlotLabel
                 return `
                     <div class="preview-match">
                         <span class="preview-order">#${t.match_order}</span>
                         <div class="preview-teams">
                             <div class="preview-team">
-                                <span class="slot-badge-sm">${t.home_slot}</span>
+                                <span class="slot-badge-sm">${t.homeSlotLabel}</span>
                                 <span>${homeLabel}</span>
                             </div>
                             <span class="preview-vs">vs</span>
                             <div class="preview-team">
-                                <span class="slot-badge-sm">${t.away_slot}</span>
+                                <span class="slot-badge-sm">${t.awaySlotLabel}</span>
                                 <span>${awayLabel}</span>
                             </div>
                         </div>
@@ -606,6 +754,9 @@ async function loadGeneratePreview() {
             }).join("")}
         </div>
     `
+
+    console.log("HTML a renderizar:", previewHtml)
+    preview.innerHTML = previewHtml
 }
 
 async function handleGenerate() {
@@ -646,8 +797,17 @@ async function handleGenerate() {
         if (leagueId) templatesQuery = templatesQuery.eq("league_id", leagueId)
         const { data: templates } = await templatesQuery
 
+        const { data: lastMatch } = await supabase
+            .from("matches")
+            .select("match_number")
+            .order("match_number", { ascending: false })
+            .limit(1)
+
+        const nextMatchNumber = (lastMatch?.[0]?.match_number || 0) + 1
+
         const matches = []
-        for (const t of templates) {
+        for (let i = 0; i < templates.length; i++) {
+            const t = templates[i]
             const homeSlot = t.home_slot
             const awaySlot = t.away_slot
             const matchDate = matchDateMap.get(`${homeSlot}-${awaySlot}`)
@@ -668,7 +828,8 @@ async function handleGenerate() {
                 status: "scheduled",
                 match_date: matchDate,
                 group_id: null,
-                bracket_position: t.match_order
+                bracket_position: t.match_order,
+                match_number: nextMatchNumber + matches.length
             })
         }
 
@@ -705,6 +866,9 @@ async function handleGenerate() {
         }
 
         result.innerHTML = `<p class="success">✓ ${created} creados, ${updated} actualizados</p>`
+        
+        // Limpiar la caché de etiquetas de slots para que se actualicen
+        clearSlotLabelCache()
     } catch (err) {
         result.innerHTML = `<p class="error">✗ ${err.message}</p>`
     }
@@ -759,25 +923,35 @@ function getSlotsForStage(stageName, groupsInDb = []) {
     return []
 }
 
+// Función para limpiar la caché de etiquetas de slots
+export function clearSlotLabelCache() {
+    slotLabelCache.clear()
+    console.log('Slot label cache cleared')
+}
+
 async function getPhaseByName(name) {
-    const { data } = await supabase
+    const { data, error } = await supabase
         .from("phases")
         .select("id, name")
         .eq("name", name)
-        .single()
-    return data
+        .limit(1)
+    
+    if (error || !data || data.length === 0) return null
+    return data[0]
 }
 
 async function resolveSlotToTeamId(leagueId, stage, slotCode) {
     if (slotCode.match(/^[A-L][12]$/) || slotCode.startsWith("THIRD_")) {
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from("qualified_teams")
             .select("team_id")
             .eq("league_id", leagueId)
             .eq("stage", stage)
             .eq("slot_code", slotCode)
-            .single()
-        return data?.team_id || null
+            .limit(1)
+        
+        if (error || !data || data.length === 0) return null
+        return data[0].team_id
     }
 
     let phaseName = null
@@ -806,12 +980,15 @@ async function resolveSlotToTeamId(leagueId, stage, slotCode) {
         position = parseInt(slotCode.split("_")[1])
     }
 
-    const { data: match } = await supabase
+    const { data: matchData, error: matchError } = await supabase
         .from("matches")
         .select("id, home_team_id, away_team_id, home_score, away_score, status")
         .eq("phase_id", phase.id)
         .eq("bracket_position", position)
-        .single()
+        .limit(1)
+
+    if (matchError || !matchData || matchData.length === 0) return null
+    const match = matchData[0]
 
     if (!match || match.status !== "finished") return null
 

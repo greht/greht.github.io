@@ -16,26 +16,29 @@ export async function getSetting(key) {
     .from("settings")
     .select("value")
     .eq("key", key)
-    .single()
+    .limit(1)
   
-  if (error) {
-    console.error("Error fetching setting:", error)
+  if (error || !data || data.length === 0) {
+    if (error) console.error("Error fetching setting:", error)
     return null
   }
   
   localStorage.setItem(cacheKey, JSON.stringify({
-    value: data?.value,
+    value: data[0].value,
     timestamp: Date.now()
   }))
   
-  return data?.value || null
+  return data[0].value || null
 }
 
 export async function updateSetting(key, value) {
   const { error } = await supabase
     .from("settings")
-    .update({ value, updated_at: new Date().toISOString() })
-    .eq("key", key)
+    .upsert({ 
+      key, 
+      value, 
+      updated_at: new Date().toISOString() 
+    }, { onConflict: "key" })
   
   if (error) {
     console.error("Error updating setting:", error)

@@ -146,7 +146,7 @@
       import { checkAdmin, ADMIN_USER_ID } from "/config/admin.js";
       import { processFinishedMatches } from "/js/services/scoring.js";
       import { loadNavbar, loadFooter } from "/js/components/navbar.js";
-      import { loadQualifiedTeamsSection } from "/js/services/admin/tournament-ui.js";
+      import { loadQualifiedTeamsSection, formatSlotLabel } from "/js/services/admin/tournament-ui.js";
       import { loadBracketConfigSection } from "/js/services/admin/bracket-admin-ui.js";
       import { getSetting, updateSetting } from "/js/services/settings.js";
 
@@ -314,12 +314,24 @@
         return false;
       }
 
-      function renderMatchCard(match) {
-        const homeTeam = match.home_team?.name || "Equipo Local";
-        const awayTeam = match.away_team?.name || "Equipo Visitante";
+      async function renderMatchCard(match) {
+        // Obtener el leagueId del match
+        const leagueId = match.league_id || '1ebd76d7-5839-4c80-a41a-554de1bb22f5'
+        
+        // Formatear los slots para mostrar etiquetas más intuitivas
+        const homeSlotLabel = match.home_slot ? await formatSlotLabel(match.home_slot, leagueId) : "Equipo Local"
+        const awaySlotLabel = match.away_slot ? await formatSlotLabel(match.away_slot, leagueId) : "Equipo Visitante"
+        
+        const homeTeam = match.home_team?.name || homeSlotLabel;
+        const awayTeam = match.away_team?.name || awaySlotLabel;
         const homeFlag = resolveFlagUrl(match.home_team?.flag_url);
         const awayFlag = resolveFlagUrl(match.away_team?.flag_url);
-        const group = match.group?.name || "Grupo";
+        
+        const isKnockout = match.phase && match.phase.display_order >= 2;
+        const matchLabel = isKnockout && match.match_number 
+          ? `P${match.match_number}` 
+          : (match.group?.name || "Grupo");
+        
         const matchDate = formatMatchDate(match.match_date);
 
         const statusMap = {
@@ -335,7 +347,7 @@
                 <div class="match-card admin-match-card" data-match-id="${match.id}">
                     <div class="match-header">
                         <div class="match-header-left">
-                            <span class="tag">${group}</span>
+                            <span class="tag">${matchLabel}</span>
                             <span class="time">${matchDate}</span>
                         </div>
                         <div class="match-header-right">
@@ -437,42 +449,46 @@
         });
       }
 
-      function renderMatches(matches) {
+      async function renderMatches(matches) {
         const container = document.getElementById("matches-container");
         if (!container) return;
 
         const grouped = groupMatchesByDay(matches);
 
-        container.innerHTML = Object.entries(grouped)
-          .map(([dayLabel, dayMatches], index) => {
-            const phaseName = dayMatches[0]?.phase?.name || "";
-            const journeyLabel = phaseName
-              ? `Fecha ${index + 1} - ${phaseName}`
-              : `Fecha ${index + 1}`;
+        const groupsHtml = await Promise.all(Object.entries(grouped).map(async ([dayLabel, dayMatches], index) => {
+          const phaseName = dayMatches[0]?.phase?.name || "";
+          const journeyLabel = phaseName
+            ? `Fecha ${index + 1} - ${phaseName}`
+            : `Fecha ${index + 1}`;
 
-            return `
-                    <div class="matches-group" data-group-index="${index}">
-                        <button type="button" class="matches-group-header">
-                            <div class="accordion-info">
-                                <span class="journey">${journeyLabel}</span>
-                                <span class="date-label">${capitalize(dayLabel)}</span>
-                            </div>
-                            <div class="accordion-right">
-                                <div class="accordion-progress">
-                                    <span class="count">${dayMatches.length} partidos</span>
-                                </div>
-                                <svg class="accordion-arrow" viewBox="0 0 24 24">
-                                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </div>
-                        </button>
-                        <div class="matches-group-content" style="max-height: 0; overflow: hidden;">
-                            ${dayMatches.map((match) => renderMatchCard(match)).join("")}
-                        </div>
-                    </div>
-                `;
-          })
-          .join("");
+          const matchesHtml = await Promise.all(
+            dayMatches.map((match) => renderMatchCard(match))
+          );
+
+          return `
+                  <div class="matches-group" data-group-index="${index}">
+                      <button type="button" class="matches-group-header">
+                          <div class="accordion-info">
+                              <span class="journey">${journeyLabel}</span>
+                              <span class="date-label">${capitalize(dayLabel)}</span>
+                          </div>
+                          <div class="accordion-right">
+                              <div class="accordion-progress">
+                                  <span class="count">${dayMatches.length} partidos</span>
+                              </div>
+                              <svg class="accordion-arrow" viewBox="0 0 24 24">
+                                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                              </svg>
+                          </div>
+                      </button>
+                      <div class="matches-group-content" style="max-height: 0; overflow: hidden;">
+                          ${matchesHtml.join("")}
+                      </div>
+                  </div>
+              `;
+        }));
+
+        container.innerHTML = groupsHtml.join("");
 
         setTimeout(() => {
           initAccordions();
@@ -518,7 +534,7 @@
         const bracketConfigSection = document.getElementById("bracket-config-section");
 
         mainTabs.forEach((btn) => {
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", async () => {
             mainTabs.forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
 
@@ -534,14 +550,14 @@
               loadBracketConfigSection();
             } else {
               datesSection.classList.add("active");
-              initDateSubTabs();
+              await initDateSubTabs();
             }
           });
         });
 
         const subtabsContainer = document.querySelector(".dates-subtabs");
         if (subtabsContainer) {
-          subtabsContainer.addEventListener("click", (e) => {
+          subtabsContainer.addEventListener("click", async (e) => {
             const subtabBtn = e.target.closest(".subtab-btn");
             if (!subtabBtn) return;
 
@@ -554,21 +570,21 @@
             const { active, finished } = splitMatchesByStatus(allMatches);
             const container = document.getElementById("matches-container");
             if (subtab === "active") {
-              renderGroupList(active, container);
+              await renderGroupList(active, container);
             } else {
-              renderGroupList(finished, container);
+              await renderGroupList(finished, container);
             }
           });
         }
       }
 
-      function initDateSubTabs() {
+      async function initDateSubTabs() {
         const container = document.getElementById("matches-container");
         const { active, finished } = splitMatchesByStatus(allMatches);
-        renderGroupList(active, container);
+        await renderGroupList(active, container);
       }
 
-      function renderGroupList(groups, container) {
+      async function renderGroupList(groups, container) {
         if (groups.length === 0) {
           container.innerHTML = `<p class="error">No hay fechas en esta sección.</p>`;
           return;
@@ -577,36 +593,41 @@
         const allGrouped = groupMatchesByDay(allMatches);
         const allKeys = Object.keys(allGrouped);
 
-        container.innerHTML = groups
-          .map(([dayLabel, dayMatches]) => {
-            const originalIndex = allKeys.indexOf(dayLabel);
-            const phaseName = dayMatches[0]?.phase?.name || "";
-            const journeyLabel = phaseName
-              ? `Fecha ${originalIndex + 1} - ${phaseName}`
-              : `Fecha ${originalIndex + 1}`;
-            return `
-                    <div class="matches-group">
-                        <button type="button" class="matches-group-header">
-                            <div class="accordion-info">
-                                <span class="journey">${journeyLabel}</span>
-                                <span class="date-label">${capitalize(dayLabel)}</span>
-                            </div>
-                            <div class="accordion-right">
-                                <div class="accordion-progress">
-                                    <span class="count">${dayMatches.length} partidos</span>
-                                </div>
-                                <svg class="accordion-arrow" viewBox="0 0 24 24">
-                                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </div>
-                        </button>
-                        <div class="matches-group-content">
-                            ${dayMatches.map((match) => renderMatchCard(match)).join("")}
-                        </div>
-                    </div>
-                `;
-          })
-          .join("");
+        const groupsHtml = await Promise.all(groups.map(async ([dayLabel, dayMatches]) => {
+          const originalIndex = allKeys.indexOf(dayLabel);
+          const phaseName = dayMatches[0]?.phase?.name || "";
+          const journeyLabel = phaseName
+            ? `Fecha ${originalIndex + 1} - ${phaseName}`
+            : `Fecha ${originalIndex + 1}`;
+          
+          const matchesHtml = await Promise.all(
+            dayMatches.map((match) => renderMatchCard(match))
+          );
+          
+          return `
+                  <div class="matches-group">
+                      <button type="button" class="matches-group-header">
+                          <div class="accordion-info">
+                              <span class="journey">${journeyLabel}</span>
+                              <span class="date-label">${capitalize(dayLabel)}</span>
+                          </div>
+                          <div class="accordion-right">
+                              <div class="accordion-progress">
+                                  <span class="count">${dayMatches.length} partidos</span>
+                              </div>
+                              <svg class="accordion-arrow" viewBox="0 0 24 24">
+                                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                              </svg>
+                          </div>
+                      </button>
+                      <div class="matches-group-content">
+                          ${matchesHtml.join("")}
+                      </div>
+                  </div>
+              `;
+        }));
+
+        container.innerHTML = groupsHtml.join("");
 
         setTimeout(() => {
           initAccordions();
@@ -619,7 +640,7 @@
         }, 100);
       }
 
-      function renderMatchesList(matches, container) {
+      async function renderMatchesList(matches, container) {
         if (matches.length === 0) {
           container.innerHTML = `<p class="error">No hay partidos en esta sección.</p>`;
           return;
@@ -628,37 +649,41 @@
         const grouped = groupMatchesByDay(matches);
         const allKeys = Object.keys(grouped);
 
-        container.innerHTML = Object.entries(grouped)
-          .map(([dayLabel, dayMatches]) => {
-            const originalIndex = allKeys.indexOf(dayLabel);
-            const phaseName = dayMatches[0]?.phase?.name || "";
-            const journeyLabel = phaseName
-              ? `Fecha ${originalIndex + 1} - ${phaseName}`
-              : `Fecha ${originalIndex + 1}`;
+        const groupsHtml = await Promise.all(Object.entries(grouped).map(async ([dayLabel, dayMatches]) => {
+          const originalIndex = allKeys.indexOf(dayLabel);
+          const phaseName = dayMatches[0]?.phase?.name || "";
+          const journeyLabel = phaseName
+            ? `Fecha ${originalIndex + 1} - ${phaseName}`
+            : `Fecha ${originalIndex + 1}`;
 
-            return `
-                    <div class="matches-group">
-                        <button type="button" class="matches-group-header">
-                            <div class="accordion-info">
-                                <span class="journey">${journeyLabel}</span>
-                                <span class="date-label">${capitalize(dayLabel)}</span>
-                            </div>
-                            <div class="accordion-right">
-                                <div class="accordion-progress">
-                                    <span class="count">${dayMatches.length} partidos</span>
-                                </div>
-                                <svg class="accordion-arrow" viewBox="0 0 24 24">
-                                    <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                            </div>
-                        </button>
-                        <div class="matches-group-content">
-                            ${dayMatches.map((match) => renderMatchCard(match)).join("")}
-                        </div>
-                    </div>
-                `;
-          })
-          .join("");
+          const matchesHtml = await Promise.all(
+            dayMatches.map((match) => renderMatchCard(match))
+          );
+
+          return `
+                  <div class="matches-group">
+                      <button type="button" class="matches-group-header">
+                          <div class="accordion-info">
+                              <span class="journey">${journeyLabel}</span>
+                              <span class="date-label">${capitalize(dayLabel)}</span>
+                          </div>
+                          <div class="accordion-right">
+                              <div class="accordion-progress">
+                                  <span class="count">${dayMatches.length} partidos</span>
+                              </div>
+                              <svg class="accordion-arrow" viewBox="0 0 24 24">
+                                  <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                              </svg>
+                          </div>
+                      </button>
+                      <div class="matches-group-content">
+                          ${matchesHtml.join("")}
+                      </div>
+                  </div>
+              `;
+        }));
+
+        container.innerHTML = groupsHtml.join("");
 
         setTimeout(() => {
           initScoreControls();
@@ -744,9 +769,9 @@
           const container = document.getElementById("matches-container");
 
           if (currentTab === "active") {
-            renderGroupList(active, container);
+            await renderGroupList(active, container);
           } else {
-            renderGroupList(finished, container);
+            await renderGroupList(finished, container);
           }
 
           showSaveNotification();

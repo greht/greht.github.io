@@ -33,12 +33,14 @@
     font-size: 14px;
 }
 
-.bracket-scroll {
+/* .bracket-scroll {
     overflow-x: auto;
     overflow-y: visible;
     padding-bottom: 20px;
     -webkit-overflow-scrolling: touch;
-}
+    display: flex;
+    justify-content: center;
+} */
 
 .bracket-scroll::-webkit-scrollbar {
     height: 8px;
@@ -56,93 +58,365 @@
 
 .bracket-wrapper {
     display: flex;
+    align-items: stretch;
     gap: 0;
     min-width: max-content;
     position: relative;
     padding: 20px 0;
+    min-height: 800px;
 }
 
+/* ===== BRACKET SIMÉTRICO ===== */
+.bracket-symmetric {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 3px;
+    padding: 30px 20px;
+    min-width: max-content;
+    position: relative;
+    min-height: 800px;
+    margin: 0 auto;
+    flex-shrink: 0;
+}
+
+.bracket-symmetric .bracket-column {
+    min-width: 160px;
+    max-width: 180px;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+}
+
+/* Alturas proporcionales para que los hijos de la siguiente ronda
+   queden centrados verticalmente entre los 2 partidos que los alimentan.
+   Usamos space-around para distribución uniforme, y la altura se iguala
+   entre columnas con align-items: stretch del padre. */
+.bracket-symmetric .bracket-column-matches {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 8px 4px;
+    background: var(--color-bg);
+    border-radius: 0 0 8px 8px;
+    border: 1px solid var(--bracket-card-border);
+    border-top: none;
+    min-height: 800px;
+    justify-content: space-around;
+    gap: 6px;
+}
+
+/* ===== COLUMNA CENTRAL (Final / SF / 3er lugar) ===== */
+.bracket-symmetric .bracket-center-column {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    max-width: 300px;
+    min-height: 800px;
+    padding: 12px;
+    background: var(--color-bg);
+    border: 2px solid var(--color-primary);
+    border-radius: 8px;
+    z-index: 5;
+    margin: 0 5px;
+}
+
+.bracket-symmetric .bracket-center-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.bracket-symmetric .bracket-center-row .bracket-match {
+    flex: 0 0 auto;
+    max-width: 200px;
+    width: 240px;
+}
+
+/* Fila de Semifinal: apilar SF1 y SF2 verticalmente */
+.bracket-symmetric .bracket-row-sf {
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Lado derecho: invertir orden visual con flex-direction: column-reverse
+   pero los matches deben mantener el orden lógico */
+.bracket-symmetric .bracket-column.right .bracket-column-matches {
+    flex-direction: column;
+}
+
+/* Quitamos las reglas antiguas de bracket-final ya que ahora es bracket-center-column */
+.bracket-symmetric .bracket-column.bracket-final {
+    display: none;
+}
+
+/* Reglas legacy removidas (bracket-section-divider, bracket-sf-section, etc.) - ahora se usa bracket-center-row */
+
+/* ===== CONECTORES SVG ===== */
 .bracket-connectors-svg {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
-    z-index: 1;
+    z-index: 3;
 }
 
+.bracket-connectors-svg path {
+    stroke: var(--color-primary, #3b82f6);
+    stroke-width: 2.5px;
+    fill: none;
+    opacity: 0.7;
+    transition: all 0.3s ease;
+}
+
+.bracket-connectors-svg circle {
+    transition: all 0.3s ease;
+}
+
+.bracket-connectors-svg polygon {
+    transition: all 0.3s ease;
+}
+
+.bracket-connectors-svg text {
+    transition: all 0.3s ease;
+}
+
+.bracket-connectors-svg rect {
+    transition: all 0.3s ease;
+}
+
+.bracket-wrapper:hover .bracket-connectors-svg path {
+    opacity: 0.8;
+    stroke-width: 4px;
+}
+
+.bracket-wrapper:hover .bracket-connectors-svg circle,
+.bracket-wrapper:hover .bracket-connectors-svg polygon {
+    opacity: 1;
+}
+
+/* ===== COLUMNAS ===== */
 .bracket-column {
     display: flex;
     flex-direction: column;
-    min-width: 220px;
-    max-width: 260px;
+    min-width: 140px;
+    max-width: 160px;
     position: relative;
-    z-index: 2;
+    z-index: 4;
 }
 
 .bracket-column-header {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 12px 16px;
-    background: var(--color-primary);
-    border-radius: 12px 12px 0 0;
-    margin: 0 8px;
+    padding: 6px 10px;
+    background: var(--color-primary-100);
+    border-radius: 8px 8px 0 0;
+    margin: 0 0px;
+    border: 1px solid var(--bracket-card-border);
+    border-bottom: 0px;
 }
 
 .bracket-phase-name {
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--color-primary);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     text-align: center;
+    line-height: 1.2;
 }
 
 .bracket-phase-count {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.7);
-    margin-top: 4px;
+    font-size: 9px;
+    color: var(--color-primary);
+    margin-top: 1px;
 }
 
 .bracket-column-matches {
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
+    gap: 6px;
     flex: 1;
-    padding: 16px 8px;
+    padding: 6px 4px;
     background: var(--color-bg);
-    border-radius: 0 0 12px 12px;
+    border-radius: 0 0 8px 8px;
     border: 1px solid var(--bracket-card-border);
     border-top: none;
-    min-height: 400px;
 }
 
+/* ===== TARJETAS DE PARTIDO ===== */
 .bracket-match {
     background: var(--bracket-card-bg);
     border: 1px solid var(--bracket-card-border);
-    border-radius: 10px;
-    padding: 12px;
+    border-radius: 6px;
+    padding: 5px 6px;
     transition: all 0.2s ease;
     position: relative;
 }
 
 .bracket-match:hover {
     border-color: var(--color-primary);
-    box-shadow: 0 2px 8px rgba(93, 27, 107, 0.1);
+    box-shadow: 0 2px 6px rgba(93, 27, 107, 0.1);
+}
+
+.bracket-match-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--bracket-card-border);
+    gap: 6px;
+}
+
+.bracket-mini-phase {
+    font-size: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: var(--color-primary);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+/* ===== TARJETAS ESPECIALES: FINAL (DORADO) y 3er LUGAR (BRONCE) ===== */
+.bracket-match-icon {
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.1));
+}
+
+.bracket-match-number-final {
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    color: #b8860b !important;
+    letter-spacing: 0.3px;
+}
+
+.bracket-match-number-third {
+    font-size: 13px !important;
+    font-weight: 900 !important;
+    color: #a0522d !important;
+    letter-spacing: 0.3px;
+}
+
+/* Tarjeta de la FINAL - estilo dorado, más ancha y vistosa */
+.bracket-match-final {
+    max-width: 200px !important;
+    border: 2px solid #d4a843 !important;
+    background: linear-gradient(135deg, #fffdf5 0%, #fff9e6 50%, #fff4d4 100%) !important;
+    box-shadow: 0 4px 16px rgba(212, 168, 67, 0.35), 0 0 0 1px rgba(212, 168, 67, 0.15) inset !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.bracket-match-final::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #d4a843 0%, #f4d03f 50%, #d4a843 100%);
+}
+
+.bracket-match-final .bracket-match-top {
+    border-bottom-color: rgba(212, 168, 67, 0.3) !important;
+}
+
+.bracket-match-final .bracket-team-name {
+    font-weight: 700;
+}
+
+/* Tarjeta del 3er LUGAR - estilo bronce, mismo ancho que Final */
+.bracket-match-third {
+    max-width: 200px !important;
+    width: 200px;
+    border: 2px solid #cd7f32 !important;
+    background: linear-gradient(135deg, #fffaf5 0%, #fff0e6 50%, #ffe6d4 100%) !important;
+    box-shadow: 0 4px 16px rgba(205, 127, 50, 0.25), 0 0 0 1px rgba(205, 127, 50, 0.15) inset !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.bracket-match-third::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #cd7f32 0%, #e0995e 50%, #cd7f32 100%);
+}
+
+.bracket-match-third .bracket-match-top {
+    border-bottom-color: rgba(205, 127, 50, 0.3) !important;
+}
+
+.bracket-match-third .bracket-team-name {
+    font-weight: 700;
+}
+
+.bracket-match-number {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-primary);
+    background: var(--color-primary-100);
+    padding: 1px 5px;
+    border-radius: 6px;
+}
+
+.bracket-match-status {
+    font-size: 8px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+}
+
+.bracket-match-status.scheduled {
+    background: var(--color-bg-secundary);
+    color: var(--color-text-secundary);
+}
+
+.bracket-match-status.live {
+    background: #fef2f2;
+    color: var(--bracket-live-color);
+    animation: pulse-live 1.5s infinite;
+}
+
+.bracket-match-status.finished {
+    background: var(--color-bg-secundary);
+    color: var(--bracket-finished-color);
+}
+
+@keyframes pulse-live {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
 }
 
 .bracket-match-teams {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 1px;
 }
 
 .bracket-team {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 6px;
+    gap: 3px;
+    padding: 2px 3px;
+    border-radius: 3px;
     transition: background 0.2s ease;
 }
 
@@ -169,8 +443,8 @@
 }
 
 .bracket-flag {
-    width: 32px;
-    height: 32px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
@@ -186,7 +460,7 @@
 
 .bracket-team-name {
     flex: 1;
-    font-size: 13px;
+    font-size: 10px;
     font-weight: 500;
     color: var(--color-text);
     white-space: nowrap;
@@ -196,9 +470,9 @@
 }
 
 .bracket-score {
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 700;
-    min-width: 20px;
+    min-width: 14px;
     text-align: center;
     flex-shrink: 0;
 }
@@ -207,86 +481,31 @@
     color: var(--color-text);
 }
 
-.bracket-score.prediction {
-    font-size: 11px;
-    color: var(--bracket-prediction-color);
-    background: var(--bracket-prediction-bg);
-    padding: 2px 6px;
-    border-radius: 4px;
-    min-width: 18px;
-}
-
-.bracket-prediction {
+.bracket-match-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 8px;
-    margin-top: 8px;
-    background: var(--bracket-prediction-bg);
-    border-radius: 6px;
-    border: 1px dashed rgba(93, 27, 107, 0.2);
-}
-
-.bracket-pred-label {
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--bracket-prediction-color);
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.bracket-pred-score {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--bracket-prediction-color);
-}
-
-.bracket-match-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 2px;
+    padding-top: 2px;
     border-top: 1px solid var(--bracket-card-border);
-    gap: 6px;
-    flex-wrap: wrap;
+    gap: 3px;
+    min-height: 14px;
 }
 
-.bracket-match-status {
-    font-size: 10px;
+.bracket-pred-mini {
+    font-size: 9px;
     font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-
-.bracket-match-status.scheduled {
-    background: var(--color-bg-secundary);
-    color: var(--color-text-secundary);
-}
-
-.bracket-match-status.live {
-    background: #fef2f2;
-    color: var(--bracket-live-color);
-    animation: pulse-live 1.5s infinite;
-}
-
-.bracket-match-status.finished {
-    background: var(--color-bg-secundary);
-    color: var(--bracket-finished-color);
-}
-
-@keyframes pulse-live {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    color: var(--bracket-prediction-color);
+    background: var(--bracket-prediction-bg);
+    padding: 1px 4px;
+    border-radius: 3px;
 }
 
 .bracket-points {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 10px;
+    padding: 1px 5px;
+    border-radius: 6px;
     background: var(--color-accent-100);
     color: #166534;
 }
@@ -317,146 +536,55 @@
     opacity: 0.7;
 }
 
-.bracket-skeleton {
+/* ===== UNDER CONSTRUCTION ===== */
+.bracket-construction-message {
     display: flex;
-    gap: 16px;
-    min-width: max-content;
-    padding: 20px 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 20px;
+    min-height: 400px;
 }
 
-.skeleton-col {
-    min-width: 220px;
-    max-width: 260px;
+.construction-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    opacity: 0.6;
 }
 
-.skeleton-col .bracket-column-header {
-    background: var(--color-bg-secundary);
+.bracket-construction-message h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 12px;
 }
 
-.skeleton-col .bracket-column-matches {
-    border-color: var(--color-bg-secundary);
+.bracket-construction-message p {
+    font-size: 16px;
+    color: var(--color-text-secundary);
+    margin-bottom: 8px;
+    max-width: 400px;
 }
 
-.skeleton-match {
-    background: var(--color-bg-secundary) !important;
-    border-color: var(--color-bg-secundary) !important;
-    animation: pulse 1.5s infinite ease-in-out;
+.construction-subtitle {
+    font-size: 14px !important;
+    opacity: 0.7;
 }
 
-.skeleton-flag {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
-
-@keyframes pulse {
-    0% { opacity: 0.4; }
-    50% { opacity: 1; }
-    100% { opacity: 0.4; }
-}
-
+/* ===== RESPONSIVE ===== */
 @media (max-width: 1200px) {
-    .bracket-column {
-        min-width: 200px;
-        max-width: 240px;
+    .bracket-symmetric .bracket-column {
+        min-width: 130px;
+        max-width: 150px;
     }
 
-    .bracket-team-name {
-        font-size: 12px;
+    .bracket-symmetric .bracket-final {
+        min-width: 150px;
     }
 }
 
 @media (max-width: 768px) {
-    .bracket-container {
-        padding: 16px;
-    }
-
-    .bracket-header h1 {
-        font-size: 22px;
-    }
-
-    .bracket-column {
-        min-width: 180px;
-        max-width: 200px;
-    }
-
-    .bracket-column-header {
-        padding: 10px 12px;
-        margin: 0 4px;
-    }
-
-    .bracket-phase-name {
-        font-size: 12px;
-    }
-
-    .bracket-phase-count {
-        font-size: 10px;
-    }
-
-    .bracket-column-matches {
-        padding: 12px 4px;
-        min-height: 300px;
-    }
-
-    .bracket-match {
-        padding: 10px;
-    }
-
-    .bracket-team {
-        gap: 6px;
-        padding: 4px 6px;
-    }
-
-    .bracket-flag {
-        width: 28px;
-        height: 28px;
-    }
-
-    .bracket-team-name {
-        font-size: 11px;
-    }
-
-    .bracket-score {
-        font-size: 13px;
-    }
-
-    .bracket-score.prediction {
-        font-size: 10px;
-    }
-
-    .bracket-prediction {
-        padding: 4px 6px;
-    }
-
-    .bracket-pred-label {
-        font-size: 9px;
-    }
-
-    .bracket-pred-score {
-        font-size: 12px;
-    }
-
-    .bracket-match-footer {
-        margin-top: 6px;
-        padding-top: 6px;
-    }
-
-    .bracket-match-status,
-    .bracket-points {
-        font-size: 9px;
-        padding: 2px 6px;
-    }
-}
-
-@media (max-width: 480px) {
     .bracket-container {
         padding: 12px;
     }
@@ -465,116 +593,120 @@
         font-size: 20px;
     }
 
-    .bracket-header p {
-        font-size: 12px;
+    .bracket-symmetric .bracket-column {
+        min-width: 120px;
+        max-width: 140px;
     }
 
-    .bracket-column {
-        min-width: 160px;
-        max-width: 180px;
-    }
-
-    .bracket-column-header {
-        padding: 8px 10px;
-        margin: 0 2px;
+    .bracket-symmetric .bracket-column-header {
+        padding: 5px 8px;
     }
 
     .bracket-phase-name {
-        font-size: 11px;
-    }
-
-    .bracket-column-matches {
-        padding: 10px 2px;
-        min-height: 250px;
-    }
-
-    .bracket-match {
-        padding: 8px;
-        border-radius: 8px;
-    }
-
-    .bracket-team {
-        gap: 4px;
-        padding: 3px 4px;
-    }
-
-    .bracket-flag {
-        width: 24px;
-        height: 24px;
-    }
-
-    .bracket-team-name {
         font-size: 10px;
     }
 
-    .bracket-score {
-        font-size: 12px;
-        min-width: 16px;
-    }
-
-    .bracket-score.prediction {
-        font-size: 9px;
-        padding: 1px 4px;
-    }
-
-    .bracket-prediction {
-        padding: 3px 4px;
-        margin-top: 6px;
-    }
-
-    .bracket-pred-label {
+    .bracket-phase-count {
         font-size: 8px;
     }
 
-    .bracket-pred-score {
+    .bracket-column-matches {
+        padding: 4px 2px;
+        gap: 4px;
+    }
+
+    .bracket-match {
+        padding: 4px 5px;
+    }
+
+    .bracket-team {
+        gap: 2px;
+        padding: 2px;
+    }
+
+    .bracket-flag {
+        width: 16px;
+        height: 16px;
+    }
+
+    .bracket-team-name {
+        font-size: 9px;
+    }
+
+    .bracket-score {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .bracket-container {
+        padding: 8px;
+    }
+
+    .bracket-header h1 {
+        font-size: 18px;
+    }
+
+    .bracket-header p {
         font-size: 11px;
     }
 
-    .bracket-match-footer {
-        margin-top: 4px;
-        padding-top: 4px;
-        gap: 4px;
+    .bracket-symmetric .bracket-column {
+        min-width: 110px;
+        max-width: 130px;
+    }
+
+    .bracket-column-matches {
+        padding: 3px 2px;
+        gap: 3px;
+    }
+
+    .bracket-match {
+        padding: 3px 4px;
+    }
+
+    .bracket-team {
+        gap: 1px;
+        padding: 1px 2px;
+    }
+
+    .bracket-flag {
+        width: 14px;
+        height: 14px;
+    }
+
+    .bracket-team-name {
+        font-size: 8px;
+    }
+
+    .bracket-score {
+        font-size: 9px;
+        min-width: 12px;
+    }
+
+    .bracket-match-top {
+        margin-bottom: 2px;
+        padding-bottom: 2px;
+    }
+
+    .bracket-match-number {
+        font-size: 8px;
+        padding: 1px 3px;
+    }
+
+    .bracket-match-meta {
+        margin-top: 1px;
+        padding-top: 1px;
+    }
+
+    .bracket-pred-mini {
+        font-size: 7px;
+        padding: 0px 3px;
     }
 
     .bracket-match-status,
     .bracket-points {
-        font-size: 8px;
-        padding: 2px 4px;
+        font-size: 7px;
+        padding: 0px 3px;
     }
-}
-
-/* Under Construction Message */
-.bracket-construction-message {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 80px 20px;
-  min-height: 400px;
-}
-
-.construction-icon {
-  font-size: 64px;
-  margin-bottom: 24px;
-  opacity: 0.6;
-}
-
-.bracket-construction-message h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--color-text);
-  margin-bottom: 12px;
-}
-
-.bracket-construction-message p {
-  font-size: 16px;
-  color: var(--color-text-secundary);
-  margin-bottom: 8px;
-  max-width: 400px;
-}
-
-.construction-subtitle {
-  font-size: 14px !important;
-  opacity: 0.7;
 }

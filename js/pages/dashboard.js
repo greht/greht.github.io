@@ -23,10 +23,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 })
 
 async function getProfileData(userId) {
-    const { data } = await supabase
+    const { data, error } = await supabase
         .from("profiles")
         .select("user_name, points")
         .eq("user_id", userId)
-        .single()
-    return data
+        .limit(1)
+    
+    if (error || !data || data.length === 0) return null
+    return data[0]
 }

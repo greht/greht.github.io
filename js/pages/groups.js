@@ -4,12 +4,12 @@ function resolveFlagUrl(flagUrl) {
     if (!flagUrl) return "/assets/images/flag-mexV2.svg";
     if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
     if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
-      return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
+        return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
     }
     const fixes = { "sp.svg": "es.svg" };
     let path = flagUrl;
     for (const [bad, good] of Object.entries(fixes)) {
-      path = path.replace(bad, good);
+        path = path.replace(bad, good);
     }
     if (path.startsWith("/")) return path;
     return "/" + path;
@@ -20,6 +20,7 @@ export async function renderGroups() {
     if (!container) return;
 
     const matches = await getMatches();
+
     const groupMatches = matches.filter(m => m.group && m.group.id);
 
     const matchesByGroup = groupMatches.reduce((acc, match) => {
@@ -126,6 +127,7 @@ function calculateStandings(matches) {
             teamsStats[awayId].drawn++;
         }
     });
+
 
     return Object.values(teamsStats)
         .map(t => ({

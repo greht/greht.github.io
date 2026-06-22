@@ -16,19 +16,19 @@ export async function getQualifiedTeams(leagueId, stage) {
 }
 
 export async function assignQualifiedTeam(leagueId, stage, slotCode, teamId) {
-    const existing = await supabase
+    const { data: existingData, error: existingError } = await supabase
         .from("qualified_teams")
         .select("id")
         .eq("league_id", leagueId)
         .eq("stage", stage)
         .eq("slot_code", slotCode)
-        .single()
+        .limit(1)
 
-    if (existing.data) {
+    if (existingData && existingData.length > 0) {
         const { error } = await supabase
             .from("qualified_teams")
             .update({ team_id: teamId })
-            .eq("id", existing.data.id)
+            .eq("id", existingData[0].id)
         if (error) throw error
     } else {
         const { error } = await supabase
@@ -92,10 +92,10 @@ export async function resolveSlotToTeamId(leagueId, stage, slotCode) {
         .eq("league_id", leagueId)
         .eq("stage", stage)
         .eq("slot_code", slotCode)
-        .single()
+        .limit(1)
 
-    if (error) throw error
-    return data?.team_id || null
+    if (error || !data || data.length === 0) return null
+    return data[0].team_id
 }
 
 export async function generateKnockoutStage(leagueId, stage, phaseId, matchDate) {

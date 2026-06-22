@@ -30,12 +30,14 @@ export async function renderHeaderStats() {
 }
 
 async function getProfileData(userId) {
-    const { data } = await supabase
+    const { data, error } = await supabase
         .from("profiles")
         .select("points")
         .eq("user_id", userId)
-        .single();
-    return data;
+        .limit(1);
+    
+    if (error || !data || data.length === 0) return null;
+    return data[0];
 }
 
 async function getWeeklyChange(userId, currentRank) {
