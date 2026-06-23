@@ -24,6 +24,10 @@ function copyStaticAssets() {
       copyDir(resolve(__dirname, "vendor"), resolve(__dirname, "dist/vendor"));
       copyDir(resolve(__dirname, "data"), resolve(__dirname, "dist/data"));
       copyFileSync(
+        resolve(__dirname, "assets/images/Fondo-oscuro.svg"),
+        resolve(__dirname, "dist/favicon.svg")
+      );
+      copyFileSync(
         resolve(__dirname, "navbar.html"),
         resolve(__dirname, "dist/navbar.html")
       );
