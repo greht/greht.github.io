@@ -357,49 +357,179 @@ button {
 
 /* Tablet (481px - 768px) */
 @media (min-width: 481px) and (max-width: 768px) {
+  .navbar-center {
+    display: none !important;
+  }
+
   .navbar-secondary {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     padding: 12px 20px;
   }
 
   .hamburger-menu {
     display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    flex-shrink: 0;
     z-index: 1003;
   }
 
-  .navbar-right {
-    z-index: 1003;
+  .hamburger-line {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
   }
 
   .navbar-left {
-    margin-left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .navbar-secondary .logo-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .navbar-secondary .logo1-text {
+    font-size: 16px;
+    white-space: nowrap;
+    color: var(--color-primary);
+  }
+
+  .navbar-secondary .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-shrink: 0;
+    width: 0;
+  }
+
+  .user-dropdown .avatar {
+    width: 36px;
+    height: 36px;
   }
 }
 
 /* Mobile (480px and below) */
 @media (max-width: 480px) {
+  .navbar-center {
+    display: none !important;
+  }
+
   .navbar-secondary {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
     padding: 12px 16px;
   }
 
   .hamburger-menu {
     display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 36px;
+    height: 36px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    flex-shrink: 0;
     z-index: 1003;
   }
 
-  .navbar-left .logo1-text {
+  .hamburger-line {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-menu.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+  }
+
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .navbar-secondary .logo-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .navbar-secondary .logo1-text {
     font-size: 16px;
+    white-space: nowrap;
+    color: var(--color-primary);
   }
 
-  .navbar-right {
-    z-index: 1003;
+  .navbar-secondary .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-shrink: 0;
+    width: 0;
+  }
+
+  .user-dropdown .avatar {
+    width: 32px;
+    height: 32px;
   }
 
   .user-rank {
     display: none;
-  }
-
-  .navbar-left {
-    margin-left: 8px;
   }
 }
 
@@ -1491,37 +1621,7 @@ button {
     color: rgba(255, 255, 255, 0.8);
   }
 
-  /* Navbar Secondary (for other pages) */
-  .navbar-secondary {
-    padding: 12px 16px;
-    height: auto;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .navbar-secondary .navbar-center {
-    display: none;
-  }
-
-  .navbar-secondary .navbar-left {
-    flex: 1;
-  }
-
-  .navbar-left .logo1-text {
-    font-size: 16px;
-  }
-
-  .navbar-right {
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  /* Logo */
-  .logo-icon {
-    width: 28px;
-    height: 28px;
-  }
-
+  /* Logo (home navbar) */
   .logo-text {
     font-size: 18px;
   }
