@@ -1,6 +1,6 @@
 import { supabase } from "/config/supabase.js"
 import { checkAdmin } from "/config/admin.js"
-import { resolveFlagUrl } from "/js/utils/flagUrl.js"
+import { renderFlag } from "/js/utils/flagUrl.js"
 
 // Caché para evitar consultas repetidas a la BD
 const slotLabelCache = new Map()
@@ -335,7 +335,7 @@ async function loadQualifiedTeams() {
                 <div class="slot-code">${formatSlotLabelForQualifiedTeams(slot)}</div>
                 <div class="slot-team">
                     ${team ? `
-                        <img src="${resolveFlagUrl(team.flag_url)}" class="team-flag">
+                        ${renderFlag(team, "team-flag")}
                         <span>${team.name}</span>
                         <button class="btn-remove-slot" data-slot="${slot}">×</button>
                     ` : `

@@ -1,5 +1,5 @@
 import { supabase } from "/config/supabase.js"
-import { resolveFlagUrl } from "/js/utils/flagUrl.js"
+import { renderFlag } from "/js/utils/flagUrl.js"
 
 const track = document.getElementById("carouselTrack")
 const dotsContainer = document.getElementById("carouselDots")
@@ -24,8 +24,8 @@ function formatDate(dateStr) {
 function buildSlide(match) {
     const homeName = match.home_team?.name || "TBD"
     const awayName = match.away_team?.name || "TBD"
-    const homeFlag = resolveFlagUrl(match.home_team?.flag_url)
-    const awayFlag = resolveFlagUrl(match.away_team?.flag_url)
+    const homeFlag = renderFlag(match.home_team, "", homeName)
+    const awayFlag = renderFlag(match.away_team, "", awayName)
     const dateStr = formatDate(match.match_date)
     const phaseName = match.phase?.name || ""
     const groupName = match.group?.name || ""
@@ -44,12 +44,12 @@ function buildSlide(match) {
             </div>
             <div class="card-body">
                 <div class="team">
-                    <img src="${homeFlag}" alt="${homeName}">
+                    ${homeFlag}
                     <span>${homeName}</span>
                 </div>
                 <div class="vs">VS</div>
                 <div class="team">
-                    <img src="${awayFlag}" alt="${awayName}">
+                    ${awayFlag}
                     <span>${awayName}</span>
                 </div>
             </div>

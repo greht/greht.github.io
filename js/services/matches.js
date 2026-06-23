@@ -17,7 +17,7 @@ export async function getMatches() {
 
     const { data: teams, error: teamsError } = await supabase
         .from("teams")
-        .select("id, name, flag_url, group_id")
+        .select("id, name, flag_url, group_id, is_eliminated, is_qualified, fifa_code")
 
     if (teamsError) {
         console.error("Error fetching teams:", teamsError)

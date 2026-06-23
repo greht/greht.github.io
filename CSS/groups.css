@@ -449,8 +449,140 @@ tr.position-4 .position-cell {
     border-top: 1px solid rgba(0, 0, 0, 0.06);
   }
 
-  .team-card-stats b {
-    color: var(--color-text);
-    font-weight: 600;
-  }
+.team-card-stats b {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ============================================
+   Team status: eliminado / clasificado
+   ============================================ */
+.team-name-wrapper,
+.team-card-name-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.team-name-wrapper .team-name,
+.team-card-name-wrapper .team-card-name {
+  max-width: none;
+}
+
+.team-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  width: fit-content;
+  line-height: 1.4;
+}
+
+.team-status-chip.qualified {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.team-status-chip.eliminated {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+/* Equipo eliminado: fila apagada estilo FIFA */
+.group-table tbody tr.team-eliminated td,
+.team-card.team-eliminated {
+  background: #e5e7eb !important;
+  transition: background 0.3s ease, opacity 0.3s ease;
+}
+
+.group-table tbody tr.team-eliminated td,
+.team-card.team-eliminated .team-card-main,
+.team-card.team-eliminated .team-card-stats {
+  color: #6b7280 !important;
+  font-weight: 400 !important;
+  background: transparent !important;
+}
+
+.group-table tbody tr.team-eliminated td:first-child,
+.group-table tbody tr.team-eliminated .position-cell {
+  color: #9ca3af !important;
+  font-weight: 700 !important;
+  position: relative;
+}
+
+.group-table tbody tr.team-eliminated td:first-child::before,
+.group-table tbody tr.team-eliminated .position-cell::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  background: #6b7280;
+  border-radius: 0 3px 3px 0;
+}
+
+.group-table tbody tr.team-eliminated .team-flag,
+.team-card.team-eliminated .team-card-flag {
+  filter: grayscale(1) opacity(0.4);
+}
+
+.group-table tbody tr.team-eliminated .team-name,
+.team-card.team-eliminated .team-card-name {
+  text-decoration: line-through;
+  text-decoration-color: rgba(0, 0, 0, 0.6);
+  text-decoration-thickness: 2px;
+  color: #6b7280 !important;
+}
+
+.group-table tbody tr.team-eliminated .pts-cell {
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+}
+
+.group-table tbody tr.team-eliminated.position-1 td,
+.group-table tbody tr.team-eliminated.position-2 td,
+.group-table tbody tr.team-eliminated.position-3 td,
+.group-table tbody tr.team-eliminated.position-4 td {
+  background: #e5e7eb !important;
+}
+
+.team-card.team-eliminated {
+  background: #e5e7eb !important;
+  border-left: 4px solid #6b7280 !important;
+  opacity: 0.95;
+}
+
+/* Equipo clasificado: leve highlight */
+.group-table tbody tr.team-qualified {
+  position: relative;
+}
+
+.group-table tbody tr.team-qualified::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-accent);
+  border-radius: 0 2px 2px 0;
+}
+
+.team-card.team-qualified {
+  border-left-color: var(--color-accent) !important;
+}
+
+.group-table tbody tr.team-qualified:hover {
+  background-color: var(--color-accent-100);
+}
 }

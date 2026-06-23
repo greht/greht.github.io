@@ -1819,3 +1819,42 @@ button {
 .mobile-menu-nav a[href="/bracket.html"] {
   display: block;
 }
+
+/* ============================================
+   Flag placeholder (equipos sin flag_url en BD)
+   Se muestra el código FIFA en lugar de la bandera
+   ============================================ */
+.flag-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  color: #6b7280;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  width: clamp(24px, 4vw, 30px);
+  height: clamp(16px, 2.67vw, 20px);
+  line-height: 1;
+  font-family: var(--font-primary, "Lexend", sans-serif);
+}
+
+.flag-placeholder.team-card-flag {
+  width: clamp(24px, 6vw, 30px);
+  height: clamp(16px, 4vw, 20px);
+}
+
+.flag-placeholder.team-status-flag {
+  width: 28px;
+  height: 20px;
+}
+
+.flag-placeholder.bracket-flag-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 8px;
+}

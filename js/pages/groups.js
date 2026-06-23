@@ -1,5 +1,5 @@
 import { getMatches } from "/js/services/matches.js";
-import { resolveFlagUrl } from "/js/utils/flagUrl.js";
+import { renderFlag } from "/js/utils/flagUrl.js";
 
 export async function renderGroups() {
     const container = document.getElementById("groupsList");
@@ -114,7 +114,6 @@ function calculateStandings(matches) {
         }
     });
 
-
     return Object.values(teamsStats)
         .map(t => ({
             ...t,
@@ -127,6 +126,57 @@ function calculateStandings(matches) {
             return b.goalsFor - a.goalsFor;
         });
 }
+
+// ============================================
+// Helpers de estado (a prueba de balas)
+// ============================================
+
+function getTeamStatusClass(team) {
+    if (team.is_eliminated) return "team-eliminated";
+    if (team.is_qualified) return "team-qualified";
+    return "";
+}
+
+function getTeamStatusChip(team) {
+    return "";
+}
+
+function getRowStyle(team) {
+    if (team.is_eliminated) return 'background:#e5e7eb !important;';
+    if (team.is_qualified) return 'background:#dcfce7 !important;';
+    return '';
+}
+
+function getCellStyle(team) {
+    if (team.is_eliminated) return 'color:#6b7280 !important;font-weight:400 !important;';
+    return '';
+}
+
+function getNameStyle(team) {
+    if (team.is_eliminated) {
+        return 'color:#6b7280 !important;text-decoration:line-through;text-decoration-thickness:2px;text-decoration-color:rgba(0,0,0,0.6);';
+    }
+    return '';
+}
+
+function getPositionStyle(team) {
+    if (team.is_eliminated) return 'color:#9ca3af !important;';
+    return '';
+}
+
+function getPtsStyle(team) {
+    if (team.is_eliminated) return 'color:#6b7280 !important;';
+    return '';
+}
+
+function getFlagStyle(team) {
+    if (team.is_eliminated) return 'filter:grayscale(1) opacity(0.4);';
+    return '';
+}
+
+// ============================================
+// Render
+// ============================================
 
 function renderGroupCard(group) {
     return `
@@ -151,40 +201,57 @@ function renderGroupCard(group) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${group.teams.map((t, i) => `
-                            <tr class="position-${i + 1}">
-                                <td class="position-cell">${i + 1}</td>
-                                <td>
+                        ${group.teams.map((t, i) => {
+                            const team = t.team;
+                            const statusClass = getTeamStatusClass(team);
+                            const statusChip = getTeamStatusChip(team);
+                            return `
+                            <tr class="position-${i + 1} ${statusClass}" style="${getRowStyle(team)}">
+                                <td class="position-cell" style="${getPositionStyle(team)}">${i + 1}</td>
+                                <td style="${getCellStyle(team)}">
                                     <div class="team-info">
-                                        <img class="team-flag" src="${resolveFlagUrl(t.team.flag_url)}" alt="${t.team.name}">
-                                        <span class="team-name">${t.team.name}</span>
+                                        ${renderFlag(team, "team-flag", team.name, getFlagStyle(team))}
+                                        <div class="team-name-wrapper">
+                                            <span class="team-name" style="${getNameStyle(team)}">${team.name}</span>
+                                            ${statusChip}
+                                        </div>
                                     </div>
                                 </td>
-                                <td class="stats-cell">${t.played}</td>
-                                <td class="stats-cell">${t.won}</td>
-                                <td class="stats-cell">${t.drawn}</td>
-                                <td class="stats-cell">${t.lost}</td>
-                                <td class="stats-cell">${t.goalsFor}</td>
-                                <td class="stats-cell">${t.goalsAgainst}</td>
-                                <td class="stats-cell">${t.goalDiff > 0 ? '+' : ''}${t.goalDiff}</td>
-                                <td class="pts-cell">${t.points}</td>
+                                <td class="stats-cell" style="${getCellStyle(team)}">${t.played}</td>
+                                <td class="stats-cell" style="${getCellStyle(team)}">${t.won}</td>
+                                <td class="stats-cell" style="${getCellStyle(team)}">${t.drawn}</td>
+                                <td class="stats-cell" style="${getCellStyle(team)}">${t.lost}</td>
+                                <td class="stats-cell" style="${getCellStyle(team)}">${t.goalsFor}</td>
+                                <td class="stats-cell" style="${getCellStyle(team)}">${t.goalsAgainst}</td>
+                                <td class="stats-cell" style="${getCellStyle(team)}">${t.goalDiff > 0 ? '+' : ''}${t.goalDiff}</td>
+                                <td class="pts-cell" style="${getPtsStyle(team)}">${t.points}</td>
                             </tr>
-                        `).join("")}
+                        `}).join("")}
                     </tbody>
                 </table>
             </div>
             <div class="group-cards-view">
-                ${group.teams.map((t, i) => `
-                    <div class="team-card position-${i + 1}">
-                        <div class="team-card-main">
+                ${group.teams.map((t, i) => {
+                    const team = t.team;
+                    const statusClass = getTeamStatusClass(team);
+                    const statusChip = getTeamStatusChip(team);
+                    const cardStyle = getRowStyle(team)
+                        ? getRowStyle(team) + 'border-left:4px solid #6b7280 !important;'
+                        : '';
+                    return `
+                    <div class="team-card position-${i + 1} ${statusClass}" style="${cardStyle}">
+                        <div class="team-card-main" style="${getCellStyle(team)}">
                             <div class="team-card-left">
-                                <span class="team-card-position">${i + 1}</span>
-                                <img class="team-card-flag" src="${resolveFlagUrl(t.team.flag_url)}" alt="${t.team.name}">
-                                <span class="team-card-name">${t.team.name}</span>
+                                <span class="team-card-position" style="${getPositionStyle(team)}">${i + 1}</span>
+                                ${renderFlag(team, "team-card-flag", team.name, getFlagStyle(team))}
+                                <div class="team-card-name-wrapper">
+                                    <span class="team-card-name" style="${getNameStyle(team)}">${team.name}</span>
+                                    ${statusChip}
+                                </div>
                             </div>
-                            <span class="team-card-pts">${t.points} <span class="team-card-pts-label">pts</span></span>
+                            <span class="team-card-pts" style="${getPtsStyle(team)}">${t.points} <span class="team-card-pts-label">pts</span></span>
                         </div>
-                        <div class="team-card-stats">
+                        <div class="team-card-stats" style="${getCellStyle(team)}">
                             <span><b>${t.played}</b> PJ</span>
                             <span><b>${t.won}</b> G</span>
                             <span><b>${t.drawn}</b> E</span>
@@ -193,7 +260,7 @@ function renderGroupCard(group) {
                             <span><b>${t.goalDiff > 0 ? '+' : ''}${t.goalDiff}</b> DG</span>
                         </div>
                     </div>
-                `).join("")}
+                `}).join("")}
             </div>
         </div>
     `;

@@ -1,5 +1,5 @@
 import { formatSlotLabel } from "/js/services/admin/tournament-ui.js"
-import { resolveFlagUrl } from "/js/utils/flagUrl.js"
+import { renderFlag } from "/js/utils/flagUrl.js"
 
 const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
 const MONTHS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
@@ -29,12 +29,8 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
 
     const homeTeam = homeTeamData?.name || homeSlotLabel
     const awayTeam = awayTeamData?.name || awaySlotLabel
-    const homeFlag = homeTeamData?.flag_url
-        ? resolveFlagUrl(homeTeamData.flag_url)
-        : "/assets/images/tbd-flag.svg"
-    const awayFlag = awayTeamData?.flag_url
-        ? resolveFlagUrl(awayTeamData.flag_url)
-        : "/assets/images/tbd-flag.svg"
+    const homeFlag = renderFlag(homeTeamData, "bracket-flag-mini", homeTeam)
+    const awayFlag = renderFlag(awayTeamData, "bracket-flag-mini", awayTeam)
     const homeIsTbd = !homeTeamData
     const awayIsTbd = !awayTeamData
 
@@ -110,14 +106,14 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
             <div class="bracket-match-teams">
                 <div class="bracket-team home ${isFinished && match.home_score > match.away_score ? "winner" : ""} ${homeIsTbd ? "tbd" : ""}">
                     <div class="bracket-flag">
-                        <img src="${homeFlag}" alt="${homeTeam}">
+                        ${homeFlag}
                     </div>
                     <span class="bracket-team-name">${homeTeam}</span>
                     <span class="bracket-score official">${homeScore}</span>
                 </div>
                 <div class="bracket-team away ${isFinished && match.away_score > match.home_score ? "winner" : ""} ${awayIsTbd ? "tbd" : ""}">
                     <div class="bracket-flag">
-                        <img src="${awayFlag}" alt="${awayTeam}">
+                        ${awayFlag}
                     </div>
                     <span class="bracket-team-name">${awayTeam}</span>
                     <span class="bracket-score official">${awayScore}</span>

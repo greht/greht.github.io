@@ -82,6 +82,10 @@
             <span class="tab-icon">🔀</span>
             <span class="tab-text">Configurar Bracket</span>
           </button>
+          <button class="main-tab-btn" data-tab="group-status">
+            <span class="tab-icon">🚩</span>
+            <span class="tab-text">Estados de grupos</span>
+          </button>
         </div>
 
         <div id="dates-section" class="tab-content-section active">
@@ -120,6 +124,8 @@
         <div id="tournament-section" class="tab-content-section"></div>
 
         <div id="bracket-config-section" class="tab-content-section"></div>
+
+        <div id="group-status-section" class="tab-content-section"></div>
       </section>
     </main>
 
@@ -132,26 +138,13 @@
       import { loadNavbar, loadFooter } from "/js/components/navbar.js";
       import { loadQualifiedTeamsSection, formatSlotLabel } from "/js/services/admin/tournament-ui.js";
       import { loadBracketConfigSection } from "/js/services/admin/bracket-admin-ui.js";
+      import { loadGroupStatusSection } from "/js/services/admin/group-status-ui.js";
+      import { renderFlag } from "/js/utils/flagUrl.js";
 
       let currentUser = null;
       let allMatches = [];
       let currentStatus = "active";
       const currentPhaseByStatus = { active: null, finished: null };
-
-      function resolveFlagUrl(flagUrl) {
-        if (!flagUrl) return "/assets/images/predictilab-gray.svg";
-        if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
-        if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
-          return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
-        }
-        const fixes = { "sp.svg": "es.svg" };
-        let path = flagUrl;
-        for (const [bad, good] of Object.entries(fixes)) {
-          path = path.replace(bad, good);
-        }
-        if (path.startsWith("/")) return path;
-        return "/" + path;
-      }
 
       async function checkAdminAccess() {
         const { data: { user }, error } = await supabase.auth.getUser();
@@ -347,8 +340,8 @@
 
         const homeTeam = match.home_team?.name || homeSlotLabel;
         const awayTeam = match.away_team?.name || awaySlotLabel;
-        const homeFlag = resolveFlagUrl(match.home_team?.flag_url);
-        const awayFlag = resolveFlagUrl(match.away_team?.flag_url);
+        const homeFlag = renderFlag(match.home_team, "flag", homeTeam);
+        const awayFlag = renderFlag(match.away_team, "flag", awayTeam);
 
         const isKnockout = match.phase && match.phase.display_order >= 2;
         const matchLabel = isKnockout && match.match_number
@@ -389,7 +382,7 @@
                         <div class="mobile-prediction-row">
                             <div class="mobile-team">
                                 <div class="flag-rounded">
-                                    <img class="flag" src="${homeFlag}" alt="flag">
+                                    ${homeFlag}
                                 </div>
                                 <span${homeSlotAttr}>${homeTeam}</span>
                             </div>
@@ -410,7 +403,7 @@
                         <div class="mobile-prediction-row">
                             <div class="mobile-team">
                                 <div class="flag-rounded">
-                                    <img class="flag" src="${awayFlag}" alt="flag">
+                                    ${awayFlag}
                                 </div>
                                 <span${awaySlotAttr}>${awayTeam}</span>
                             </div>
@@ -534,6 +527,7 @@
         const datesSection = document.getElementById("dates-section");
         const tournamentSection = document.getElementById("tournament-section");
         const bracketConfigSection = document.getElementById("bracket-config-section");
+        const groupStatusSection = document.getElementById("group-status-section");
 
         mainTabs.forEach((btn) => {
           btn.addEventListener("click", async () => {
@@ -543,6 +537,7 @@
             datesSection.classList.remove("active");
             tournamentSection.classList.remove("active");
             bracketConfigSection.classList.remove("active");
+            groupStatusSection.classList.remove("active");
 
             if (btn.dataset.tab === "tournament") {
               tournamentSection.classList.add("active");
@@ -550,6 +545,9 @@
             } else if (btn.dataset.tab === "bracket-config") {
               bracketConfigSection.classList.add("active");
               loadBracketConfigSection();
+            } else if (btn.dataset.tab === "group-status") {
+              groupStatusSection.classList.add("active");
+              await loadGroupStatusSection();
             } else {
               datesSection.classList.add("active");
               await initDateSubTabs();

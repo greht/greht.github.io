@@ -6,7 +6,7 @@ import {
     getPreviewConnections
 } from "/js/services/admin/bracket-admin.js"
 import { checkAdmin } from "/config/admin.js"
-import { resolveFlagUrl } from "/js/utils/flagUrl.js"
+import { renderFlag } from "/js/utils/flagUrl.js"
 
 let currentPhaseId = null
 let phases = []
@@ -123,8 +123,8 @@ async function renderBracketConfig() {
 function renderBracketMatchRow(match, index, totalMatches) {
     const homeTeam = match.home_team?.name || "TBD"
     const awayTeam = match.away_team?.name || "TBD"
-    const homeFlag = resolveFlagUrl(match.home_team?.flag_url)
-    const awayFlag = resolveFlagUrl(match.away_team?.flag_url)
+    const homeFlag = renderFlag(match.home_team, "bracket-flag-mini", homeTeam)
+    const awayFlag = renderFlag(match.away_team, "bracket-flag-mini", awayTeam)
     const position = match.bracket_position || index + 1
     const isFirst = index === 0
     const isLast = index === currentMatches.length - 1
@@ -142,12 +142,12 @@ function renderBracketMatchRow(match, index, totalMatches) {
             <div class="bracket-match-info">
                 <div class="bracket-match-teams-preview">
                     <div class="bracket-team-mini">
-                        <img src="${homeFlag}" alt="${homeTeam}" class="bracket-flag-mini">
+                        ${homeFlag}
                         <span>${homeTeam}</span>
                     </div>
                     <span class="bracket-vs">vs</span>
                     <div class="bracket-team-mini">
-                        <img src="${awayFlag}" alt="${awayTeam}" class="bracket-flag-mini">
+                        ${awayFlag}
                         <span>${awayTeam}</span>
                     </div>
                 </div>

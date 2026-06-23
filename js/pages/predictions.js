@@ -10,7 +10,7 @@ import { requireAuth } from "/js/services/auth.js"
 import { getProfile } from "/js/services/profile.js"
 import { getTimezoneOffset, toLocalTime, toRealUtcDate, formatLocalDate } from "/js/utils/timezone.js"
 import { formatSlotLabel } from "/js/services/admin/tournament-ui.js"
-import { resolveFlagUrl } from "/js/utils/flagUrl.js"
+import { renderFlag } from "/js/utils/flagUrl.js"
 
 let matchesGlobal = [];
 let currentPhaseName = "";
@@ -105,8 +105,8 @@ async function renderMatchCard(match) {
   
   const homeTeam = match.home_team?.name || homeSlotLabel;
   const awayTeam = match.away_team?.name || awaySlotLabel;
-  const homeFlag = resolveFlagUrl(match.home_team?.flag_url);
-  const awayFlag = resolveFlagUrl(match.away_team?.flag_url);
+  const homeFlag = renderFlag(match.home_team, "flag", homeTeam);
+  const awayFlag = renderFlag(match.away_team, "flag", awayTeam);
   const teamsNotDefined = !match.home_team || !match.away_team;
   
   const isKnockout = match.phase && match.phase.display_order >= 2;
@@ -233,7 +233,7 @@ async function renderMatchCard(match) {
 
         <div class="mobile-team">
           <div class="flag-rounded">
-            <img class="flag" src="${homeFlag}" alt="flag">
+            ${homeFlag}
           </div>
           <span>${homeTeam}</span>
         </div>
@@ -250,7 +250,7 @@ async function renderMatchCard(match) {
 
         <div class="mobile-team">
           <div class="flag-rounded">
-            <img class="flag" src="${awayFlag}" alt="flag">
+            ${awayFlag}
           </div>
           <span>${awayTeam}</span>
         </div>
@@ -296,7 +296,7 @@ async function renderMatchCard(match) {
         <div class="team">
           <span>${homeTeam}</span>
           <div class="flag-rounded">
-            <img class="flag" src="${homeFlag}" alt="flag">
+            ${homeFlag}
           </div>
         </div>
 
@@ -319,7 +319,7 @@ async function renderMatchCard(match) {
         <div class="team">
           <span>${awayTeam}</span>
           <div class="flag-rounded">
-            <img class="flag" src="${awayFlag}" alt="flag">
+            ${awayFlag}
           </div>
         </div>
 
