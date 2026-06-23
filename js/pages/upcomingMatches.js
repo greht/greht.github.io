@@ -125,7 +125,13 @@ track.addEventListener("touchend", (e) => {
 async function init() {
     const { data: matches, error } = await supabase
         .from("matches")
-        .select("*")
+        .select(`
+            *,
+            home_team:teams!matches_home_team_id_fkey(id, name, flag_url, fifa_code),
+            away_team:teams!matches_away_team_id_fkey(id, name, flag_url, fifa_code),
+            phase:phases!matches_phase_id_fkey(id, name),
+            group:groups!matches_group_id_fkey(id, name)
+        `)
         .eq("status", "scheduled")
         .order("match_date", { ascending: true })
         .limit(5)
@@ -135,39 +141,8 @@ async function init() {
         return
     }
 
-    const teamIds = [...new Set(matches.flatMap(m => [m.home_team_id, m.away_team_id]))]
-    const phaseIds = [...new Set(matches.map(m => m.phase_id).filter(Boolean))]
-    const groupIds = [...new Set(matches.map(m => m.group_id).filter(Boolean))]
-
-    const { data: teams } = await supabase
-        .from("teams")
-        .select("id, name, flag_url, fifa_code")
-        .in("id", teamIds)
-
-    const { data: phases } = await supabase
-        .from("phases")
-        .select("id, name")
-        .in("id", phaseIds)
-
-    const { data: groups } = await supabase
-        .from("groups")
-        .select("id, name")
-        .in("id", groupIds)
-
-    const teamsMap = new Map(teams?.map(t => [t.id, t]) || [])
-    const phasesMap = new Map(phases?.map(p => [p.id, p]) || [])
-    const groupsMap = new Map(groups?.map(g => [g.id, g]) || [])
-
-    const enriched = matches.map(m => ({
-        ...m,
-        home_team: teamsMap.get(m.home_team_id) || null,
-        away_team: teamsMap.get(m.away_team_id) || null,
-        phase: phasesMap.get(m.phase_id) || null,
-        group: groupsMap.get(m.group_id) || null
-    }))
-
     track.innerHTML = ""
-    slides = enriched.map(m => {
+    slides = matches.map(m => {
         const slide = buildSlide(m)
         track.appendChild(slide)
         return slide

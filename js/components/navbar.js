@@ -35,8 +35,10 @@ export async function renderNavbarUser() {
     return;
   }
 
-  const profile = await getProfileData(user.id);
-  const { rank } = await getUserRank(user.id);
+  const [profile, { rank }] = await Promise.all([
+    getProfileData(user.id),
+    getUserRank(user.id),
+  ]);
 
   if (profile?.role === "admin") {
     const adminLink = document.getElementById("adminLink");

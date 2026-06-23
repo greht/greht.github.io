@@ -6,9 +6,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
-      rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"
+      />
+    </noscript>
     <link rel="stylesheet" href="CSS/styles.css" />
     <link rel="stylesheet" href="CSS/footer.css" />
     <link rel="stylesheet" href="CSS/contact.css" />
@@ -72,7 +85,7 @@
                     aria-label="LinkedIn de Greht Fernández"
                     >
                     <svg class="icon-rrss">
-                        <use href="assets/icons/icons.svg#icon-web""></use>
+                        <use href="assets/icons/icons.svg#icon-web"></use>
                     </svg>
                 </a>
 

@@ -130,43 +130,5 @@
 
     <script type="module" src="/js/app/init.js"></script>
     <script type="module" src="/js/pages/dashboard.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        const hamburger = document.getElementById("hamburgerMenu");
-        const mobileMenu = document.getElementById("mobileMenu");
-        const mobileMenuOverlay = document.getElementById("mobileMenuOverlay");
-        const mobileMenuClose = document.getElementById("mobileMenuClose");
-        const mobileMenuLinks = mobileMenu.querySelectorAll("a");
-
-        function openMobileMenu() {
-          hamburger.classList.add("active");
-          mobileMenu.classList.add("active");
-          mobileMenuOverlay.classList.add("active");
-          document.body.style.overflow = "hidden";
-        }
-
-        function closeMobileMenu() {
-          hamburger.classList.remove("active");
-          mobileMenu.classList.remove("active");
-          mobileMenuOverlay.classList.remove("active");
-          document.body.style.overflow = "";
-        }
-
-        hamburger.addEventListener("click", () => {
-          if (mobileMenu.classList.contains("active")) {
-            closeMobileMenu();
-          } else {
-            openMobileMenu();
-          }
-        });
-
-        mobileMenuOverlay.addEventListener("click", closeMobileMenu);
-        mobileMenuClose.addEventListener("click", closeMobileMenu);
-
-        mobileMenuLinks.forEach((link) => {
-          link.addEventListener("click", closeMobileMenu);
-        });
-      });
-    </script>
   </body>
 </html>

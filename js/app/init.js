@@ -1,19 +1,22 @@
 import { loadNavbar, loadFooter } from "/js/components/navbar.js";
+import { initMobileMenu } from "/js/components/mobileMenu.js";
 import { supabase } from "/config/supabase.js";
-import { requireAuth } from "/js/services/auth.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
+  initMobileMenu();
 
-  await loadNavbar();
-  await loadFooter();
+  const [, , { data: { session } }] = await Promise.all([
+    loadNavbar(),
+    loadFooter(),
+    supabase.auth.getSession(),
+  ]);
 
-  supabase.auth.onAuthStateChange((event, session) => {
+  supabase.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_OUT") {
       window.location.href = "/login.html";
     }
   });
 
-  const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
     const protectedPages = ["/dashboard.html", "/profile.html", "/predictions.html"];
     if (protectedPages.includes(window.location.pathname)) {
