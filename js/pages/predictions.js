@@ -496,10 +496,10 @@ async function renderMatches(matches, predictions = [], onRendered) {
 
   if (tabsContainer) {
     tabsContainer.innerHTML = renderTabs(active.length, finished.length);
-    initTabs(active, finished, predictions, phaseTabsContainer, onRendered);
+    await initTabs(active, finished, predictions, phaseTabsContainer, onRendered);
+  } else {
+    await renderGroupList(active, predictions, container, onRendered);
   }
-
-  await renderGroupList(active, predictions, container, onRendered);
 }
 
 function initTabs(active, finished, predictions, phaseTabsContainer, onRendered) {
@@ -507,6 +507,7 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered)
   if (!tabsContainer) return;
 
   let phaseTabsInitialized = false;
+  let currentList = active;
 
   function updatePhaseTabs(groups) {
     const uniquePhases = [...new Set(groups.map(([_, matches]) => matches[0]?.phase?.name).filter(Boolean))];
@@ -532,40 +533,39 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered)
       phaseTabsContainer.innerHTML = "";
       phaseTabsContainer.style.display = "none";
     }
+
+    return uniquePhases.length > 1
+      ? groups.filter(([_, matches]) => matches[0]?.phase?.name === currentPhaseName)
+      : groups;
   }
 
-  updatePhaseTabs(active);
+  function restoreInputValues(predictions) {
+    predictions.forEach(p => {
+      const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
+      if (!card) return
+      const homeInput = card.querySelector('[data-team="home"]')
+      const awayInput = card.querySelector('[data-team="away"]')
+      if (homeInput) homeInput.value = p.home_predictions ?? ""
+      if (awayInput) awayInput.value = p.away_predictions ?? ""
+    });
+  }
+
+  const container = document.querySelector(".card-order");
+  const initialFiltered = updatePhaseTabs(active);
 
   tabsContainer.addEventListener("click", async (e) => {
     const tabBtn = e.target.closest(".tab-btn");
     if (!tabBtn) return;
 
     const tab = tabBtn.dataset.tab;
+    currentList = tab === "active" ? active : finished;
 
     tabsContainer.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     tabBtn.classList.add("active");
 
-    function restoreInputValues(predictions) {
-      predictions.forEach(p => {
-        const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
-        if (!card) return
-        const homeInput = card.querySelector('[data-team="home"]')
-        const awayInput = card.querySelector('[data-team="away"]')
-        if (homeInput) homeInput.value = p.home_predictions ?? ""
-        if (awayInput) awayInput.value = p.away_predictions ?? ""
-      });
-    }
-
-    const container = document.querySelector(".card-order");
-    if (tab === "active") {
-      updatePhaseTabs(active);
-      await renderGroupList(active, predictions, container, onRendered);
-      restoreInputValues(predictions);
-    } else {
-      updatePhaseTabs(finished);
-      await renderGroupList(finished, predictions, container, onRendered);
-      restoreInputValues(predictions);
-    }
+    const filtered = updatePhaseTabs(currentList);
+    await renderGroupList(filtered, predictions, container, onRendered);
+    restoreInputValues(predictions);
   });
 
   function initPhaseTabs(phases, groups, predictions, phaseTabsContainer, findPhaseId, onRendered) {
@@ -591,11 +591,14 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered)
       phaseTabsContainer.querySelectorAll(".phase-tab-btn").forEach(b => b.classList.remove("active"));
       tabBtn.classList.add("active");
 
-      const filtered = groups.filter(([_, matches]) => matches[0]?.phase?.name === selectedPhase);
+      const filtered = currentList.filter(([_, matches]) => matches[0]?.phase?.name === selectedPhase);
       const container = document.querySelector(".card-order");
       await renderGroupList(filtered, predictions, container, onRendered);
+      restoreInputValues(predictions);
     });
   }
+
+  return renderGroupList(initialFiltered, predictions, container, onRendered);
 }
 
 function renderPhaseTabs(phases) {
