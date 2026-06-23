@@ -289,6 +289,7 @@ button {
 .navbar-right {
   display: flex;
   align-items: center;
+  justify-content: right;
   gap: 12px;
   min-width: 180px;
   height: 40px;
@@ -430,6 +431,7 @@ button {
   .navbar-secondary .navbar-right {
     display: flex;
     align-items: center;
+    justify-content: right;
     gap: 8px;
     margin-left: auto;
     flex-shrink: 0;
@@ -516,6 +518,7 @@ button {
   .navbar-secondary .navbar-right {
     display: flex;
     align-items: center;
+    justify-content: right;
     gap: 8px;
     margin-left: auto;
     flex-shrink: 0;
@@ -1794,6 +1797,7 @@ button {
     margin-left: 0;
     display: flex;
     align-items: center;
+    justify-content: right;
     gap: 12px;
     justify-content: flex-end;
     width: auto;
