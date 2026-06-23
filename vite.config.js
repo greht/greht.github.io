@@ -22,6 +22,7 @@ function copyStaticAssets() {
     closeBundle() {
       copyDir(resolve(__dirname, "assets"), resolve(__dirname, "dist/assets"));
       copyDir(resolve(__dirname, "vendor"), resolve(__dirname, "dist/vendor"));
+      copyDir(resolve(__dirname, "data"), resolve(__dirname, "dist/data"));
       copyFileSync(
         resolve(__dirname, "navbar.html"),
         resolve(__dirname, "dist/navbar.html")
