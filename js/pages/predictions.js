@@ -10,21 +10,7 @@ import { requireAuth } from "/js/services/auth.js"
 import { getProfile } from "/js/services/profile.js"
 import { getTimezoneOffset, toLocalTime, toRealUtcDate, formatLocalDate } from "/js/utils/timezone.js"
 import { formatSlotLabel } from "/js/services/admin/tournament-ui.js"
-
-function resolveFlagUrl(flagUrl) {
-  if (!flagUrl) return "/assets/images/predictilab-gray.svg";
-  if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl;
-  if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
-    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl);
-  }
-  const fixes = { "sp.svg": "es.svg" };
-  let path = flagUrl;
-  for (const [bad, good] of Object.entries(fixes)) {
-    path = path.replace(bad, good);
-  }
-  if (path.startsWith("/")) return path;
-  return "/" + path;
-}
+import { resolveFlagUrl } from "/js/utils/flagUrl.js"
 
 let matchesGlobal = [];
 let currentPhaseName = "";

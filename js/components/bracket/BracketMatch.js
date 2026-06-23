@@ -1,4 +1,5 @@
 import { formatSlotLabel } from "/js/services/admin/tournament-ui.js"
+import { resolveFlagUrl } from "/js/utils/flagUrl.js"
 
 const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
 const MONTHS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
@@ -13,21 +14,6 @@ function formatMatchDate(dateStr) {
     const h = String(d.getUTCHours()).padStart(2, "0")
     const m = String(d.getUTCMinutes()).padStart(2, "0")
     return `${day} ${num} ${month} • ${h}:${m}`
-}
-
-export function resolveFlagUrl(flagUrl) {
-    if (!flagUrl) return "/assets/images/predictilab-gray.svg"
-    if (flagUrl.startsWith("http://") || flagUrl.startsWith("https://")) return flagUrl
-    if (flagUrl.startsWith("<svg") || flagUrl.startsWith("<?xml")) {
-        return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(flagUrl)
-    }
-    const fixes = { "sp.svg": "es.svg" }
-    let path = flagUrl
-    for (const [bad, good] of Object.entries(fixes)) {
-        path = path.replace(bad, good)
-    }
-    if (path.startsWith("/")) return path
-    return "/" + path
 }
 
 export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseLabel = "", matchType = "normal") {
