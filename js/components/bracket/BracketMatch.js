@@ -54,6 +54,7 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
 
     let homeScore, awayScore
     let homePredDisplay, awayPredDisplay
+    let penaltiesHtml = ""
 
     if (isFinished || isLive) {
         homeScore = match.home_score ?? "-"
@@ -61,6 +62,12 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
     } else {
         homeScore = "-"
         awayScore = "-"
+    }
+
+    if (isFinished && match.went_to_penalties &&
+        match.home_penalties !== null && match.home_penalties !== undefined &&
+        match.away_penalties !== null && match.away_penalties !== undefined) {
+        penaltiesHtml = `<span class="bracket-score penalties">(${match.home_penalties}-${match.away_penalties} pen.)</span>`
     }
 
     if (hasPrediction) {
@@ -95,6 +102,15 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
 
     const typeClass = matchType !== "normal" ? ` bracket-match-${matchType}` : ''
 
+    const homeIsWinner = isFinished && (
+        (match.went_to_penalties && match.winner_team_id && match.winner_team_id === match.home_team_id) ||
+        (!match.went_to_penalties && match.home_score > match.away_score)
+    )
+    const awayIsWinner = isFinished && (
+        (match.went_to_penalties && match.winner_team_id && match.winner_team_id === match.away_team_id) ||
+        (!match.went_to_penalties && match.away_score > match.home_score)
+    )
+
     return `
         <div class="bracket-match${typeClass}" data-match-id="${match.id}" data-position="${match.bracket_position}" data-phase-order="${phaseOrder}">
             <div class="bracket-match-top">
@@ -104,14 +120,14 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
                 ${dateTimeDisplay ? `<span class="bracket-match-datetime">${dateTimeDisplay}</span>` : ""}
             </div>
             <div class="bracket-match-teams">
-                <div class="bracket-team home ${isFinished && match.home_score > match.away_score ? "winner" : ""} ${homeIsTbd ? "tbd" : ""}">
+                <div class="bracket-team home ${homeIsWinner ? "winner" : ""} ${homeIsTbd ? "tbd" : ""}">
                     <div class="bracket-flag">
                         ${homeFlag}
                     </div>
                     <span class="bracket-team-name">${homeTeam}</span>
                     <span class="bracket-score official">${homeScore}</span>
                 </div>
-                <div class="bracket-team away ${isFinished && match.away_score > match.home_score ? "winner" : ""} ${awayIsTbd ? "tbd" : ""}">
+                <div class="bracket-team away ${awayIsWinner ? "winner" : ""} ${awayIsTbd ? "tbd" : ""}">
                     <div class="bracket-flag">
                         ${awayFlag}
                     </div>
@@ -121,6 +137,7 @@ export async function renderBracketMatch(match, leagueId, phaseOrder = 0, phaseL
             </div>
             <div class="bracket-match-meta">
                 <span class="bracket-match-status ${statusClass}">${statusText}</span>
+                ${penaltiesHtml}
                 ${predictionDisplay}
                 ${pointsBadge}
             </div>

@@ -956,7 +956,7 @@ async function resolveSlotToTeamId(leagueId, stage, slotCode) {
 
     const { data: matchData, error: matchError } = await supabase
         .from("matches")
-        .select("id, home_team_id, away_team_id, home_score, away_score, status")
+        .select("id, home_team_id, away_team_id, home_score, away_score, status, winner_team_id, went_to_penalties")
         .eq("phase_id", phase.id)
         .eq("bracket_position", position)
         .limit(1)
@@ -969,9 +969,18 @@ async function resolveSlotToTeamId(leagueId, stage, slotCode) {
     const isLoser = slotCode.startsWith("L_SF_")
 
     if (isLoser) {
+        if (match.went_to_penalties && match.winner_team_id) {
+            return match.winner_team_id === match.home_team_id
+                ? match.away_team_id
+                : match.home_team_id
+        }
         if (match.home_score < match.away_score) return match.home_team_id
         if (match.away_score < match.home_score) return match.away_team_id
         return null
+    }
+
+    if (match.went_to_penalties && match.winner_team_id) {
+        return match.winner_team_id
     }
 
     if (match.home_score > match.away_score) return match.home_team_id

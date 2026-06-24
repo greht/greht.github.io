@@ -18,6 +18,18 @@ let currentPhaseId = null;
 let savedPredictions = [];
 let userTimezoneOffset = 0;
 
+function formatScoreDisplay(m) {
+  if (m.home_score === null || m.home_score === undefined ||
+      m.away_score === null || m.away_score === undefined) {
+    return null;
+  }
+  if (m.went_to_penalties && m.home_penalties !== null && m.home_penalties !== undefined &&
+      m.away_penalties !== null && m.away_penalties !== undefined) {
+    return `${m.home_score} (${m.home_penalties}) - ${m.away_score} (${m.away_penalties})`;
+  }
+  return `${m.home_score} - ${m.away_score}`;
+}
+
 function renderSkeletons() {
   const container = document.querySelector(".card-order");
   if (!container) return;
@@ -223,7 +235,7 @@ async function renderMatchCard(match) {
           ${(match.status === "live" || match.status === "finished" || diff <= 0) &&
         match.home_score !== null &&
         match.away_score !== null
-        ? `<span class="live-score">${match.home_score} - ${match.away_score}</span>`
+        ? `<span class="live-score">${formatScoreDisplay(match)}</span>`
         : `<span>${countdown}</span>`
       }
         </div>
@@ -285,7 +297,7 @@ async function renderMatchCard(match) {
 
         <div class="match-header-right">
           ${(match.status === "live" || match.status === "finished" || diff <= 0) && match.home_score !== null && match.away_score !== null
-      ? `<span class="live-score">${match.home_score} - ${match.away_score}</span>`
+      ? `<span class="live-score">${formatScoreDisplay(match)}</span>`
       : `<span>${countdown}</span>`
     }
         </div>
@@ -916,7 +928,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const countdownEl = card.querySelector(".match-header-right span");
         if (countdownEl) {
           if (match.status === "live" || match.status === "finished" || diff <= 0) {
-            countdownEl.textContent = `${match.home_score ?? 0} - ${match.away_score ?? 0}`;
+            countdownEl.textContent = formatScoreDisplay(match) || "0 - 0";
             countdownEl.classList.add("live-score");
           } else if (diff > 0) {
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));

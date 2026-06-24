@@ -496,6 +496,15 @@
   color: var(--color-text);
 }
 
+.bracket-score.penalties {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--color-text-secundary, #6b7280);
+  margin-left: 3px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
 .bracket-match-meta {
   display: flex;
   align-items: center;

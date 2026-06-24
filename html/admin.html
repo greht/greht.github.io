@@ -366,8 +366,78 @@
           ? ` data-slot-code="${match.away_slot}"`
           : "";
 
+        const homeScoreVal = getScoreValue(match.home_score);
+        const awayScoreVal = getScoreValue(match.away_score);
+        const isTied =
+          homeScoreVal !== "" &&
+          awayScoreVal !== "" &&
+          parseInt(homeScoreVal) === parseInt(awayScoreVal);
+        const showPenaltySection = isKnockout && isTied;
+        const wentToPenalties = match.went_to_penalties === true;
+        const homeWinner = match.winner_team_id && match.winner_team_id === match.home_team_id;
+        const awayWinner = match.winner_team_id && match.winner_team_id === match.away_team_id;
+
+        const penaltySectionHtml = `
+                    <div class="penalty-section${showPenaltySection || wentToPenalties ? " visible" : ""}" data-match-id="${match.id}" data-show="${showPenaltySection ? "1" : "0"}">
+                        <div class="penalty-divider">
+                            <span>⚽ Penales</span>
+                        </div>
+                        <div class="penalty-row">
+                            <span class="penalty-team">${homeTeam}</span>
+                            <div class="score-control penalty-control">
+                                <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>
+                                <input type="number"
+                                       class="score-input admin-input penalty-input"
+                                       id="pen-home-${match.id}"
+                                       value="${getScoreValue(match.home_penalties)}"
+                                       placeholder="0"
+                                       min="0"
+                                       max="20"
+                                       ${isLocked ? "disabled" : ""}>
+                                <button type="button" class="score-btn plus" ${isLocked ? "disabled" : ""}>+</button>
+                            </div>
+                        </div>
+                        <div class="penalty-row">
+                            <span class="penalty-team">${awayTeam}</span>
+                            <div class="score-control penalty-control">
+                                <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>
+                                <input type="number"
+                                       class="score-input admin-input penalty-input"
+                                       id="pen-away-${match.id}"
+                                       value="${getScoreValue(match.away_penalties)}"
+                                       placeholder="0"
+                                       min="0"
+                                       max="20"
+                                       ${isLocked ? "disabled" : ""}>
+                                <button type="button" class="score-btn plus" ${isLocked ? "disabled" : ""}>+</button>
+                            </div>
+                        </div>
+                        <div class="penalty-winner">
+                            <span class="penalty-winner-label">🏆 Ganador:</span>
+                            <label>
+                                <input type="radio"
+                                       name="winner-${match.id}"
+                                       value="home"
+                                       data-team-id="${match.home_team_id || ""}"
+                                       ${homeWinner ? "checked" : ""}
+                                       ${isLocked ? "disabled" : ""}>
+                                <span>${homeTeam}</span>
+                            </label>
+                            <label>
+                                <input type="radio"
+                                       name="winner-${match.id}"
+                                       value="away"
+                                       data-team-id="${match.away_team_id || ""}"
+                                       ${awayWinner ? "checked" : ""}
+                                       ${isLocked ? "disabled" : ""}>
+                                <span>${awayTeam}</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+
         return `
-                <div class="match-card admin-match-card" data-match-id="${match.id}">
+                <div class="match-card admin-match-card" data-match-id="${match.id}" data-is-knockout="${isKnockout ? "1" : "0"}">
                     <div class="match-header">
                         <div class="match-header-left">
                             <span class="tag">${matchLabel}</span>
@@ -391,7 +461,7 @@
                                 <input type="number"
                                        class="score-input admin-input"
                                        id="home-${match.id}"
-                                       value="${getScoreValue(match.home_score)}"
+                                       value="${homeScoreVal}"
                                        placeholder="0"
                                        min="0"
                                        max="15"
@@ -412,7 +482,7 @@
                                 <input type="number"
                                        class="score-input admin-input"
                                        id="away-${match.id}"
-                                       value="${getScoreValue(match.away_score)}"
+                                       value="${awayScoreVal}"
                                        placeholder="0"
                                        min="0"
                                        max="15"
@@ -421,6 +491,8 @@
                             </div>
                         </div>
                     </div>
+
+                    ${penaltySectionHtml}
 
                     <div class="match-status admin-status">
                         <select class="status-select" id="status-${match.id}" ${isLocked ? "disabled" : ""}>
@@ -434,7 +506,7 @@
                     </div>
                 </div>
             `;
-      }
+    }
 
       function initAccordions() {
         document.querySelectorAll(".matches-group").forEach((group, index) => {
@@ -877,6 +949,7 @@
 
         initAccordions();
         initScoreControls();
+        initPenaltySectionWatchers();
         container.querySelectorAll(".btn-save-match").forEach((btn) => {
           btn.addEventListener("click", () =>
             saveMatchResult(btn.dataset.matchId),
@@ -900,6 +973,11 @@
         const homeInput = document.getElementById(`home-${matchId}`);
         const awayInput = document.getElementById(`away-${matchId}`);
         const statusSelect = document.getElementById(`status-${matchId}`);
+        const penHomeInput = document.getElementById(`pen-home-${matchId}`);
+        const penAwayInput = document.getElementById(`pen-away-${matchId}`);
+        const winnerRadios = document.querySelectorAll(
+          `input[name="winner-${matchId}"]:checked`,
+        );
 
         const homeScore = homeInput.value;
         const awayScore = awayInput.value;
@@ -910,6 +988,86 @@
           return;
         }
 
+        const homeScoreInt = parseInt(homeScore);
+        const awayScoreInt = parseInt(awayScore);
+        const isTied = homeScoreInt === awayScoreInt;
+        const isKnockout =
+          (() => {
+            const m = allMatches.find((x) => x.id === matchId);
+            return m?.phase && m.phase.display_order >= 2;
+          })();
+
+        const updatePayload = {
+          home_score: homeScoreInt,
+          away_score: awayScoreInt,
+          status: status,
+        };
+
+        if (isTied && isKnockout) {
+          if (status === "finished") {
+            if (penHomeInput && penAwayInput) {
+              if (penHomeInput.value === "" || penAwayInput.value === "") {
+                alert("Ingresa el resultado de los penales para ambos equipos");
+                return;
+              }
+            }
+            const penHome = penHomeInput ? parseInt(penHomeInput.value) : null;
+            const penAway = penAwayInput ? parseInt(penAwayInput.value) : null;
+            if (penHome === penAway) {
+              alert("Los penales no pueden quedar empatados");
+              return;
+            }
+            const winnerRadio = winnerRadios[0];
+            if (!winnerRadio) {
+              alert("Selecciona el equipo ganador por penales");
+              return;
+            }
+            const winnerTeamId = winnerRadio.dataset.teamId;
+            if (!winnerTeamId) {
+              alert("No se pudo determinar el ganador (equipo sin asignar)");
+              return;
+            }
+            updatePayload.home_penalties = penHome;
+            updatePayload.away_penalties = penAway;
+            updatePayload.went_to_penalties = true;
+            updatePayload.winner_team_id = winnerTeamId;
+          } else {
+            const penHome =
+              penHomeInput && penHomeInput.value !== ""
+                ? parseInt(penHomeInput.value)
+                : null;
+            const penAway =
+              penAwayInput && penAwayInput.value !== ""
+                ? parseInt(penAwayInput.value)
+                : null;
+            const winnerRadio = winnerRadios[0];
+            if (penHome !== null || penAway !== null) {
+              if (penHome === penAway) {
+                alert("Los penales no pueden quedar empatados");
+                return;
+              }
+              if (!winnerRadio) {
+                alert("Selecciona el equipo ganador por penales");
+                return;
+              }
+              updatePayload.home_penalties = penHome;
+              updatePayload.away_penalties = penAway;
+              updatePayload.went_to_penalties = true;
+              updatePayload.winner_team_id = winnerRadio.dataset.teamId;
+            } else {
+              updatePayload.home_penalties = null;
+              updatePayload.away_penalties = null;
+              updatePayload.went_to_penalties = false;
+              updatePayload.winner_team_id = null;
+            }
+          }
+        } else {
+          updatePayload.home_penalties = null;
+          updatePayload.away_penalties = null;
+          updatePayload.went_to_penalties = false;
+          updatePayload.winner_team_id = null;
+        }
+
         const btn = document.querySelector(
           `.btn-save-match[data-match-id="${matchId}"]`,
         );
@@ -918,11 +1076,7 @@
 
         const { error } = await supabase
           .from("matches")
-          .update({
-            home_score: parseInt(homeScore),
-            away_score: parseInt(awayScore),
-            status: status,
-          })
+          .update(updatePayload)
           .eq("id", matchId);
 
         if (error) {
@@ -932,9 +1086,10 @@
         } else {
           const matchIndex = allMatches.findIndex((m) => m.id === matchId);
           if (matchIndex !== -1) {
-            allMatches[matchIndex].home_score = parseInt(homeScore);
-            allMatches[matchIndex].away_score = parseInt(awayScore);
-            allMatches[matchIndex].status = status;
+            allMatches[matchIndex] = {
+              ...allMatches[matchIndex],
+              ...updatePayload,
+            };
           }
 
           const card = document.querySelector(
@@ -945,11 +1100,17 @@
             const statusSelectEl = card.querySelector(".status-select");
             if (status === "finished") {
               inputs.forEach((i) => (i.disabled = true));
+              card
+                .querySelectorAll(".penalty-winner input[type=radio]")
+                .forEach((r) => (r.disabled = true));
               if (statusSelectEl) statusSelectEl.disabled = true;
               btn.disabled = true;
               btn.textContent = "✓ Finalizado";
             } else {
               inputs.forEach((i) => (i.disabled = false));
+              card
+                .querySelectorAll(".penalty-winner input[type=radio]")
+                .forEach((r) => (r.disabled = false));
               if (statusSelectEl) statusSelectEl.disabled = false;
               btn.disabled = false;
               btn.textContent = "Guardar";
@@ -975,12 +1136,17 @@
           showSaveNotification();
 
           if (status === "finished") {
-            await resolveWinnerToNextPhase(matchId, parseInt(homeScore), parseInt(awayScore));
+            await resolveWinnerToNextPhase(
+              matchId,
+              homeScoreInt,
+              awayScoreInt,
+              updatePayload.winner_team_id || null,
+            );
           }
         }
       }
 
-      async function resolveWinnerToNextPhase(matchId, homeScore, awayScore) {
+      async function resolveWinnerToNextPhase(matchId, homeScore, awayScore, explicitWinnerTeamId = null) {
         const { data: matchData } = await supabase
           .from("matches")
           .select("*, phases(name)")
@@ -997,7 +1163,13 @@
         let winnerTeamId = null;
         let loserTeamId = null;
 
-        if (homeScore > awayScore) {
+        if (explicitWinnerTeamId) {
+          winnerTeamId = explicitWinnerTeamId;
+          loserTeamId =
+            winnerTeamId === matchData.home_team_id
+              ? matchData.away_team_id
+              : matchData.home_team_id;
+        } else if (homeScore > awayScore) {
           winnerTeamId = matchData.home_team_id;
           loserTeamId = matchData.away_team_id;
         } else if (awayScore > homeScore) {
@@ -1090,13 +1262,16 @@
 
           if (!input || !plus || !minus) return;
 
+          const isPenalty = control.classList.contains("penalty-control");
+          const max = isPenalty ? 20 : 15;
+
           plus.addEventListener("click", () => {
             const isEmpty = !input.value || input.value === "";
             if (isEmpty) {
               input.value = 0;
             } else {
               let value = parseInt(input.value) || 0;
-              if (value < 15) {
+              if (value < max) {
                 input.value = value + 1;
               }
             }
@@ -1111,8 +1286,53 @@
 
           input.addEventListener("input", () => {
             input.value = input.value.replace(/[^0-9]/g, '');
-            if (parseInt(input.value) > 15) input.value = 15;
+            if (parseInt(input.value) > max) input.value = max;
           });
+        });
+      }
+
+      function updatePenaltySectionVisibility(matchId) {
+        const card = document.querySelector(
+          `.match-card[data-match-id="${matchId}"]`,
+        );
+        if (!card) return;
+        const isKnockout = card.dataset.isKnockout === "1";
+        if (!isKnockout) return;
+        const homeVal = document.getElementById(`home-${matchId}`)?.value;
+        const awayVal = document.getElementById(`away-${matchId}`)?.value;
+        const isTied =
+          homeVal !== "" &&
+          awayVal !== "" &&
+          parseInt(homeVal) === parseInt(awayVal);
+        const section = card.querySelector(".penalty-section");
+        if (section) {
+          section.classList.toggle("visible", isTied);
+          section.dataset.show = isTied ? "1" : "0";
+        }
+      }
+
+      function initPenaltySectionWatchers() {
+        document.querySelectorAll(".match-card").forEach((card) => {
+          const matchId = card.dataset.matchId;
+          if (!matchId) return;
+          const homeInput = document.getElementById(`home-${matchId}`);
+          const awayInput = document.getElementById(`away-${matchId}`);
+          if (homeInput) {
+            homeInput.addEventListener("input", () =>
+              updatePenaltySectionVisibility(matchId),
+            );
+            homeInput.addEventListener("change", () =>
+              updatePenaltySectionVisibility(matchId),
+            );
+          }
+          if (awayInput) {
+            awayInput.addEventListener("input", () =>
+              updatePenaltySectionVisibility(matchId),
+            );
+            awayInput.addEventListener("change", () =>
+              updatePenaltySectionVisibility(matchId),
+            );
+          }
         });
       }
 

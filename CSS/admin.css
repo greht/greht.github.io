@@ -97,6 +97,100 @@
   cursor: not-allowed;
 }
 
+.penalty-section {
+  display: none;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(93, 27, 107, 0.04);
+  border: 1px dashed var(--color-primary);
+  border-radius: 8px;
+}
+
+.penalty-section.visible {
+  display: block;
+}
+
+.penalty-divider {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.penalty-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.penalty-team {
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.penalty-control {
+  gap: 4px;
+}
+
+.penalty-input {
+  width: 50px;
+  height: 36px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.penalty-winner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-bg-secundary);
+  border-radius: 6px;
+}
+
+.penalty-winner-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-right: 4px;
+}
+
+.penalty-winner label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.penalty-winner label:hover {
+  background: var(--color-bg-secundary);
+}
+
+.penalty-winner input[type="radio"] {
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.penalty-winner input[type="radio"]:disabled {
+  cursor: not-allowed;
+}
+
 .admin-score {
   gap: 20px;
 }
