@@ -1326,7 +1326,7 @@
   padding: 12px;
   display: flex;
   flex-direction: column;
-  max-height: 240px;
+  max-height: 400px;
   gap: 8px;
   overflow-y: auto;
 }

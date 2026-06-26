@@ -18,6 +18,41 @@ let currentPhaseId = null;
 let savedPredictions = [];
 let userTimezoneOffset = 0;
 
+const STORAGE_KEY_PHASE = "predictions_current_phase";
+const STORAGE_KEY_TAB = "predictions_current_tab";
+
+function getSavedPhase() {
+  try {
+    return localStorage.getItem(STORAGE_KEY_PHASE) || null;
+  } catch {
+    return null;
+  }
+}
+
+function savePhase(phaseName) {
+  try {
+    if (phaseName) {
+      localStorage.setItem(STORAGE_KEY_PHASE, phaseName);
+    }
+  } catch {}
+}
+
+function getSavedTab() {
+  try {
+    return localStorage.getItem(STORAGE_KEY_TAB) || "active";
+  } catch {
+    return "active";
+  }
+}
+
+function saveTab(tabName) {
+  try {
+    if (tabName) {
+      localStorage.setItem(STORAGE_KEY_TAB, tabName);
+    }
+  } catch {}
+}
+
 function formatScoreDisplay(m) {
   if (m.home_score === null || m.home_score === undefined ||
       m.away_score === null || m.away_score === undefined) {
@@ -495,7 +530,7 @@ function renderTabs(activeCount, finishedCount) {
   `;
 }
 
-async function renderMatches(matches, predictions = [], onRendered) {
+async function renderMatches(matches, predictions = [], onRendered, initialPhaseName = null, initialTab = "active") {
   const container = document.querySelector(".card-order");
   const tabsContainer = document.getElementById("predictionsTabsContainer");
   const phaseTabsContainer = document.getElementById("phaseTabsContainer");
@@ -508,20 +543,20 @@ async function renderMatches(matches, predictions = [], onRendered) {
 
   if (tabsContainer) {
     tabsContainer.innerHTML = renderTabs(active.length, finished.length);
-    await initTabs(active, finished, predictions, phaseTabsContainer, onRendered);
+    await initTabs(active, finished, predictions, phaseTabsContainer, onRendered, initialPhaseName, initialTab);
   } else {
     await renderGroupList(active, predictions, container, onRendered);
   }
 }
 
-function initTabs(active, finished, predictions, phaseTabsContainer, onRendered) {
+function initTabs(active, finished, predictions, phaseTabsContainer, onRendered, initialPhaseName = null, initialTab = "active") {
   const tabsContainer = document.getElementById("predictionsTabsContainer");
   if (!tabsContainer) return;
 
   let phaseTabsInitialized = false;
-  let currentList = active;
+  let currentList = initialTab === "finished" ? finished : active;
 
-  function updatePhaseTabs(groups) {
+  function updatePhaseTabs(groups, initialPhaseName = null) {
     const uniquePhases = [...new Set(groups.map(([_, matches]) => matches[0]?.phase?.name).filter(Boolean))];
 
     const findPhaseId = (phaseName) => {
@@ -532,14 +567,18 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered)
       return null
     }
 
-    if (uniquePhases.length > 0) {
-      currentPhaseName = uniquePhases[0];
-      currentPhaseId = findPhaseId(uniquePhases[0]);
+    const initialPhase = initialPhaseName && uniquePhases.includes(initialPhaseName)
+      ? initialPhaseName
+      : uniquePhases[0];
+
+    if (initialPhase) {
+      currentPhaseName = initialPhase;
+      currentPhaseId = findPhaseId(initialPhase);
     }
 
     if (phaseTabsContainer && uniquePhases.length > 1) {
-      phaseTabsContainer.innerHTML = renderPhaseTabs(uniquePhases);
-      initPhaseTabs(uniquePhases, groups, predictions, phaseTabsContainer, findPhaseId, onRendered);
+      phaseTabsContainer.innerHTML = renderPhaseTabs(uniquePhases, currentPhaseName);
+      initPhaseTabs(uniquePhases, groups, predictions, phaseTabsContainer, findPhaseId, onRendered, currentPhaseName);
       phaseTabsContainer.style.display = "block";
     } else if (phaseTabsContainer) {
       phaseTabsContainer.innerHTML = "";
@@ -563,7 +602,13 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered)
   }
 
   const container = document.querySelector(".card-order");
-  const initialFiltered = updatePhaseTabs(active);
+  const initialFiltered = updatePhaseTabs(currentList, initialPhaseName);
+
+  if (initialTab === "finished") {
+    tabsContainer.querySelectorAll(".tab-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.tab === "finished");
+    });
+  }
 
   tabsContainer.addEventListener("click", async (e) => {
     const tabBtn = e.target.closest(".tab-btn");
@@ -571,16 +616,17 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered)
 
     const tab = tabBtn.dataset.tab;
     currentList = tab === "active" ? active : finished;
+    saveTab(tab);
 
     tabsContainer.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
     tabBtn.classList.add("active");
 
-    const filtered = updatePhaseTabs(currentList);
+    const filtered = updatePhaseTabs(currentList, currentPhaseName);
     await renderGroupList(filtered, predictions, container, onRendered);
     restoreInputValues(predictions);
   });
 
-  function initPhaseTabs(phases, groups, predictions, phaseTabsContainer, findPhaseId, onRendered) {
+  function initPhaseTabs(phases, groups, predictions, phaseTabsContainer, findPhaseId, onRendered, initialPhase = null) {
     if (!phaseTabsContainer || phaseTabsInitialized) return;
     phaseTabsInitialized = true;
 
@@ -589,8 +635,9 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered)
       currentPhaseId = findPhaseId(phaseName)
     }
 
-    if (phases.length > 0) {
-      updateCurrentPhase(phases[0])
+    const startPhase = initialPhase && phases.includes(initialPhase) ? initialPhase : phases[0];
+    if (startPhase) {
+      updateCurrentPhase(startPhase)
     }
 
     phaseTabsContainer.addEventListener("click", async (e) => {
@@ -599,6 +646,7 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered)
 
       const selectedPhase = tabBtn.dataset.phase;
       updateCurrentPhase(selectedPhase)
+      savePhase(selectedPhase);
 
       phaseTabsContainer.querySelectorAll(".phase-tab-btn").forEach(b => b.classList.remove("active"));
       tabBtn.classList.add("active");
@@ -613,14 +661,17 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered)
   return renderGroupList(initialFiltered, predictions, container, onRendered);
 }
 
-function renderPhaseTabs(phases) {
+function renderPhaseTabs(phases, activePhase = null) {
   return `
     <div class="phase-tabs">
-      ${phases.map((phase, i) => `
-        <button class="phase-tab-btn ${i === 0 ? 'active' : ''}" data-phase="${phase}">
+      ${phases.map((phase, i) => {
+        const isActive = activePhase ? phase === activePhase : i === 0;
+        return `
+        <button class="phase-tab-btn ${isActive ? 'active' : ''}" data-phase="${phase}">
           ${phase}
         </button>
-      `).join("")}
+      `;
+      }).join("")}
     </div>
   `;
 }
@@ -813,7 +864,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       attachInputListeners()
     }
 
-    await renderMatches(matches, savedPredictions, reattachMatchListeners);
+    const savedPhase = getSavedPhase();
+    const savedTab = getSavedTab();
+    await renderMatches(matches, savedPredictions, reattachMatchListeners, savedPhase, savedTab);
 
     if (savedPredictions && savedPredictions.length > 0) {
       savedPredictions.forEach(p => {
@@ -890,7 +943,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
               }
             } else {
-              await renderMatches(matches, savedPredictions, reattachMatchListeners);
+              await renderMatches(matches, savedPredictions, reattachMatchListeners, currentPhaseName, getSavedTab());
               savedPredictions.forEach(p => {
                 const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
                 if (!card) return
@@ -964,7 +1017,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
 
       if (needsRerender) {
-        await renderMatches(matches, savedPredictions, reattachMatchListeners);
+        await renderMatches(matches, savedPredictions, reattachMatchListeners, currentPhaseName, getSavedTab());
         savedPredictions.forEach(p => {
           const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
           if (!card) return

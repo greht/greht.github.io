@@ -83,9 +83,11 @@ async function renderBracketConfig() {
         return
     }
 
-    const currentPhase = phases.find(p => p.id === currentPhaseId)
-    const currentPhaseIndex = phases.findIndex(p => p.id === currentPhaseId)
+    const currentPhase = phases.find(p => String(p.id) === String(currentPhaseId))
+    const currentPhaseIndex = phases.findIndex(p => String(p.id) === String(currentPhaseId))
     const nextPhase = phases[currentPhaseIndex + 1]
+
+    if (!currentPhase) return
 
     let previewHtml = ""
     if (nextPhase) {
@@ -337,7 +339,7 @@ async function performSwap(matchId, currentPosition, newPosition) {
 }
 
 async function refreshPreview() {
-    const currentPhaseIndex = phases.findIndex(p => p.id === currentPhaseId)
+    const currentPhaseIndex = phases.findIndex(p => String(p.id) === String(currentPhaseId))
     const nextPhase = phases[currentPhaseIndex + 1]
     if (!nextPhase) return
 
@@ -345,7 +347,8 @@ async function refreshPreview() {
     if (!previewContainer) return
 
     const previewData = await getPreviewConnections(currentPhaseId, nextPhase.id)
-    const currentPhase = phases.find(p => p.id === currentPhaseId)
+    const currentPhase = phases.find(p => String(p.id) === String(currentPhaseId))
+    if (!currentPhase) return
     const newPreviewHtml = renderConnectionPreview(previewData, currentPhase.name, nextPhase.name)
 
     previewContainer.outerHTML = newPreviewHtml
