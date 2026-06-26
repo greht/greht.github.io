@@ -140,6 +140,7 @@
       import { loadBracketConfigSection } from "/js/services/admin/bracket-admin-ui.js";
       import { loadGroupStatusSection } from "/js/services/admin/group-status-ui.js";
       import { renderFlag } from "/js/utils/flagUrl.js";
+      import { preloadSlotLabels, applySlotLabels, resolveSlotLabel } from "/js/services/admin/slot-labels.js";
 
       let currentUser = null;
       let allMatches = [];
@@ -324,14 +325,6 @@
       function isMatchLocked(match) {
         if (match.status === "finished") return true;
         return false;
-      }
-
-      function resolveSlotLabel(slotCode, slotLabelMap) {
-        if (!slotCode) return null;
-        if (slotLabelMap && slotLabelMap.has(slotCode)) {
-          return slotLabelMap.get(slotCode).label;
-        }
-        return slotCode;
       }
 
       function renderMatchCard(match, slotLabelMap) {
@@ -676,183 +669,6 @@
         return map;
       }
 
-      const SLOT_PREFIX_TO_PHASE = {
-        R32_: "Eliminatoria de 32",
-        R16_: "Octavos de final",
-        QF_: "Cuartos de final",
-        SF_: "Semifinal",
-        L_SF_: "Semifinal",
-      };
-
-      const PHASE_TO_MATCH_NUMBER_RANGE = {
-        "Eliminatoria de 32": { start: 73, count: 16 },
-        "Octavos de final": { start: 89, count: 8 },
-        "Cuartos de final": { start: 97, count: 4 },
-        Semifinal: { start: 101, count: 2 },
-        "Eliminatoria por el 3er lugar": { start: 103, count: 1 },
-        Final: { start: 104, count: 1 },
-      };
-
-      const slotLabelCache = new Map();
-
-      function getPhaseNameForSlot(slotCode) {
-        for (const [prefix, phaseName] of Object.entries(SLOT_PREFIX_TO_PHASE)) {
-          if (slotCode.startsWith(prefix)) return phaseName;
-        }
-        return null;
-      }
-
-      function computeFallbackLabel(slotCode, phaseName) {
-        const range = PHASE_TO_MATCH_NUMBER_RANGE[phaseName];
-        if (!range) return slotCode;
-        const position = parseInt(slotCode.split("_").pop());
-        if (!position || position < 1 || position > range.count) return slotCode;
-        const expectedMatchNumber = range.start + position - 1;
-        const isLoser = slotCode.startsWith("L_SF_");
-        return isLoser
-          ? `Perdedor P${expectedMatchNumber}`
-          : `Ganador P${expectedMatchNumber}`;
-      }
-
-      async function preResolveSlotLabels(phaseGroups) {
-        const slotCodeSet = new Set();
-        const leagueIdSet = new Set();
-
-        for (const { days } of phaseGroups) {
-          for (const [, dayMatches] of days) {
-            for (const m of dayMatches) {
-              if (m.home_slot) slotCodeSet.add(m.home_slot);
-              if (m.away_slot) slotCodeSet.add(m.away_slot);
-              if (m.league_id) leagueIdSet.add(m.league_id);
-            }
-          }
-        }
-
-        if (leagueIdSet.size === 0) {
-          leagueIdSet.add("1ebd76d7-5839-4c80-a41a-554de1bb22f5");
-        }
-
-        const uncachedSlots = [...slotCodeSet].filter(
-          (code) => !slotLabelCache.has(code),
-        );
-
-        if (uncachedSlots.length === 0) {
-          return new Map(slotLabelCache);
-        }
-
-        const phaseNameSet = new Set();
-        for (const code of uncachedSlots) {
-          const name = getPhaseNameForSlot(code);
-          if (name) phaseNameSet.add(name);
-        }
-
-        if (phaseNameSet.size === 0) {
-          for (const code of uncachedSlots) {
-            slotLabelCache.set(code, { label: code, status: "fallback" });
-          }
-          return new Map(slotLabelCache);
-        }
-
-        const { data: phases } = await supabase
-          .from("phases")
-          .select("id, name")
-          .in("name", [...phaseNameSet]);
-
-        const phasesByName = new Map();
-        for (const p of phases || []) phasesByName.set(p.name, p);
-
-        const phaseToPositions = new Map();
-        for (const code of uncachedSlots) {
-          const phaseName = getPhaseNameForSlot(code);
-          if (!phaseName) continue;
-          const phase = phasesByName.get(phaseName);
-          if (!phase) continue;
-          const position = parseInt(code.split("_").pop());
-          if (!position) continue;
-          if (!phaseToPositions.has(phase.id)) {
-            phaseToPositions.set(phase.id, new Set());
-          }
-          phaseToPositions.get(phase.id).add(position);
-        }
-
-        const phaseIds = [...phaseToPositions.keys()];
-        const allPositions = [
-          ...new Set(
-            [...phaseToPositions.values()].flatMap((s) => [...s]),
-          ),
-        ];
-
-        let matchData = [];
-        if (phaseIds.length > 0 && allPositions.length > 0) {
-          const { data } = await supabase
-            .from("matches")
-            .select("phase_id, bracket_position, match_number, league_id")
-            .in("phase_id", phaseIds)
-            .in("bracket_position", allPositions)
-            .in("league_id", [...leagueIdSet]);
-          matchData = data || [];
-        }
-
-        const matchLookup = new Map();
-        for (const m of matchData) {
-          const key = `${m.phase_id}_${m.bracket_position}_${m.league_id}`;
-          matchLookup.set(key, m.match_number);
-        }
-
-        const leagueIdList = [...leagueIdSet];
-
-        for (const code of uncachedSlots) {
-          const phaseName = getPhaseNameForSlot(code);
-          if (!phaseName) {
-            slotLabelCache.set(code, { label: code, status: "fallback" });
-            continue;
-          }
-          const phase = phasesByName.get(phaseName);
-          if (!phase) {
-            slotLabelCache.set(code, {
-              label: computeFallbackLabel(code, phaseName),
-              status: "fallback",
-            });
-            continue;
-          }
-          const position = parseInt(code.split("_").pop());
-          let matchNumber = null;
-          for (const leagueId of leagueIdList) {
-            const num = matchLookup.get(`${phase.id}_${position}_${leagueId}`);
-            if (num) {
-              matchNumber = num;
-              break;
-            }
-          }
-          if (matchNumber) {
-            const isLoser = code.startsWith("L_SF_");
-            const label = isLoser
-              ? `Perdedor P${matchNumber}`
-              : `Ganador P${matchNumber}`;
-            slotLabelCache.set(code, { label, status: "resolved" });
-          } else {
-            slotLabelCache.set(code, {
-              label: computeFallbackLabel(code, phaseName),
-              status: "fallback",
-            });
-          }
-        }
-
-        return new Map(slotLabelCache);
-      }
-
-      function applySlotLabels(container) {
-        const slotElements = container.querySelectorAll("[data-slot-code]");
-        if (slotElements.length === 0) return;
-        for (const el of slotElements) {
-          const code = el.dataset.slotCode;
-          const entry = slotLabelCache.get(code);
-          if (entry && entry.label) {
-            el.textContent = entry.label;
-          }
-        }
-      }
-
       function buildDayAccordionsHtml(days) {
         const dayIndexMap = buildGlobalDayIndexMap(allMatches);
         return days
@@ -861,7 +677,7 @@
             const journeyLabel = `Fecha ${globalIndex}`;
 
             const matchesHtml = dayMatches
-              .map((match) => renderMatchCard(match, slotLabelCache))
+              .map((match) => renderMatchCard(match))
               .join("");
 
             return `
@@ -926,6 +742,18 @@
           })
           .join("");
 
+        const slotCodes = [
+          ...new Set(
+            phaseGroups
+              .flatMap(({ days }) =>
+                days.flatMap(([, dayMatches]) =>
+                  dayMatches.flatMap((m) => [m.home_slot, m.away_slot]),
+                ),
+              )
+              .filter(Boolean),
+          ),
+        ];
+
         container.innerHTML = `
             <div class="phase-tabs">${tabsHtml}</div>
             <div class="phase-content">${sectionsHtml}</div>
@@ -956,7 +784,7 @@
           );
         });
 
-        preResolveSlotLabels(phaseGroups)
+        preloadSlotLabels(slotCodes, "1ebd76d7-5839-4c80-a41a-554de1bb22f5")
           .then(() => applySlotLabels(container))
           .catch((err) =>
             console.warn("No se pudieron pre-resolver los slots:", err),

@@ -7,10 +7,14 @@ import {
 } from "/js/services/admin/bracket-admin.js"
 import { checkAdmin } from "/config/admin.js"
 import { renderFlag } from "/js/utils/flagUrl.js"
+import { preloadSlotLabels, resolveSlotLabel } from "/js/services/admin/slot-labels.js"
+
+const DEFAULT_LEAGUE_ID = "1ebd76d7-5839-4c80-a41a-554de1bb22f5"
 
 let currentPhaseId = null
 let phases = []
 let currentMatches = []
+let currentSlotLabelMap = new Map()
 
 export async function loadBracketConfigSection() {
     const user = await checkAdmin()
@@ -89,6 +93,15 @@ async function renderBracketConfig() {
 
     if (!currentPhase) return
 
+    const slotCodes = [
+        ...new Set(
+            currentMatches
+                .flatMap(m => [m.home_slot, m.away_slot])
+                .filter(Boolean)
+        )
+    ]
+    currentSlotLabelMap = await preloadSlotLabels(slotCodes, DEFAULT_LEAGUE_ID)
+
     let previewHtml = ""
     if (nextPhase) {
         const previewData = await getPreviewConnections(currentPhaseId, nextPhase.id)
@@ -103,7 +116,7 @@ async function renderBracketConfig() {
                     <span class="bracket-match-count">${currentMatches.length} partidos</span>
                 </div>
                 <div class="bracket-match-list">
-                    ${currentMatches.map((match, index) => renderBracketMatchRow(match, index, currentMatches.length)).join("")}
+                    ${currentMatches.map((match, index) => renderBracketMatchRow(match, index, currentMatches.length, currentSlotLabelMap)).join("")}
                 </div>
             </div>
 
@@ -122,47 +135,62 @@ async function renderBracketConfig() {
     initReorderHandlers()
 }
 
-function renderBracketMatchRow(match, index, totalMatches) {
-    const homeTeam = match.home_team?.name || "TBD"
-    const awayTeam = match.away_team?.name || "TBD"
-    const homeFlag = renderFlag(match.home_team, "bracket-flag-mini", homeTeam)
-    const awayFlag = renderFlag(match.away_team, "bracket-flag-mini", awayTeam)
-    const position = match.bracket_position || index + 1
+function getTeamDisplay(match, slotKey, slotLabelMap) {
+    const team = slotKey === "home" ? match.home_team : match.away_team
+    const slotCode = slotKey === "home" ? match.home_slot : match.away_slot
+    if (team?.name) return team.name
+    const label = resolveSlotLabel(slotCode, slotLabelMap)
+    if (label) return `TBD (${label})`
+    return "TBD"
+}
+
+function getSlotInfoText(match, slotLabelMap) {
+    const homeLabel = resolveSlotLabel(match.home_slot, slotLabelMap) || match.home_slot
+    const awayLabel = resolveSlotLabel(match.away_slot, slotLabelMap) || match.away_slot
+    return `${homeLabel} vs ${awayLabel}`
+}
+
+function renderBracketMatchRow(match, index, totalMatches, slotLabelMap) {
+    const homeTeamName = getTeamDisplay(match, "home", slotLabelMap)
+    const awayTeamName = getTeamDisplay(match, "away", slotLabelMap)
+    const homeFlag = renderFlag(match.home_team, "bracket-flag-mini", homeTeamName)
+    const awayFlag = renderFlag(match.away_team, "bracket-flag-mini", awayTeamName)
+    const localPosition = index + 1
     const isFirst = index === 0
     const isLast = index === currentMatches.length - 1
 
     const halfMark = totalMatches / 2
-    const isLeftSide = position <= halfMark
+    const isLeftSide = localPosition <= halfMark
     const sideLabel = isLeftSide ? "IZQ" : "DER"
     const sideClass = isLeftSide ? "left" : "right"
 
     return `
-        <div class="bracket-match-row" data-match-id="${match.id}" data-position="${position}" data-side="${isLeftSide ? 'left' : 'right'}">
-            <div class="bracket-position-badge">${position}</div>
+        <div class="bracket-match-row" data-match-id="${match.id}" data-position="${localPosition}" data-side="${isLeftSide ? 'left' : 'right'}">
+            <div class="bracket-position-badge">${localPosition}</div>
             <div class="bracket-side-badge ${sideClass}">${sideLabel}</div>
 
             <div class="bracket-match-info">
                 <div class="bracket-match-teams-preview">
                     <div class="bracket-team-mini">
                         ${homeFlag}
-                        <span>${homeTeam}</span>
+                        <span>${homeTeamName}</span>
                     </div>
                     <span class="bracket-vs">vs</span>
                     <div class="bracket-team-mini">
                         ${awayFlag}
-                        <span>${awayTeam}</span>
+                        <span>${awayTeamName}</span>
                     </div>
                 </div>
-                ${match.home_slot ? `<span class="bracket-slot-info">${match.home_slot} vs ${match.away_slot}</span>` : ""}
+                ${match.home_slot ? `<span class="bracket-slot-info">${getSlotInfoText(match, slotLabelMap)}</span>` : ""}
             </div>
 
             <div class="bracket-reorder-controls">
-                <button class="bracket-reorder-btn up" data-match-id="${match.id}" data-position="${position}" ${isFirst ? "disabled" : ""}>
+                <button class="bracket-reorder-btn up" data-match-id="${match.id}" data-position="${localPosition}" ${isFirst ? "disabled" : ""}>
                     <svg viewBox="0 0 24 24" width="16" height="16">
                         <path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor"/>
                     </svg>
                 </button>
-                <button class="bracket-reorder-btn down" data-match-id="${match.id}" data-position="${position}" ${isLast ? "disabled" : ""}>
+                <button class="bracket-reorder-btn down" data-match-id="${match.id}" data-position="${localPosition}" ${isLast ? "disabled" : ""}>
                     <svg viewBox="0 0 24 24" width="16" height="16">
                         <path d="M12 20l8-8h-5V4H9v8H4z" fill="currentColor"/>
                     </svg>
@@ -170,7 +198,7 @@ function renderBracketMatchRow(match, index, totalMatches) {
             </div>
 
             <div class="bracket-position-input-wrapper">
-                <input type="number" class="bracket-position-input" value="${position}" min="1" max="${currentMatches.length}" data-match-id="${match.id}">
+                <input type="number" class="bracket-position-input" value="${localPosition}" min="1" max="${currentMatches.length}" data-match-id="${match.id}">
             </div>
         </div>
     `
@@ -246,7 +274,10 @@ function initReorderHandlers() {
     document.querySelectorAll(".bracket-reorder-btn").forEach(btn => {
         btn.addEventListener("click", async (e) => {
             const adminUser = await checkAdmin()
-            if (!adminUser) return
+            if (!adminUser) {
+                alert("No tienes permisos para reordenar")
+                return
+            }
 
             const matchId = btn.dataset.matchId
             const currentPosition = parseInt(btn.dataset.position)
@@ -260,14 +291,17 @@ function initReorderHandlers() {
     document.querySelectorAll(".bracket-position-input").forEach(input => {
         input.addEventListener("change", async (e) => {
             const adminUser = await checkAdmin()
-            if (!adminUser) return
+            if (!adminUser) {
+                alert("No tienes permisos para reordenar")
+                return
+            }
 
             const matchId = input.dataset.matchId
             const newPosition = parseInt(input.value)
-            const currentMatch = currentMatches.find(m => m.id === matchId)
-            if (!currentMatch) return
+            const currentIdx = currentMatches.findIndex(m => m.id === matchId)
+            if (currentIdx === -1) return
 
-            const currentPosition = currentMatch.bracket_position || currentMatches.indexOf(currentMatch) + 1
+            const currentPosition = currentIdx + 1
 
             if (newPosition === currentPosition) return
             if (newPosition < 1 || newPosition > currentMatches.length) {
@@ -284,53 +318,50 @@ function initReorderHandlers() {
     })
 }
 
-async function performSwap(matchId, currentPosition, newPosition) {
-    if (newPosition < 1 || newPosition > currentMatches.length) return
+async function performSwap(matchId, currentLocalPos, newLocalPos) {
+    if (newLocalPos < 1 || newLocalPos > currentMatches.length) return
+    if (currentLocalPos === newLocalPos) return
 
-    const currentMatch = currentMatches.find(m => m.id === matchId)
-    if (!currentMatch) return
+    const currentIdx = currentLocalPos - 1
+    const targetIdx = newLocalPos - 1
 
-    const currentPos = currentMatch.bracket_position || currentMatches.indexOf(currentMatch) + 1
-    const targetPos = newPosition
+    const originalBracketPositions = currentMatches.map(m => m.bracket_position)
+    const reorderedLocalOrder = currentMatches.map((_, i) => i + 1)
+    const [movedLocalPos] = reorderedLocalOrder.splice(currentIdx, 1)
+    reorderedLocalOrder.splice(targetIdx, 0, movedLocalPos)
 
-    if (currentPos === targetPos) return
+    for (let newLocalPos = 1; newLocalPos <= currentMatches.length; newLocalPos++) {
+        const originalLocalPos = reorderedLocalOrder[newLocalPos - 1]
+        const match = currentMatches[originalLocalPos - 1]
+        const newBracketPos = originalBracketPositions[newLocalPos - 1]
 
-    const matchesToMove = []
+        if (!match || newBracketPos == null) continue
+        if (match.bracket_position === newBracketPos) continue
 
-    if (currentPos < targetPos) {
-        for (let pos = currentPos + 1; pos <= targetPos; pos++) {
-            const match = currentMatches.find(m =>
-                (m.bracket_position || currentMatches.indexOf(m) + 1) === pos
-            )
-            if (match) matchesToMove.push({ match, fromPos: pos, toPos: pos - 1 })
-        }
-        matchesToMove.push({ match: currentMatch, fromPos: currentPos, toPos: targetPos })
-    } else {
-        for (let pos = currentPos - 1; pos >= targetPos; pos--) {
-            const match = currentMatches.find(m =>
-                (m.bracket_position || currentMatches.indexOf(m) + 1) === pos
-            )
-            if (match) matchesToMove.push({ match, fromPos: pos, toPos: pos + 1 })
-        }
-        matchesToMove.push({ match: currentMatch, fromPos: currentPos, toPos: targetPos })
-    }
-
-    for (const { match, toPos } of matchesToMove) {
-        const success = await updateBracketPosition(match.id, toPos)
+        const success = await updateBracketPosition(match.id, newBracketPos)
         if (!success) {
             alert("Error al reordenar los partidos")
             await renderBracketConfig()
             return
         }
-        match.bracket_position = toPos
+        match.bracket_position = newBracketPos
     }
 
     currentMatches.sort((a, b) => (a.bracket_position || 0) - (b.bracket_position || 0))
 
+    const slotCodes = [
+        ...new Set(
+            currentMatches
+                .flatMap(m => [m.home_slot, m.away_slot])
+                .filter(Boolean)
+        )
+    ]
+    currentSlotLabelMap = await preloadSlotLabels(slotCodes, DEFAULT_LEAGUE_ID)
+
     const matchList = document.querySelector(".bracket-match-list")
     if (matchList) {
         const scrollTop = matchList.scrollTop
-        matchList.innerHTML = currentMatches.map((match, index) => renderBracketMatchRow(match, index)).join("")
+        matchList.innerHTML = currentMatches.map((match, index) => renderBracketMatchRow(match, index, currentMatches.length, currentSlotLabelMap)).join("")
         initReorderHandlers()
         matchList.scrollTop = scrollTop
     }
