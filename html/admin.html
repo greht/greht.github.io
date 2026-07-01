@@ -328,11 +328,24 @@
       }
 
       function renderMatchCard(match, slotLabelMap) {
-        const homeSlotLabel = resolveSlotLabel(match.home_slot, slotLabelMap) || "Equipo Local";
-        const awaySlotLabel = resolveSlotLabel(match.away_slot, slotLabelMap) || "Equipo Visitante";
+        const homeSlotLabel = match.home_slot
+          ? resolveSlotLabel(match.home_slot, slotLabelMap)
+          : null;
+        const awaySlotLabel = match.away_slot
+          ? resolveSlotLabel(match.away_slot, slotLabelMap)
+          : null;
 
-        const homeTeam = match.home_team?.name || homeSlotLabel;
-        const awayTeam = match.away_team?.name || awaySlotLabel;
+        const homeTeamName = match.home_team?.name || null;
+        const awayTeamName = match.away_team?.name || null;
+
+        const homeTeam =
+          homeTeamName && homeSlotLabel
+            ? `${homeSlotLabel} - ${homeTeamName}`
+            : homeTeamName || homeSlotLabel || "Equipo Local";
+        const awayTeam =
+          awayTeamName && awaySlotLabel
+            ? `${awaySlotLabel} - ${awayTeamName}`
+            : awayTeamName || awaySlotLabel || "Equipo Visitante";
         const homeFlag = renderFlag(match.home_team, "flag", homeTeam);
         const awayFlag = renderFlag(match.away_team, "flag", awayTeam);
 
@@ -447,7 +460,7 @@
                                 <div class="flag-rounded">
                                     ${homeFlag}
                                 </div>
-                                <span${homeSlotAttr}>${homeTeam}</span>
+                                <span${homeSlotAttr} data-team-name="${homeTeamName || ""}">${homeTeam}</span>
                             </div>
                             <div class="score-control">
                                 <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>
@@ -468,7 +481,7 @@
                                 <div class="flag-rounded">
                                     ${awayFlag}
                                 </div>
-                                <span${awaySlotAttr}>${awayTeam}</span>
+                                <span${awaySlotAttr} data-team-name="${awayTeamName || ""}">${awayTeam}</span>
                             </div>
                             <div class="score-control">
                                 <button type="button" class="score-btn minus" ${isLocked ? "disabled" : ""}>−</button>

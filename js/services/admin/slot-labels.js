@@ -60,7 +60,10 @@ export function applySlotLabels(container) {
         const code = el.dataset.slotCode
         const entry = slotLabelCache.get(code)
         if (entry && entry.label) {
-            el.textContent = entry.label
+            const teamName = el.dataset.teamName
+            el.textContent = teamName
+                ? `${entry.label} - ${teamName}`
+                : entry.label
         }
     }
 }
