@@ -505,7 +505,7 @@ tr.position-4 .position-cell {
 
   .team-status-chip.eliminated {
     background: #f3f4f6;
-    color: var(color-text-secondary);
+    color: var(--color-text-secondary);
     border: 1px solid #d1d5db;
   }
 
