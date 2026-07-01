@@ -18,6 +18,20 @@ let currentPhaseId = null;
 let savedPredictions = [];
 let userTimezoneOffset = 0;
 
+const tabsState = {
+  activeList: [],
+  finishedList: [],
+  currentList: [],
+  predictions: [],
+  onRendered: null,
+  phaseName: "",
+  phaseId: null,
+};
+
+let mainTabsListenerAttached = false;
+let phaseTabsListenerAttached = false;
+let renderIdCounter = 0;
+
 const STORAGE_KEY_PHASE = "predictions_current_phase";
 const STORAGE_KEY_TAB = "predictions_current_tab";
 
@@ -549,60 +563,152 @@ async function renderMatches(matches, predictions = [], onRendered, initialPhase
   }
 }
 
+function findPhaseIdForState(phaseName) {
+  for (const [_, matches] of tabsState.currentList) {
+    const match = matches.find(m => m.phase?.name === phaseName);
+    if (match) return match.phase?.id || match.phase_id || null;
+  }
+  return null;
+}
+
+function updatePhaseTabs(groups, initialPhaseName = null) {
+  const phaseTabsContainer = document.getElementById("phaseTabsContainer");
+  const uniquePhases = [...new Set(groups.map(([_, matches]) => matches[0]?.phase?.name).filter(Boolean))];
+
+  const findPhaseId = (phaseName) => {
+    for (const [_, matches] of groups) {
+      const match = matches.find(m => m.phase?.name === phaseName);
+      if (match) return match.phase?.id || match.phase_id || null;
+    }
+    return null;
+  };
+
+  const initialPhase = initialPhaseName && uniquePhases.includes(initialPhaseName)
+    ? initialPhaseName
+    : uniquePhases[0];
+
+  if (initialPhase) {
+    currentPhaseName = initialPhase;
+    currentPhaseId = findPhaseId(initialPhase);
+    tabsState.phaseName = initialPhase;
+    tabsState.phaseId = findPhaseId(initialPhase);
+  }
+
+  if (phaseTabsContainer && uniquePhases.length > 1) {
+    phaseTabsContainer.innerHTML = renderPhaseTabs(uniquePhases, currentPhaseName);
+    phaseTabsContainer.style.display = "block";
+  } else if (phaseTabsContainer) {
+    phaseTabsContainer.innerHTML = "";
+    phaseTabsContainer.style.display = "none";
+  }
+
+  if (uniquePhases.length <= 1) return groups;
+  return groups
+    .map(([dayLabel, matches]) => [
+      dayLabel,
+      matches.filter(m => m.phase?.name === currentPhaseName),
+    ])
+    .filter(([_, matches]) => matches.length > 0);
+}
+
+function restoreInputValues(predictions) {
+  predictions.forEach(p => {
+    const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`);
+    if (!card) return;
+    const homeInput = card.querySelector('[data-team="home"]');
+    const awayInput = card.querySelector('[data-team="away"]');
+    if (homeInput) homeInput.value = p.home_predictions ?? "";
+    if (awayInput) awayInput.value = p.away_predictions ?? "";
+  });
+}
+
+function showLoadingOverlay(container) {
+  if (!container) return;
+  if (container.children.length === 0) return;
+
+  let overlay = container.querySelector(".card-order-loading");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.className = "card-order-loading";
+    overlay.setAttribute("role", "status");
+    overlay.setAttribute("aria-label", "Cargando partidos");
+    overlay.innerHTML = `<div class="spinner"></div>`;
+    if (getComputedStyle(container).position === "static") {
+      container.style.position = "relative";
+    }
+    container.appendChild(overlay);
+  }
+  requestAnimationFrame(() => {
+    overlay.classList.add("visible");
+  });
+}
+
+function hideLoadingOverlay(container) {
+  if (!container) return;
+  const overlay = container.querySelector(".card-order-loading");
+  if (overlay) {
+    overlay.classList.remove("visible");
+  }
+}
+
+async function handleMainTabsClick(e) {
+  const tabBtn = e.target.closest(".tab-btn");
+  if (!tabBtn) return;
+
+  const tab = tabBtn.dataset.tab;
+  tabsState.currentList = tab === "active" ? tabsState.activeList : tabsState.finishedList;
+  saveTab(tab);
+
+  const tabsContainer = document.getElementById("predictionsTabsContainer");
+  tabsContainer.querySelectorAll(".tab-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.tab === tab)
+  );
+
+  const filtered = updatePhaseTabs(tabsState.currentList, tabsState.phaseName);
+  const container = document.querySelector(".card-order");
+  await renderGroupList(filtered, tabsState.predictions, container, tabsState.onRendered);
+  restoreInputValues(tabsState.predictions);
+}
+
+async function handlePhaseTabsClick(e) {
+  const tabBtn = e.target.closest(".phase-tab-btn");
+  if (!tabBtn) return;
+
+  const selectedPhase = tabBtn.dataset.phase;
+  tabsState.phaseName = selectedPhase;
+  tabsState.phaseId = findPhaseIdForState(selectedPhase);
+  currentPhaseName = selectedPhase;
+  currentPhaseId = tabsState.phaseId;
+  savePhase(selectedPhase);
+
+  const phaseTabsContainer = document.getElementById("phaseTabsContainer");
+  phaseTabsContainer.querySelectorAll(".phase-tab-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.phase === selectedPhase)
+  );
+
+  const filtered = tabsState.currentList
+    .map(([dayLabel, matches]) => [
+      dayLabel,
+      matches.filter(m => m.phase?.name === selectedPhase),
+    ])
+    .filter(([_, matches]) => matches.length > 0);
+  const container = document.querySelector(".card-order");
+  await renderGroupList(filtered, tabsState.predictions, container, tabsState.onRendered);
+  restoreInputValues(tabsState.predictions);
+}
+
 function initTabs(active, finished, predictions, phaseTabsContainer, onRendered, initialPhaseName = null, initialTab = "active") {
   const tabsContainer = document.getElementById("predictionsTabsContainer");
   if (!tabsContainer) return;
 
-  let phaseTabsInitialized = false;
-  let currentList = initialTab === "finished" ? finished : active;
-
-  function updatePhaseTabs(groups, initialPhaseName = null) {
-    const uniquePhases = [...new Set(groups.map(([_, matches]) => matches[0]?.phase?.name).filter(Boolean))];
-
-    const findPhaseId = (phaseName) => {
-      for (const [_, matches] of groups) {
-        const match = matches.find(m => m.phase?.name === phaseName)
-        if (match) return match.phase?.id || match.phase_id || null
-      }
-      return null
-    }
-
-    const initialPhase = initialPhaseName && uniquePhases.includes(initialPhaseName)
-      ? initialPhaseName
-      : uniquePhases[0];
-
-    if (initialPhase) {
-      currentPhaseName = initialPhase;
-      currentPhaseId = findPhaseId(initialPhase);
-    }
-
-    if (phaseTabsContainer && uniquePhases.length > 1) {
-      phaseTabsContainer.innerHTML = renderPhaseTabs(uniquePhases, currentPhaseName);
-      initPhaseTabs(uniquePhases, groups, predictions, phaseTabsContainer, findPhaseId, onRendered, currentPhaseName);
-      phaseTabsContainer.style.display = "block";
-    } else if (phaseTabsContainer) {
-      phaseTabsContainer.innerHTML = "";
-      phaseTabsContainer.style.display = "none";
-    }
-
-    return uniquePhases.length > 1
-      ? groups.filter(([_, matches]) => matches[0]?.phase?.name === currentPhaseName)
-      : groups;
-  }
-
-  function restoreInputValues(predictions) {
-    predictions.forEach(p => {
-      const card = document.querySelector(`.match-card[data-match-id="${p.match_id}"]`)
-      if (!card) return
-      const homeInput = card.querySelector('[data-team="home"]')
-      const awayInput = card.querySelector('[data-team="away"]')
-      if (homeInput) homeInput.value = p.home_predictions ?? ""
-      if (awayInput) awayInput.value = p.away_predictions ?? ""
-    });
-  }
+  tabsState.activeList = active;
+  tabsState.finishedList = finished;
+  tabsState.predictions = predictions;
+  tabsState.onRendered = onRendered;
+  tabsState.currentList = initialTab === "finished" ? finished : active;
 
   const container = document.querySelector(".card-order");
-  const initialFiltered = updatePhaseTabs(currentList, initialPhaseName);
+  const initialFiltered = updatePhaseTabs(tabsState.currentList, initialPhaseName);
 
   if (initialTab === "finished") {
     tabsContainer.querySelectorAll(".tab-btn").forEach(b => {
@@ -610,52 +716,13 @@ function initTabs(active, finished, predictions, phaseTabsContainer, onRendered,
     });
   }
 
-  tabsContainer.addEventListener("click", async (e) => {
-    const tabBtn = e.target.closest(".tab-btn");
-    if (!tabBtn) return;
-
-    const tab = tabBtn.dataset.tab;
-    currentList = tab === "active" ? active : finished;
-    saveTab(tab);
-
-    tabsContainer.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-    tabBtn.classList.add("active");
-
-    const filtered = updatePhaseTabs(currentList, currentPhaseName);
-    await renderGroupList(filtered, predictions, container, onRendered);
-    restoreInputValues(predictions);
-  });
-
-  function initPhaseTabs(phases, groups, predictions, phaseTabsContainer, findPhaseId, onRendered, initialPhase = null) {
-    if (!phaseTabsContainer || phaseTabsInitialized) return;
-    phaseTabsInitialized = true;
-
-    const updateCurrentPhase = (phaseName) => {
-      currentPhaseName = phaseName
-      currentPhaseId = findPhaseId(phaseName)
-    }
-
-    const startPhase = initialPhase && phases.includes(initialPhase) ? initialPhase : phases[0];
-    if (startPhase) {
-      updateCurrentPhase(startPhase)
-    }
-
-    phaseTabsContainer.addEventListener("click", async (e) => {
-      const tabBtn = e.target.closest(".phase-tab-btn");
-      if (!tabBtn) return;
-
-      const selectedPhase = tabBtn.dataset.phase;
-      updateCurrentPhase(selectedPhase)
-      savePhase(selectedPhase);
-
-      phaseTabsContainer.querySelectorAll(".phase-tab-btn").forEach(b => b.classList.remove("active"));
-      tabBtn.classList.add("active");
-
-      const filtered = currentList.filter(([_, matches]) => matches[0]?.phase?.name === selectedPhase);
-      const container = document.querySelector(".card-order");
-      await renderGroupList(filtered, predictions, container, onRendered);
-      restoreInputValues(predictions);
-    });
+  if (!mainTabsListenerAttached) {
+    mainTabsListenerAttached = true;
+    tabsContainer.addEventListener("click", handleMainTabsClick);
+  }
+  if (phaseTabsContainer && !phaseTabsListenerAttached) {
+    phaseTabsListenerAttached = true;
+    phaseTabsContainer.addEventListener("click", handlePhaseTabsClick);
   }
 
   return renderGroupList(initialFiltered, predictions, container, onRendered);
@@ -677,93 +744,111 @@ function renderPhaseTabs(phases, activePhase = null) {
 }
 
 async function renderGroupList(groups, predictions, container, onRendered) {
+  const myRenderId = ++renderIdCounter;
+
   if (groups.length === 0) {
+    if (myRenderId !== renderIdCounter) return;
     container.innerHTML = `<p class="no-matches">No hay fechas en esta sección.</p>`;
     if (typeof onRendered === "function") onRendered();
     return;
   }
 
-  const grouped = groupMatchesByDay(matchesGlobal);
-  const allKeys = Object.keys(grouped);
+  const overlayTimeout = setTimeout(() => {
+    if (myRenderId === renderIdCounter) {
+      showLoadingOverlay(container);
+    }
+  }, 150);
 
-  // Renderizar todos los grupos
-  const groupsHtml = await Promise.all(groups.map(async ([dayLabel, dayMatches]) => {
-    const originalIndex = allKeys.indexOf(dayLabel);
-    const phaseNumber = originalIndex + 1;
+  try {
+    const grouped = groupMatchesByDay(matchesGlobal);
+    const allKeys = Object.keys(grouped);
 
-    const predictedCount = getPredictedCount(dayMatches);
-    const totalMatches = dayMatches.length;
-    const groupPoints = getGroupPoints(dayMatches, predictions);
-    const phaseName = dayMatches[0]?.phase?.name || "";
-    const journeyLabel = phaseName ? `Fecha ${phaseNumber} - ${phaseName}` : `Fecha ${phaseNumber}`;
+    // Renderizar todos los grupos
+    const groupsHtml = await Promise.all(groups.map(async ([dayLabel, dayMatches]) => {
+      const originalIndex = allKeys.indexOf(dayLabel);
+      const phaseNumber = originalIndex + 1;
 
-    // Renderizar todas las tarjetas de partidos de este grupo
-    const matchesHtml = await Promise.all(
-      dayMatches.map(match => renderMatchCard(match))
-    );
+      const predictedCount = getPredictedCount(dayMatches);
+      const totalMatches = dayMatches.length;
+      const groupPoints = getGroupPoints(dayMatches, predictions);
+      const phaseName = dayMatches[0]?.phase?.name || "";
+      const journeyLabel = phaseName ? `Fecha ${phaseNumber} - ${phaseName}` : `Fecha ${phaseNumber}`;
 
-    return `
-      <div class="matches-group">
+      // Renderizar todas las tarjetas de partidos de este grupo
+      const matchesHtml = await Promise.all(
+        dayMatches.map(match => renderMatchCard(match))
+      );
 
-        <button class="matches-group-header">
+      return `
+        <div class="matches-group">
 
-  <div class="accordion-info">
-    <span class="journey">
-      ${journeyLabel}
-    </span>
+          <button class="matches-group-header">
 
-    <span class="date-label">
-      ${capitalize(dayLabel)}
-    </span>
-  </div>
+    <div class="accordion-info">
+      <span class="journey">
+        ${journeyLabel}
+      </span>
 
-  <div class="accordion-right">
-
-    <div class="accordion-right-content">
-
-      ${groupPoints > 0 ? `<span class="group-points">+${groupPoints} pts</span>` : ""}
-
-      <div class="accordion-progress">
-
-        <span class="count">
-          ${predictedCount}/${totalMatches}
-        </span>
-
-        <span class="progress-label">
-          pronosticados
-        </span>
-
-      </div>
-
+      <span class="date-label">
+        ${capitalize(dayLabel)}
+      </span>
     </div>
 
-    <svg class="accordion-arrow" viewBox="0 0 24 24">
-      <path
-        d="M6 9l6 6 6-6"
-        stroke="currentColor"
-        stroke-width="2"
-        fill="none"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </svg>
+    <div class="accordion-right">
 
-  </div>
+      <div class="accordion-right-content">
 
-</button>
+        ${groupPoints > 0 ? `<span class="group-points">+${groupPoints} pts</span>` : ""}
 
-        <div class="matches-group-content">
-          ${matchesHtml.join("")}
+        <div class="accordion-progress">
+
+          <span class="count">
+            ${predictedCount}/${totalMatches}
+          </span>
+
+          <span class="progress-label">
+            pronosticados
+          </span>
+
         </div>
 
       </div>
-    `;
-  }));
 
-  container.innerHTML = groupsHtml.join("");
+      <svg class="accordion-arrow" viewBox="0 0 24 24">
+        <path
+          d="M6 9l6 6 6-6"
+          stroke="currentColor"
+          stroke-width="2"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
 
-  initAccordions();
-  if (typeof onRendered === "function") onRendered();
+    </div>
+
+  </button>
+
+          <div class="matches-group-content">
+            ${matchesHtml.join("")}
+          </div>
+
+        </div>
+      `;
+    }));
+
+    if (myRenderId !== renderIdCounter) return;
+
+    container.innerHTML = groupsHtml.join("");
+
+    initAccordions();
+    if (typeof onRendered === "function") onRendered();
+  } finally {
+    clearTimeout(overlayTimeout);
+    if (myRenderId === renderIdCounter) {
+      hideLoadingOverlay(container);
+    }
+  }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

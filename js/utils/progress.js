@@ -20,6 +20,36 @@ function attachTapHandler() {
   });
 }
 
+const PREDICTION_DEADLINE_MINUTES = 15;
+
+function parseMatchDate(matchDate) {
+  if (!matchDate) return null;
+  const parts = String(matchDate).match(
+    /(\d+)[-\sT]+(\d+)[-\sT]+(\d+)[\sT]+(\d+):(\d+):(\d+)/
+  );
+  if (!parts) {
+    const d = new Date(matchDate);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const [, year, month, day, hour, minute, second] = parts.map(Number);
+  return new Date(Date.UTC(year, month - 1, day, hour + 3, minute, second));
+}
+
+function isMatchClosed(match, now = new Date()) {
+  if (!match) return false;
+  if (match.status === "finished") return true;
+  const matchTime = parseMatchDate(match.match_date);
+  if (!matchTime) return false;
+  const deadline =
+    matchTime.getTime() - PREDICTION_DEADLINE_MINUTES * 60 * 1000;
+  return now.getTime() >= deadline;
+}
+
+function isPhasePast(phase, now = new Date()) {
+  if (!phase.matches || phase.matches.length === 0) return false;
+  return phase.matches.every((m) => isMatchClosed(m, now));
+}
+
 export function renderSegmentedProgress(matches = [], predictions = []) {
   const segmentsContainer = document.getElementById("progressSegments");
   const progressText = document.getElementById("progressText");
@@ -63,9 +93,12 @@ export function renderSegmentedProgress(matches = [], predictions = []) {
     (a, b) => a.displayOrder - b.displayOrder
   );
 
+  const now = new Date();
   let globalTotal = 0;
   let globalCompleted = 0;
   let firstIncomplete = null;
+  let activeRemaining = 0;
+  let anyActiveIncomplete = false;
 
   const segmentsHtml = phases
     .map((phase) => {
@@ -74,25 +107,48 @@ export function renderSegmentedProgress(matches = [], predictions = []) {
         const pred = predictionsByMatch.get(m.id);
         return hasPrediction(pred);
       }).length;
+      const missing = Math.max(0, total - completed);
 
       globalTotal += total;
       globalCompleted += completed;
 
-      if (!firstIncomplete && total > 0 && completed < total) {
-        firstIncomplete = {
-          name: phase.name,
-          remaining: total - completed
-        };
+      const past = isPhasePast(phase, now);
+      if (!past && missing > 0) {
+        activeRemaining += missing;
+        anyActiveIncomplete = true;
+        if (!firstIncomplete) {
+          firstIncomplete = {
+            name: phase.name,
+            remaining: missing
+          };
+        }
       }
 
       const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
       const isCompleted = total > 0 && completed === total;
-      const status = isCompleted ? "✓ Completa" : "En progreso";
+      const isPastComplete = past && isCompleted;
+      const isPastMissed = past && missing > 0;
+
+      let segmentClass = "";
+      let status = "";
+      if (isPastMissed) {
+        segmentClass = "past-missed";
+        status = `🔒 Cerrada — ${missing} sin predecir`;
+      } else if (isPastComplete) {
+        segmentClass = "past-complete";
+        status = "🔒 Cerrada";
+      } else if (isCompleted) {
+        segmentClass = "completed";
+        status = "✓ Completa";
+      } else {
+        status = "En progreso";
+      }
+
       const tooltip = `${phase.name}\n${completed}/${total} — ${percent}%\n${status}`;
 
       return `
         <div
-          class="progress-segment ${isCompleted ? "completed" : ""}"
+          class="progress-segment ${segmentClass}"
           style="flex-grow: ${total};"
           data-phase="${phase.name}"
           data-completed="${completed}"
@@ -111,7 +167,7 @@ export function renderSegmentedProgress(matches = [], predictions = []) {
 
   progressText.textContent = `${globalCompleted} de ${globalTotal} completadas`;
 
-  const allComplete = globalTotal > 0 && globalCompleted === globalTotal;
+  const allComplete = globalTotal > 0 && activeRemaining === 0;
 
   if (allComplete) {
     if (insightInProgress) insightInProgress.style.display = "none";
@@ -126,7 +182,7 @@ export function renderSegmentedProgress(matches = [], predictions = []) {
         phaseLabel.textContent = `la ${firstIncomplete.name.toLowerCase()}`;
       }
     } else {
-      remainingText.textContent = globalTotal - globalCompleted;
+      remainingText.textContent = activeRemaining;
       if (phaseLabel) {
         phaseLabel.textContent = "el torneo";
       }

@@ -1843,7 +1843,7 @@
   padding: 3px 8px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.18);
-  color: #fff;
+  color: var(--color-bg);
 }
 
 .group-status-list {
