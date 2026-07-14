@@ -987,6 +987,19 @@
         }
       }
 
+      const PROPAGATION_RULES = [
+        { phaseMatch: "32",      winnerPrefix: "R32_", nextPhase: "Octavos de final" },
+        { phaseMatch: "Octavos", winnerPrefix: "R16_", nextPhase: "Cuartos de final" },
+        { phaseMatch: "Cuartos", winnerPrefix: "QF_",  nextPhase: "Semifinal" },
+        {
+          phaseMatch: "Semifinal",
+          winnerPrefix: "SF_",
+          nextPhase: "Final",
+          loserPrefix: "L_SF_",
+          loserNextPhase: "Eliminatoria por el 3er lugar",
+        },
+      ];
+
       async function resolveWinnerToNextPhase(matchId, homeScore, awayScore, explicitWinnerTeamId = null) {
         const { data: matchData } = await supabase
           .from("matches")
@@ -994,12 +1007,21 @@
           .eq("id", matchId)
           .single();
 
-        if (!matchData) return;
+        if (!matchData) {
+          console.warn(`[propagation] No match data found for id ${matchId}`);
+          return;
+        }
 
         const currentPhaseName = matchData.phases?.name;
         const bracketPosition = matchData.bracket_position;
 
-        if (!currentPhaseName || !bracketPosition) return;
+        if (!currentPhaseName || bracketPosition == null) {
+          console.warn(
+            `[propagation] Missing phase name or bracket_position for match ${matchId}`,
+            { currentPhaseName, bracketPosition },
+          );
+          return;
+        }
 
         let winnerTeamId = null;
         let loserTeamId = null;
@@ -1017,52 +1039,109 @@
           winnerTeamId = matchData.away_team_id;
           loserTeamId = matchData.home_team_id;
         } else {
+          console.warn(
+            `[propagation] Match ${matchId} (${currentPhaseName}) ended in a draw with no explicit winner; skipping propagation.`,
+          );
           return;
         }
 
-        let winnerSlot = null;
-        let loserSlot = null;
-
-        if (currentPhaseName.includes("32")) {
-          winnerSlot = `R32_${bracketPosition}`;
-        } else if (currentPhaseName.includes("Octavos")) {
-          winnerSlot = `R16_${bracketPosition}`;
-        } else if (currentPhaseName.includes("Cuartos")) {
-          winnerSlot = `QF_${bracketPosition}`;
-        } else if (currentPhaseName.includes("Semifinal")) {
-          winnerSlot = `SF_${bracketPosition}`;
-          loserSlot = `L_SF_${bracketPosition}`;
+        if (!winnerTeamId) {
+          console.warn(
+            `[propagation] Cannot propagate from match ${matchId} (${currentPhaseName}): winnerTeamId is null.`,
+            {
+              home_team_id: matchData.home_team_id,
+              away_team_id: matchData.away_team_id,
+            },
+          );
+          return;
         }
 
-        if (currentPhaseName.includes("32")) {
-          await updateMatchesWithSlot("Octavos de final", winnerSlot, winnerTeamId);
-        } else if (currentPhaseName.includes("Octavos")) {
-          await updateMatchesWithSlot("Cuartos de final", winnerSlot, winnerTeamId);
-        } else if (currentPhaseName.includes("Cuartos")) {
-          await updateMatchesWithSlot("Semifinal", winnerSlot, winnerTeamId);
-        } else if (currentPhaseName.includes("Semifinal")) {
-          await updateMatchesWithSlot("Final", winnerSlot, winnerTeamId);
-          if (loserSlot) {
-            await updateMatchesWithSlot("Eliminatoria por el 3er lugar", loserSlot, loserTeamId);
+        const rule = PROPAGATION_RULES.find((r) =>
+          currentPhaseName.includes(r.phaseMatch),
+        );
+        if (!rule) {
+          console.warn(
+            `[propagation] No propagation rule matches phase "${currentPhaseName}" (match ${matchId})`,
+          );
+          return;
+        }
+
+        const winnerSlot = `${rule.winnerPrefix}${bracketPosition}`;
+        const tasks = [
+          updateMatchesWithSlot(rule.nextPhase, winnerSlot, winnerTeamId),
+        ];
+
+        if (rule.loserPrefix && rule.loserNextPhase) {
+          if (!loserTeamId) {
+            console.warn(
+              `[propagation] Skipping 3rd place propagation for match ${matchId} (${currentPhaseName}): loserTeamId is null.`,
+              {
+                home_team_id: matchData.home_team_id,
+                away_team_id: matchData.away_team_id,
+              },
+            );
+          } else {
+            const loserSlot = `${rule.loserPrefix}${bracketPosition}`;
+            tasks.push(
+              updateMatchesWithSlot(rule.loserNextPhase, loserSlot, loserTeamId),
+            );
           }
         }
+
+        await Promise.all(tasks);
       }
 
       async function updateMatchesWithSlot(phaseName, slotCode, teamId) {
-        const { data: phase } = await supabase
+        if (!teamId) {
+          console.warn(
+            `[propagation] updateMatchesWithSlot: teamId is null for slot "${slotCode}" in phase "${phaseName}". Skipping.`,
+          );
+          return;
+        }
+
+        const { data: phase, error: phaseError } = await supabase
           .from("phases")
-          .select("id")
+          .select("id, name")
           .eq("name", phaseName)
-          .single();
+          .maybeSingle();
 
-        if (!phase) return;
+        if (phaseError) {
+          console.error(
+            `[propagation] Error fetching phase "${phaseName}":`,
+            phaseError,
+          );
+          return;
+        }
 
-        const { data: matchesToUpdate } = await supabase
+        if (!phase) {
+          console.error(
+            `[propagation] Phase "${phaseName}" not found in database. Cannot propagate slot "${slotCode}". Check the phase name spelling/accents.`,
+          );
+          return;
+        }
+
+        const { data: matchesToUpdate, error: matchesError } = await supabase
           .from("matches")
-          .select("id, home_slot, away_slot")
+          .select("id, home_slot, away_slot, match_number")
           .eq("phase_id", phase.id);
 
-        for (const match of matchesToUpdate || []) {
+        if (matchesError) {
+          console.error(
+            `[propagation] Error fetching matches for phase "${phaseName}":`,
+            matchesError,
+          );
+          return;
+        }
+
+        if (!matchesToUpdate || matchesToUpdate.length === 0) {
+          console.warn(
+            `[propagation] No matches found in phase "${phaseName}" to receive slot "${slotCode}".`,
+          );
+          return;
+        }
+
+        let updatedCount = 0;
+        for (const match of matchesToUpdate) {
           const updates = {};
 
           if (match.home_slot === slotCode) {
@@ -1074,12 +1153,64 @@
           }
 
           if (Object.keys(updates).length > 0) {
-            await supabase
+            const { error: updateError } = await supabase
               .from("matches")
               .update(updates)
               .eq("id", match.id);
+
+            if (updateError) {
+              console.error(
+                `[propagation] Error updating match ${match.match_number} (id ${match.id}) with slot "${slotCode}":`,
+                updateError,
+              );
+            } else {
+              updatedCount += 1;
+              const side = match.home_slot === slotCode ? "home" : "away";
+              console.log(
+                `[propagation] Updated match ${match.match_number} (id ${match.id}) in phase "${phaseName}" with team ${teamId} via slot "${slotCode}" (${side}).`,
+              );
+            }
           }
         }
+
+        if (updatedCount === 0) {
+          console.warn(
+            `[propagation] No match in phase "${phaseName}" has slot "${slotCode}". Check match home_slot/away_slot values.`,
+            matchesToUpdate.map((m) => ({
+              id: m.id,
+              match_number: m.match_number,
+              home_slot: m.home_slot,
+              away_slot: m.away_slot,
+            })),
+          );
+        }
+      }
+
+      async function propagateFromMatch(matchId) {
+        const { data: matchData } = await supabase
+          .from("matches")
+          .select("home_score, away_score, winner_team_id, status, phases(name)")
+          .eq("id", matchId)
+          .single();
+
+        if (!matchData) {
+          console.warn(`[propagation] propagateFromMatch: match ${matchId} not found.`);
+          return;
+        }
+
+        if (matchData.status !== "finished") {
+          console.warn(
+            `[propagation] propagateFromMatch: match ${matchId} is not finished (status: ${matchData.status}). Aborting.`,
+          );
+          return;
+        }
+
+        await resolveWinnerToNextPhase(
+          matchId,
+          matchData.home_score ?? 0,
+          matchData.away_score ?? 0,
+          matchData.winner_team_id || null,
+        );
       }
 
       function showSaveNotification() {
@@ -1287,6 +1418,7 @@
         });
       }, 300000);
 
+      window.propagateFromMatch = propagateFromMatch;
     </script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
